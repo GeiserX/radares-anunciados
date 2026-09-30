@@ -29,3 +29,11 @@ def test_stale_copy_survives_a_failed_refresh(tmp_path, monkeypatch):
     assert net.cached_get("https://x/b", max_age_s=60) == b"old"
     with pytest.raises(OSError):
         net.cached_get("https://x/never-fetched", max_age_s=60)
+
+
+def test_unwritable_cache_still_returns_the_download(tmp_path, monkeypatch):
+    blocker = tmp_path / "file"
+    blocker.write_text("not a directory")
+    monkeypatch.setenv("RADARES_CACHE", str(blocker / "cache"))  # mkdir fails
+    monkeypatch.setattr(net, "get", lambda url, **kw: b"fresh")
+    assert net.cached_get("https://x/c") == b"fresh"

@@ -62,8 +62,11 @@ def cached_get(
             log.warning("using cached copy of %s after a failed refresh", url)
             return path.read_bytes()
         raise
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".tmp")
-    tmp.write_bytes(body)
-    tmp.replace(path)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".tmp")
+        tmp.write_bytes(body)
+        tmp.replace(path)
+    except OSError as exc:  # an unwritable cache must not fail a download that worked
+        log.warning("could not cache %s in %s: %s", url, path.parent, exc)
     return body
