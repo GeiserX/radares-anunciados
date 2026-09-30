@@ -137,17 +137,31 @@ def candidates(index: str, day: date) -> list[tuple[date, str]]:
 
 
 def find_article(day: date) -> tuple[str, date, str] | None:
-    """(url, published, html) of this week's list, trying La Opinión first."""
+    """(url, published, html) of this week's list, trying La Opinión first.
+
+    None means the indexes were read and hold no list yet. A download that
+    failed raises instead: an empty list would delete this week's zones, while
+    a failed run keeps them.
+    """
+    failed: OSError | None = None
     for index_url in (LAOPINION_SITEMAP, MURCIAACTUALIDAD_RSS):
         try:
             index = net.get(index_url, headers=BROWSER).decode("utf-8", "replace")
         except OSError as exc:
             log.warning("could not read %s: %s", index_url, exc)
+            failed = exc
             continue
         for published, url in candidates(index, day):
-            page = net.get(url, headers=BROWSER).decode("utf-8", "replace")
+            try:
+                page = net.get(url, headers=BROWSER).decode("utf-8", "replace")
+            except OSError as exc:
+                log.warning("could not read %s: %s", url, exc)
+                failed = exc
+                continue
             if parse_article(page):
                 return url, published, page
+    if failed is not None:
+        raise OSError("could not read the Murcia radar list") from failed
     return None
 
 

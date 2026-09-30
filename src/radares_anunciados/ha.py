@@ -16,6 +16,7 @@ change we send a notification: tapping it opens the app and loads the new zones.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from dataclasses import dataclass
@@ -32,6 +33,7 @@ log = logging.getLogger(__name__)
 ICON = "mdi:camera-timer"
 MIN_RADIUS_M = 100
 MAX_ZONES = 400  # a parser gone wrong must not flood Home Assistant
+CALL_TIMEOUT_S = 60  # a Home Assistant that pings but never answers must not hang the run
 
 
 @dataclass(frozen=True)
@@ -71,10 +73,12 @@ def plan(existing: list[dict], radars: list[Radar]) -> Plan:
         if not is_ours(z):
             continue
         spec = ZoneSpec.from_zone(z)
-        if spec in wanted and spec not in have:
+        if spec in wanted and spec not in have and z.get("passive") is True:
             have[spec] = z["id"]
         else:
-            delete.append(z["id"])  # stale, or a duplicate of one we keep
+            # stale, a duplicate of one we keep, or edited to a normal zone
+            # (a radar zone that sets a person's state breaks presence)
+            delete.append(z["id"])
     create = sorted(wanted - have.keys(), key=lambda s: (s.name, s.latitude, s.longitude))
     return Plan(create=create, delete=sorted(delete), keep=len(have))
 
@@ -112,13 +116,15 @@ class HomeAssistant:
     async def call(self, msg_type: str, **payload) -> object:
         msg_id = next(self._ids)
         await self._ws.send(json.dumps({"id": msg_id, "type": msg_type, **payload}))
-        while True:
-            reply = json.loads(await self._ws.recv())
-            if reply.get("id") != msg_id or reply.get("type") != "result":
-                continue
-            if not reply.get("success"):
-                raise RuntimeError(f"{msg_type} failed: {reply.get('error')}")
-            return reply.get("result")
+        # One deadline for the whole wait: unrelated messages must not reset it.
+        async with asyncio.timeout(CALL_TIMEOUT_S):
+            while True:
+                reply = json.loads(await self._ws.recv())
+                if reply.get("id") != msg_id or reply.get("type") != "result":
+                    continue
+                if not reply.get("success"):
+                    raise RuntimeError(f"{msg_type} failed: {reply.get('error')}")
+                return reply.get("result")
 
     async def sync(self, radars: list[Radar], dry_run: bool = False) -> Plan:
         existing = await self.call("zone/list")

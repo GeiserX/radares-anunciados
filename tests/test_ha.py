@@ -65,3 +65,29 @@ def test_cap_refuses_a_flood():
 def test_websocket_url():
     assert ha.websocket_url("https://ha.example.org/") == "wss://ha.example.org/api/websocket"
     assert ha.websocket_url("http://10.0.0.2:8123") == "ws://10.0.0.2:8123/api/websocket"
+
+
+def test_plan_recreates_a_zone_edited_to_not_passive():
+    # a radar zone that is not passive would set a person's state to it
+    edited = zone("edited", "Radar fijo A-7 km 1.0", 37.1, -1.1, 500.0) | {"passive": False}
+    todo = ha.plan([edited], [radar()])
+    assert todo.delete == ["edited"] and [s.name for s in todo.create] == ["Radar fijo A-7 km 1.0"]
+
+
+def test_call_gives_up_when_home_assistant_never_answers(monkeypatch):
+    import asyncio
+    import json
+
+    class Silent:  # pings for ever, never a result
+        async def send(self, _):
+            pass
+
+        async def recv(self):
+            await asyncio.sleep(0.01)
+            return json.dumps({"type": "pong"})
+
+    monkeypatch.setattr(ha, "CALL_TIMEOUT_S", 0.05)
+    client = ha.HomeAssistant("http://ha.test", "t")
+    client._ws = Silent()
+    with pytest.raises(TimeoutError):
+        asyncio.run(client.call("zone/list"))

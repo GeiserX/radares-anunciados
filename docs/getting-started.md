@@ -26,7 +26,8 @@ services:
       - ./data:/data
 ```
 
-`docker compose up -d`, then read the log. The first run creates the zones:
+The container runs as user 65534, so give it the cache folder first: `mkdir -p data && sudo chown
+65534:65534 data`. Then `docker compose up -d` and read the log. The first run creates the zones:
 
 ```
 INFO Murcia list https://www.laopiniondemurcia.es/murcia/2026/09/28/...: 6 streets

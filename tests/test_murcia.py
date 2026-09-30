@@ -123,3 +123,63 @@ def test_ways_query_searches_around_each_district_only():
     assert f"(around:{NEAR_M},37.976943,-1.105154)" in q  # the Los Dolores place node
     assert q.count("(around:") >= 1
     assert "(37.78,-1.4,38.1,-0.93)" in q  # no district: whole municipality
+
+
+def _fake_net(monkeypatch, pages):
+    """net.get that answers from ``pages`` (url -> bytes or OSError)."""
+    from radares_anunciados.sources import murcia
+
+    def get(url, data=None, headers=None, timeout=90, tries=3):
+        answer = pages[url]
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
+
+    monkeypatch.setattr(murcia.net, "get", get)
+    return murcia
+
+
+def test_find_article_skips_an_article_that_fails_to_download(monkeypatch):
+    good = "https://www.laopiniondemurcia.es/murcia/2026/09/28/radares-semana-b.html"
+    bad = "https://www.laopiniondemurcia.es/murcia/2026/09/29/radares-semana-a.html"
+    sitemap = f"<urlset><url><loc>{bad}</loc></url><url><loc>{good}</loc></url></urlset>"
+    murcia = _fake_net(
+        monkeypatch,
+        {
+            murcia_sitemap(): sitemap.encode(),
+            bad: OSError("timed out"),
+            good: page("laopinion_2026-09-28.html").encode(),
+        },
+    )
+    found = murcia.find_article(date(2026, 9, 30))
+    assert found is not None and found[0] == good
+
+
+def test_find_article_raises_when_a_download_failed_instead_of_an_empty_week(monkeypatch):
+    import pytest
+
+    murcia = _fake_net(
+        monkeypatch,
+        {murcia_sitemap(): OSError("406"), murcia_rss(): b"<rss></rss>"},
+    )
+    with pytest.raises(OSError):
+        murcia.find_article(date(2026, 9, 30))
+
+
+def test_find_article_returns_none_for_a_week_without_a_list(monkeypatch):
+    murcia = _fake_net(
+        monkeypatch, {murcia_sitemap(): b"<urlset></urlset>", murcia_rss(): b"<rss></rss>"}
+    )
+    assert murcia.find_article(date(2026, 9, 30)) is None
+
+
+def murcia_sitemap():
+    from radares_anunciados.sources.murcia import LAOPINION_SITEMAP
+
+    return LAOPINION_SITEMAP
+
+
+def murcia_rss():
+    from radares_anunciados.sources.murcia import MURCIAACTUALIDAD_RSS
+
+    return MURCIAACTUALIDAD_RSS
