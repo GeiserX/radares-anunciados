@@ -1,0 +1,48 @@
+blueprint:
+  name: Radar ahead (radares-anunciados)
+  description: >-
+    Sends a notification to the iPhone that just entered a radar zone created by
+    radares-anunciados. The iOS companion app fires `ios.zone_entered` for passive
+    zones too, so presence (home / not_home) is untouched.
+  domain: automation
+  source_url: https://github.com/GeiserX/radares-anunciados/blob/main/blueprints/radar_zone_alert.yaml
+  input:
+    sound:
+      name: Sound
+      description: iOS notification sound name.
+      default: default
+      selector:
+        text:
+    time_sensitive:
+      name: Time sensitive
+      description: Break through Focus modes (iOS "time-sensitive" interruption level).
+      default: true
+      selector:
+        boolean:
+
+triggers:
+  - trigger: event
+    event_type: ios.zone_entered
+
+conditions:
+  - condition: template
+    value_template: >-
+      {{ state_attr(trigger.event.data.zone, 'icon') == 'mdi:camera-timer'
+         and (state_attr(trigger.event.data.zone, 'friendly_name') or '').startswith('Radar') }}
+
+variables:
+  sound: !input sound
+  time_sensitive: !input time_sensitive
+
+actions:
+  - action: "notify.mobile_app_{{ trigger.event.data.sourceDeviceID }}"
+    data:
+      title: "{{ state_attr(trigger.event.data.zone, 'friendly_name') }}"
+      message: Radar publicado cerca. Revisa tu velocidad.
+      data:
+        push:
+          sound: "{{ sound }}"
+          interruption-level: "{{ 'time-sensitive' if time_sensitive else 'active' }}"
+
+mode: queued
+max: 10

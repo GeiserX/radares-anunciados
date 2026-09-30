@@ -1,0 +1,218 @@
+"""The weekly mobile-radar list of the Policía Local de Murcia.
+
+The police post the list on X as an image, which a program can't read
+without logging in. La Opinión de Murcia republishes it most Mondays as an
+article with one ``<li>`` per street; Murcia Actualidad does on some weeks.
+We find this week's article through the outlet's sitemap or RSS, read the
+"Street, District" pairs, and turn each street into circles near its district
+(see ``streets``). A list is valid Monday to Sunday of the week it came out.
+"""
+
+from __future__ import annotations
+
+import html
+import json
+import logging
+import re
+from datetime import date, timedelta
+
+from .. import net
+from ..model import Radar
+from ..streets import STREET_TYPES, Announced, locate, places_query, ways_query
+
+log = logging.getLogger(__name__)
+
+# Municipality of Murcia with a margin, (south, west, north, east)
+BBOX = (37.78, -1.40, 38.10, -0.93)
+ATTRIBUTION = "Policía Local de Murcia (lista semanal); geometría © OpenStreetMap"
+
+OVERPASS = "https://overpass-api.de/api/interpreter"
+LAOPINION_SITEMAP = "https://www.laopiniondemurcia.es/sitemapMonth.xml"
+MURCIAACTUALIDAD_RSS = "https://www.murciaactualidad.com/rss/sucesos/"
+# La Opinión answers 406 without browser-like headers
+BROWSER = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/130 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "es-ES,es;q=0.9",
+}
+
+_ABBREVIATIONS = [
+    (r"^Avda?\.?\s+", "Avenida "),
+    (r"^C/\s*", "Calle "),
+    (r"^Cno\.?\s+", "Camino "),
+    (r"^Ctra\.?\s+", "Carretera "),
+    (r"^Pza\.?\s+", "Plaza "),
+]
+_CONNECTOR = re.compile(
+    r"^(a su paso por|en el entorno de|en la zona de|junto a|en)\s+"
+    r"(la pedanía de\s+|el barrio de\s+)?",
+    re.IGNORECASE,
+)
+_TYPES = "|".join(sorted(STREET_TYPES | {t.capitalize() for t in STREET_TYPES}, key=len))
+# "Street, en District" inside running text, for articles without a list
+_PAIR = re.compile(
+    rf"(?P<street>\b(?:{_TYPES}|Avda\.?|C/|Cno\.?)\s[^,.;:\n]{{2,80}}?)\s*,\s*"
+    r"(?P<place>(?:a su paso por|en el entorno de|en la zona de|junto a|en)\s+"
+    r"[A-ZÁÉÍÓÚÑ][^,.;:\n()]{1,60}?)\s*(?=[.;,\n]|$| y )",
+)
+
+
+def _clean(fragment: str) -> str:
+    """Inline HTML to text. Tags go without a space: La Opinión writes 'A<strong>venida'."""
+    text = html.unescape(re.sub(r"<[^>]+>", "", fragment))
+    return re.sub(r"[\s\xa0]+", " ", text).strip()
+
+
+def _street(text: str) -> str:
+    text = text.strip(" .")
+    for pattern, full in _ABBREVIATIONS:
+        text = re.sub(pattern, full, text, flags=re.IGNORECASE)
+    return text[:1].upper() + text[1:]
+
+
+def _place(text: str) -> str:
+    return _CONNECTOR.sub("", text.strip(" .")).strip(" .")
+
+
+def parse_item(text: str) -> Announced | None:
+    """'Cno. Tiñosa, RM-F6, Los Dolores' -> Camino Tiñosa / Los Dolores.
+
+    The first part is the street and the last part the district; anything
+    between (a road number, a landmark) is dropped.
+    """
+    parts = [p.strip() for p in text.split(",") if p.strip(" .")]
+    if not parts:
+        return None
+    place = _place(parts[-1]) if len(parts) > 1 else None
+    return Announced(_street(parts[0]), place or None)
+
+
+def parse_article(page: str) -> list[Announced]:
+    """The street list of one article, in order, without repeats."""
+    items: list[Announced] = []
+    # La Opinión: the list is the ul with ft-list--primary. A plain ft-list on
+    # the same page holds related headlines, never streets.
+    primary = re.search(r'<ul class="ft-list ft-list--primary"[^>]*>(.*?)</ul>', page, re.S)
+    if primary:
+        for li in re.findall(r"<li\b[^>]*>(.*?)</li>", primary.group(1), re.S):
+            item = parse_item(_clean(li))
+            if item and item not in items:
+                items.append(item)
+        return items
+    # Anyone else: "Street, en District" pairs in the body text, block by block.
+    body = re.sub(r"(?is)<(script|style|noscript)\b.*?</\1>", " ", page)
+    body = re.sub(r"(?i)<\s*(br|/p|/li|/h\d|/div)\b[^>]*>", "\n", body)
+    for chunk in body.split("\n"):
+        for match in _PAIR.finditer(_clean(chunk)):
+            item = Announced(_street(match.group("street")), _place(match.group("place")))
+            if item not in items:
+                items.append(item)
+    return items
+
+
+def week_of(day: date) -> tuple[date, date]:
+    monday = day - timedelta(days=day.weekday())
+    return monday, monday + timedelta(days=6)
+
+
+def _published(url: str) -> date | None:
+    # La Opinión: /2026/09/28/ ; Murcia Actualidad: /20260817120319032337.html
+    m = re.search(r"/(20\d\d)/(\d\d)/(\d\d)/", url) or re.search(r"/(20\d\d)(\d\d)(\d\d)\d{6}", url)
+    return date(int(m.group(1)), int(m.group(2)), int(m.group(3))) if m else None
+
+
+def candidates(index: str, day: date) -> list[tuple[date, str]]:
+    """List-article URLs in a sitemap or RSS from the week of ``day``, newest first."""
+    start, end = week_of(day)
+    found = set()
+    for url in re.findall(r"<(?:loc|link)>\s*(?:<!\[CDATA\[)?\s*([^<\]\s]+)", index):
+        is_list = ("laopiniondemurcia.es/murcia/" in url and "radares-semana" in url) or (
+            "murciaactualidad.com" in url and "radar-semana" in url
+        )
+        published = _published(url)
+        if is_list and published and start <= published <= end:
+            found.add((published, url))
+    return sorted(found, reverse=True)
+
+
+def find_article(day: date) -> tuple[str, date, str] | None:
+    """(url, published, html) of this week's list, trying La Opinión first.
+
+    None means the indexes were read and hold no list yet. A download that
+    failed raises instead: an empty list would delete this week's zones, while
+    a failed run keeps them.
+    """
+    failed: OSError | None = None
+    for index_url in (LAOPINION_SITEMAP, MURCIAACTUALIDAD_RSS):
+        try:
+            index = net.get(index_url, headers=BROWSER).decode("utf-8", "replace")
+        except OSError as exc:
+            log.warning("could not read %s: %s", index_url, exc)
+            failed = exc
+            continue
+        for published, url in candidates(index, day):
+            try:
+                page = net.get(url, headers=BROWSER).decode("utf-8", "replace")
+            except OSError as exc:
+                log.warning("could not read %s: %s", url, exc)
+                failed = exc
+                continue
+            if parse_article(page):
+                return url, published, page
+    if failed is not None:
+        raise OSError("could not read the Murcia radar list") from failed
+    return None
+
+
+def to_radars(
+    items: list[Announced],
+    overpass_json: bytes,
+    published: date,
+    radius_m: int,
+    url: str | None,
+) -> list[Radar]:
+    start, end = week_of(published)
+    radars: list[Radar] = []
+    for item, centres in locate(items, overpass_json, radius_m).items():
+        if not centres:
+            log.warning("could not place %s (%s) on the map; skipped", item.street, item.place)
+            continue
+        label = f"Radar anunciado {item.street}" + (f" ({item.place})" if item.place else "")
+        slug = re.sub(r"[^a-z0-9]+", "-", f"{item.street} {item.place or ''}".lower()).strip("-")
+        for n, (lat, lon) in enumerate(centres):
+            radars.append(
+                Radar(
+                    id=f"murcia-{start.isoformat()}-{slug}-{n}",
+                    source="murcia",
+                    kind="mobile_announced",
+                    name=label,
+                    lat=lat,
+                    lon=lon,
+                    radius_m=radius_m,
+                    valid_from=start,
+                    valid_to=end,
+                    url=url,
+                    attribution=ATTRIBUTION,
+                )
+            )
+    return radars
+
+
+def fetch(day: date, radius_m: int = 300) -> list[Radar]:
+    """This week's list, or [] if it has not been published yet."""
+    found = find_article(day)
+    if found is None:
+        log.info("no Murcia radar list found for the week of %s", week_of(day)[0])
+        return []
+    url, published, page = found
+    items = parse_article(page)
+    log.info("Murcia list %s: %d streets", url, len(items))
+    # Same list, same queries: fetched once a week, not every hour.
+    week = 7 * 86_400
+    places = net.cached_get(OVERPASS, {"data": places_query(items, BBOX)}, max_age_s=week)
+    ways = net.cached_get(OVERPASS, {"data": ways_query(items, places, BBOX)}, max_age_s=week)
+    overpass = json.dumps(
+        {"elements": json.loads(places)["elements"] + json.loads(ways)["elements"]}
+    ).encode()
+    return to_radars(items, overpass, published, radius_m, url)
