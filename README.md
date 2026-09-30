@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/banner.svg" alt="Radares Anunciados" width="100%">
+</p>
+
 <h1 align="center">Radares Anunciados</h1>
 
 <p align="center">
