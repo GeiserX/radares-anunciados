@@ -19,6 +19,15 @@ blueprint:
       default: true
       selector:
         boolean:
+    critical:
+      name: Critical alert
+      description: >-
+        Play at full volume even in silent mode or Do Not Disturb (iOS critical
+        alert). The companion app must have critical alerts allowed in iOS
+        Settings > Notifications > Home Assistant.
+      default: false
+      selector:
+        boolean:
 
 triggers:
   - trigger: event
@@ -33,6 +42,7 @@ conditions:
 variables:
   sound: !input sound
   time_sensitive: !input time_sensitive
+  critical: !input critical
 
 actions:
   - action: "notify.mobile_app_{{ trigger.event.data.sourceDeviceID }}"
@@ -41,8 +51,10 @@ actions:
       message: Radar publicado cerca. Revisa tu velocidad.
       data:
         push:
-          sound: "{{ sound }}"
-          interruption-level: "{{ 'time-sensitive' if time_sensitive else 'active' }}"
+          sound: >-
+            {{ {'name': sound, 'critical': 1, 'volume': 1.0} if critical else sound }}
+          interruption-level: >-
+            {{ 'critical' if critical else ('time-sensitive' if time_sensitive else 'active') }}
 
 mode: queued
 max: 10
