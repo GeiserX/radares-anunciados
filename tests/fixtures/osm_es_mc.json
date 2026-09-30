@@ -1,0 +1,329 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-09-30T14:35:56Z",
+    "timestamp_areas_base": "2026-09-29T04:46:06Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "node",
+  "id": 13832722,
+  "lat": 38.0540137,
+  "lon": -1.1176784,
+  "tags": {
+    "direction": "200",
+    "highway": "speed_camera",
+    "maxspeed": "120",
+    "note": "F120 LETA A-7 Km 758.79 Enlace Cabezo DIR Murcia CL"
+  }
+},
+{
+  "type": "node",
+  "id": 29095584,
+  "lat": 37.6727399,
+  "lon": -1.7078123,
+  "tags": {
+    "direction": "21",
+    "highway": "speed_camera",
+    "maxspeed": "80",
+    "note": "F100 XABI A-7 Km 593.28 Lorca DIR Valencia CL"
+  }
+},
+{
+  "type": "node",
+  "id": 992000622,
+  "lat": 38.0155553,
+  "lon": -1.3796530,
+  "tags": {
+    "direction": "243",
+    "highway": "speed_camera",
+    "maxspeed": "100",
+    "note": "F100 ENIN C-415 Km 13 Albudeite DIR Caravaca CL"
+  }
+},
+{
+  "type": "node",
+  "id": 992001569,
+  "lat": 37.5293000,
+  "lon": -1.6284400,
+  "tags": {
+    "direction": "200",
+    "highway": "speed_camera",
+    "maxspeed": "100",
+    "note": "F100 TECN RM-11 Km 18.3 Purñas DIR Aguilas"
+  }
+},
+{
+  "type": "node",
+  "id": 992001841,
+  "lat": 38.1761914,
+  "lon": -1.3137826,
+  "tags": {
+    "direction": "-25",
+    "highway": "speed_camera",
+    "maxspeed": "120",
+    "note": "F120 LETA A-30 Km 112.94 Salida Jumilla DIR Albacete CL"
+  }
+},
+{
+  "type": "node",
+  "id": 992002145,
+  "lat": 37.6946134,
+  "lon": -1.0200602,
+  "tags": {
+    "description": "F120 PEND A-30 Km 179.3 Enlace AP-7 DIR Cartagena CL",
+    "direction": "150",
+    "highway": "speed_camera",
+    "maxspeed": "120"
+  }
+},
+{
+  "type": "node",
+  "id": 992003285,
+  "lat": 37.8156155,
+  "lon": -0.9375466,
+  "tags": {
+    "direction": "80",
+    "highway": "speed_camera",
+    "maxspeed": "100",
+    "note": "F100 POOH RM-19 Km 17.79 Balsicas DIR San Javier"
+  }
+},
+{
+  "type": "node",
+  "id": 992004594,
+  "lat": 37.9443935,
+  "lon": -1.1596938,
+  "tags": {
+    "direction": "50",
+    "highway": "speed_camera",
+    "maxspeed": "80",
+    "note": "F080 A300 ENIN MU-30 Km 9 El Palmar DIR Murcia CLAV"
+  }
+},
+{
+  "type": "node",
+  "id": 992004964,
+  "lat": 37.6832799,
+  "lon": -1.7108528,
+  "tags": {
+    "direction": "170",
+    "highway": "speed_camera",
+    "maxspeed": "80",
+    "note": "F100 A300 A-7 Km 594.45 Lorca DIR Cádiz CL"
+  }
+},
+{
+  "type": "node",
+  "id": 992005312,
+  "lat": 38.0235087,
+  "lon": -1.1647335,
+  "tags": {
+    "direction": "2",
+    "highway": "speed_camera",
+    "maxspeed": "80",
+    "note": "F080 LETA A-7 Km 764.2 Murcia DIR Valencia CL"
+  }
+},
+{
+  "type": "node",
+  "id": 992005662,
+  "lat": 37.5663837,
+  "lon": -1.6504558,
+  "tags": {
+    "direction": "160",
+    "highway": "speed_camera",
+    "maxspeed": "100",
+    "note": "F100 A300 RM-11 Km 13 Purñas DIR Lorca"
+  }
+},
+{
+  "type": "node",
+  "id": 992006412,
+  "lat": 37.7061070,
+  "lon": -1.0820596,
+  "tags": {
+    "direction": "130",
+    "highway": "speed_camera",
+    "maxspeed": "70",
+    "note": "F070 PEND RM-602 Km 10.9 Fte-Álamo DIR Aljorra"
+  }
+},
+{
+  "type": "node",
+  "id": 992006678,
+  "lat": 38.4076069,
+  "lon": -1.3947870,
+  "tags": {
+    "direction": "210",
+    "highway": "speed_camera",
+    "maxspeed": "90",
+    "note": "F090 DARN RM-714 Km 9.8 Jumilla DIR Venta Olivo"
+  }
+},
+{
+  "type": "node",
+  "id": 992006915,
+  "lat": 37.6203035,
+  "lon": -0.9488430,
+  "tags": {
+    "direction": "200",
+    "highway": "speed_camera",
+    "maxspeed": "100",
+    "note": "F100 GINE A-30 Km 190.45 Enlace AP-7 DIR Cartagena CL"
+  }
+},
+{
+  "type": "node",
+  "id": 1432162268,
+  "lat": 37.6264540,
+  "lon": -0.7228403,
+  "tags": {
+    "direction": "50",
+    "highway": "speed_camera",
+    "maxspeed": "100",
+    "note": "F100 FITO RM-12 Km 17.54 Cabo Palos DIR La Manga"
+  }
+},
+{
+  "type": "node",
+  "id": 2491235667,
+  "lat": 38.1119762,
+  "lon": -1.2394777,
+  "tags": {
+    "direction": "160",
+    "highway": "speed_camera",
+    "maxspeed": "120"
+  }
+},
+{
+  "type": "node",
+  "id": 4136904469,
+  "lat": 37.9357488,
+  "lon": -1.1900988,
+  "tags": {
+    "description": "Radar 60 kmh",
+    "highway": "speed_camera",
+    "maxspeed": "60"
+  }
+},
+{
+  "type": "node",
+  "id": 4136904470,
+  "lat": 37.9396577,
+  "lon": -1.1757183,
+  "tags": {
+    "description": "Radar 60 kmh",
+    "highway": "speed_camera",
+    "maxspeed": "60"
+  }
+},
+{
+  "type": "node",
+  "id": 7847018894,
+  "lat": 37.6712248,
+  "lon": -1.7096699,
+  "tags": {
+    "direction": "180",
+    "highway": "speed_camera",
+    "maxspeed": "80"
+  }
+},
+{
+  "type": "node",
+  "id": 7847018896,
+  "lat": 37.6844527,
+  "lon": -1.7105629,
+  "tags": {
+    "direction": "1",
+    "highway": "speed_camera",
+    "maxspeed": "80",
+    "note": "F100 A300 A-7 Km 594.45 Lorca DIR Cádiz CL"
+  }
+},
+{
+  "type": "node",
+  "id": 12993898230,
+  "lat": 38.2113888,
+  "lon": -1.7276915,
+  "tags": {
+    "camera:direction": "220",
+    "description": "Radar control semáforo.",
+    "direction": "195",
+    "highway": "speed_camera",
+    "surveillance": "traffic",
+    "surveillance:zone": "traffic"
+  }
+},
+{
+  "type": "node",
+  "id": 13602482235,
+  "lat": 38.0655111,
+  "lon": -1.2054972,
+  "tags": {
+    "direction": "190",
+    "highway": "speed_camera",
+    "maxspeed": "30"
+  }
+},
+{
+  "type": "node",
+  "id": 13602482236,
+  "lat": 38.0610112,
+  "lon": -1.1986840,
+  "tags": {
+    "direction": "250",
+    "highway": "speed_camera",
+    "maxspeed": "30"
+  }
+},
+{
+  "type": "node",
+  "id": 13602482237,
+  "lat": 38.0527701,
+  "lon": -1.2167677,
+  "tags": {
+    "direction": "140",
+    "highway": "speed_camera",
+    "maxspeed": "50"
+  }
+},
+{
+  "type": "node",
+  "id": 13602482238,
+  "lat": 38.0587158,
+  "lon": -1.2177470,
+  "tags": {
+    "direction": "5",
+    "highway": "speed_camera",
+    "maxspeed": "50"
+  }
+},
+{
+  "type": "node",
+  "id": 13624845602,
+  "lat": 37.5635006,
+  "lon": -1.6795500,
+  "tags": {
+    "direction": "200",
+    "highway": "speed_camera",
+    "maxspeed": "90"
+  }
+},
+{
+  "type": "node",
+  "id": 14166515810,
+  "lat": 37.8236215,
+  "lon": -0.7613316,
+  "tags": {
+    "direction": "145",
+    "highway": "speed_camera",
+    "maxspeed": "30"
+  }
+}
+
+  ]
+}

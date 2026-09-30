@@ -23,6 +23,23 @@ detectors in a vehicle and excludes "los mecanismos de aviso que informan de la 
 vigilancia del tráfico". Every feature reads published lists and maps; a feature that senses, receives or
 interferes with a radar signal is out of scope, whoever asks for it.
 
-## State
+## Layout
 
-No source code yet. This file grows with the code.
+- `src/radares_anunciados/sources/`: one module per source (`dgt`, `osm`, `murcia`), each returning `Radar`s
+- `streets.py`: street + district from a police list to circle centres (two Overpass queries)
+- `feed.py`: merge, dedupe, GeoJSON; `ha.py`: Home Assistant zone sync over the websocket API
+- [`blueprints/radar_zone_alert.yaml`](blueprints/radar_zone_alert.yaml): the automation that sends the alert
+- [`tests/fixtures/`](tests/fixtures/): real pages and responses, trimmed. Tests never touch the network.
+- [`docs/how-it-works.md`](docs/how-it-works.md) explains the design in full.
+
+## Rules that keep it working
+
+- Zones are passive, icon `mdi:camera-timer`, name starting with "Radar". `ha.py` touches no other zone.
+- Radius never under 100 m: the iOS app splits smaller zones into three regions of its 20.
+- The iOS app loads new zones only in the foreground; every change notifies the phones.
+- Never send Overpass a name regex over the whole municipality. It answers 504. Look up the districts
+  first, then search `around` them.
+- La Opinión's street list is `ul.ft-list--primary`. A plain `ft-list` on the same page holds headlines.
+- A street or district not found is skipped and logged, never guessed.
+
+Checks: `uv run ruff check . && uv run ruff format --check . && uv run pytest -q`.
