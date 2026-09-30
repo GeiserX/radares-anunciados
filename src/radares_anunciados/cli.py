@@ -11,6 +11,7 @@ Configuration comes from the environment so the same image runs anywhere:
   RADARES_NOTIFY         notify services told to open the app after a change,
                          e.g. notify.mobile_app_phone1,notify.mobile_app_phone2
   RADARES_INTERVAL       seconds between runs for `radares run` (default 3600)
+  RADARES_CACHE          directory for cached downloads (default ~/.cache/radares-anunciados)
 """
 
 from __future__ import annotations
@@ -43,10 +44,10 @@ def collect(day: date) -> list[Radar]:
     # aborts the run, and Home Assistant keeps last run's zones.
     if "dgt" in sources:
         provinces = set(_env_list("RADARES_DGT_PROVINCES", "30"))
-        radars += dgt.parse(net.get(dgt.URL), provinces, radius_m=fixed_r)
+        radars += dgt.parse(net.cached_get(dgt.URL), provinces, radius_m=fixed_r)
     if "osm" in sources:
         bbox = tuple(float(x) for x in _env_list("RADARES_OSM_BBOX")) or osm.MURCIA_REGION
-        payload = net.get(osm.OVERPASS_URL, {"data": osm.query(bbox)})
+        payload = net.cached_get(osm.OVERPASS_URL, {"data": osm.query(bbox)})
         radars += osm.parse(payload, radius_m=fixed_r)
     if "murcia" in sources:
         radars += murcia.fetch(day, radius_m=street_r)

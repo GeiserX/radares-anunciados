@@ -18,7 +18,7 @@ def distance_m(a: tuple[float, float], b: tuple[float, float]) -> float:
     return 2 * EARTH_M * math.asin(math.sqrt(h))
 
 
-def _densify(line: list[tuple[float, float]], every_m: float) -> list[tuple[float, float]]:
+def densify(line: list[tuple[float, float]], every_m: float) -> list[tuple[float, float]]:
     points = [line[0]]
     for a, b in zip(line, line[1:], strict=False):
         steps = max(1, math.ceil(distance_m(a, b) / every_m))
@@ -41,7 +41,7 @@ def cover(lines: list[list[tuple[float, float]]], radius_m: float) -> list[tuple
     for line in lines:
         if not line:
             continue
-        for point in _densify(line, 20.0):
+        for point in densify(line, 20.0):
             if all(distance_m(point, c) > reach for c in centres):
                 centres.append(point)
     return centres

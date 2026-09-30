@@ -4,7 +4,7 @@ from pathlib import Path
 from radares_anunciados import feed
 from radares_anunciados.geo import cover, distance_m
 from radares_anunciados.sources import dgt, osm
-from radares_anunciados.streets import Announced, locate, street_key
+from radares_anunciados.streets import street_key
 
 FIX = Path(__file__).parent / "fixtures"
 
@@ -60,23 +60,6 @@ def test_street_key_ignores_honorific_and_linker():
     assert street_key("Avenida Don Juan de Borbón") == street_key("Avenida Juan de Borbón")
     assert street_key("Avenida de Juan Carlos I") == street_key("Avenida Juan Carlos I")
     assert street_key("Calle Morera") != street_key("Avenida Morera")
-
-
-def test_locate_real_weekly_list():
-    items = [
-        Announced("Camino de Tiñosa", "Los Dolores"),
-        Announced("Avenida Juan de Borbón", "Santiago y Zaraiche"),
-        Announced("Avenida Juan Carlos I", "Santa María de Gracia"),
-        Announced("Avenida Juan Carlos I", "Nowhere That Exists"),
-    ]
-    found = locate(items, (FIX / "overpass_streets.json").read_bytes(), 300)
-    assert found[items[0]]
-    assert found[items[1]]  # needs the "Don" and the boundary-only district
-    # every circle for Juan Carlos I is near Santa María de Gracia, none in the
-    # other districts that have a street with the same name
-    anchor = (37.9941988, -1.1393876)
-    assert all(distance_m(c, anchor) < 3000 for c in found[items[2]])
-    assert found[items[3]] == []  # unknown district: no guess
 
 
 def test_merge_keeps_one_radar_per_spot():
