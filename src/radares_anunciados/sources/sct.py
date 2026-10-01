@@ -19,6 +19,13 @@ Some rows carry coordinates that are not a place in Catalonia (a missing
 decimal comma, two northings in one row). Such a row is skipped and logged,
 never repaired by guessing where the comma went.
 
+Left out: the page's table of stretches where mobile radars work (road and a
+km range, no coordinates). Placing a km from OpenStreetMap's km markers was
+measured against this file's own radars on 2026-10-01: median 34 m, but 27 of
+250 points more than 300 m off and the worst 20 km, because one road number can
+carry two km sequences (the C-58 motorway and the old C-58 by Montserrat). No
+check at run time can tell which placements are wrong, so none are drawn.
+
 Reuse: the files fall under the gencat.cat reuse terms, the "Llicència oberta
 d'ús d'informació – Catalunya" (the open-data catalogue lists radars.txt as
 dataset re3y-fftf with that licence). It asks to cite the source as

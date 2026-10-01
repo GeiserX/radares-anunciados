@@ -20,7 +20,8 @@ Ceuta and Melilla, so it reaches the Balearics and the Canaries too.
 A DGT average-speed section is a zone at each end, and the feed also carries it as a line from one end
 to the other. Lines never become zones: a stretch tens of kilometres long is no place for a circle.
 
-An OpenStreetMap camera within 150 m of a DGT radar is the same camera mapped twice, so it's dropped.
+An OpenStreetMap camera within 150 m of a radar an authority publishes (the DGT, the Servei Català de
+Trànsit, a city) is the same camera mapped twice, so it's dropped.
 Two radars at the same spot become one zone. The DGT lists both directions of a section with the same
 two ends, and the phone has no slots to waste.
 

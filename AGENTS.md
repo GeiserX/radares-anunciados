@@ -26,10 +26,11 @@ interferes with a radar signal is out of scope, whoever asks for it.
 ## Layout
 
 - `src/radares_anunciados/sources/`: one module per source (`dgt`, `osm`, `murcia`). Each exposes
-  `SOURCE = Source(key, fetch, attribution, licence, spanish_ip, max_age_s, provinces)` and is listed
-  once in `sources/__init__.py`. `fetch(Context)` returns a `SourceResult` (radars, stretches, weekly
-  lists) and raises on any failure; the registry then reuses its last good result. Contract in
-  `sources/base.py`.
+  `SOURCE = Source(key, fetch, attribution, licence, spanish_ip, max_age_s, provinces, official)` and
+  is listed once in `sources/__init__.py`. `official=False` marks a crowd map (OSM): `feed.merge` drops
+  its camera within 150 m of a radar from an official source. `fetch(Context)` returns a
+  `SourceResult` (radars, stretches, weekly lists) and raises on any failure; the registry then reuses
+  its last good result. Contract in `sources/base.py`.
 - `model.py`: `Radar`, `Stretch`, `SourceResult`; `provinces.py`: INE codes and bounding boxes
 - `speed.py`: radius by speed limit; `LOOKUPS` is the hook for a limit lookup; `geo.py`: distances,
   street cover, ETRS89 UTM to WGS84
