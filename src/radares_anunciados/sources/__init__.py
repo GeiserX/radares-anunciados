@@ -14,13 +14,21 @@ from datetime import date
 
 from .. import store
 from ..model import SourceResult, WeeklyList
-from . import dgt, murcia, osm, sct
+from . import dgt, dgt_freshness, dgt_invive, murcia, osm, sct
 from .base import Context, Source
 
 log = logging.getLogger(__name__)
 
 REGISTRY: dict[str, Source] = {
-    s.key: s for s in (dgt.SOURCE, osm.SOURCE, murcia.SOURCE, sct.SOURCE, sct.TRAILER)
+    s.key: s
+    for s in (
+        dgt_freshness.watch(dgt.SOURCE),
+        osm.SOURCE,
+        murcia.SOURCE,
+        sct.SOURCE,
+        sct.TRAILER,
+        dgt_invive.SOURCE,
+    )
 }
 
 
