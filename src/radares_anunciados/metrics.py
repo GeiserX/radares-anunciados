@@ -20,7 +20,7 @@ from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from . import __version__
-from .model import Radar
+from .model import SPAIN, Radar
 from .streets import WeeklyList
 
 DEFAULT_PORT = 9464
@@ -56,9 +56,9 @@ def _midnight_utc(day) -> float:
     return datetime(day.year, day.month, day.day, tzinfo=UTC).timestamp()
 
 
-def _midnight_local(day) -> float:
-    # The week rolls over on the container's local date (date.today()), so its start does too.
-    return datetime(day.year, day.month, day.day).timestamp()
+def _midnight_spain(day) -> float:
+    # The week rolls over on Spain's date (model.today_in_spain), so its start does too.
+    return datetime(day.year, day.month, day.day, tzinfo=SPAIN).timestamp()
 
 
 class State:
@@ -211,12 +211,12 @@ class State:
             metric(
                 "radares_weekly_list_missing_seconds",
                 "gauge",
-                "Seconds since this week started (Monday 00:00, local time) with no police "
+                "Seconds since this week started (Monday 00:00, Spanish time) with no police "
                 "list found; 0 once found.",
                 [
                     (
                         {"source": w.source},
-                        0 if w.published is not None else max(0, now - _midnight_local(w.week)),
+                        0 if w.published is not None else max(0, now - _midnight_spain(w.week)),
                     )
                     for w in self.lists
                 ],

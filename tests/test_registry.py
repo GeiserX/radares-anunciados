@@ -2,14 +2,14 @@ import json
 import os
 import time
 from dataclasses import replace
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 import pytest
 
 from radares_anunciados import cli, feed, metrics, net, provinces, sources, store
 from radares_anunciados.geo import distance_m
-from radares_anunciados.model import Radar, SourceResult, Stretch, WeeklyList
+from radares_anunciados.model import SPAIN, Radar, SourceResult, Stretch, WeeklyList
 from radares_anunciados.sources import Context, Source, dgt, murcia, osm
 from radares_anunciados.speed import Radius
 
@@ -33,7 +33,21 @@ def ctx(**kw) -> Context:
 
 
 def test_every_source_is_registered_with_its_terms():
-    assert list(sources.REGISTRY) == ["dgt", "osm", "murcia"]
+    assert list(sources.REGISTRY) == [
+        "dgt",
+        "osm",
+        "murcia",
+        "sct",
+        "sct_remolc",
+        "dgt_invive",
+        "euskadi",
+        "navarra",
+        "donostia",
+        "donostia_movil",
+        "madrid",
+        "salamanca",
+        "leon",
+    ]
     for key, source in sources.REGISTRY.items():
         assert source.key == key
         assert callable(source.fetch)
@@ -45,11 +59,13 @@ def test_every_source_is_registered_with_its_terms():
 
 def test_selected_sources():
     keys = lambda found: [s.key for s in found]  # noqa: E731
-    assert keys(sources.selected(None, frozenset({"30"}))) == ["dgt", "osm", "murcia"]
+    assert keys(sources.selected(None, frozenset({"30"}))) == ["dgt", "osm", "murcia", "dgt_invive"]
     assert keys(sources.selected(["osm", "dgt"], None)) == ["dgt", "osm"]
     # a city list outside the selected provinces is not fetched
-    assert keys(sources.selected(None, frozenset({"28"}))) == ["dgt", "osm"]
-    assert keys(sources.selected(None, None)) == ["dgt", "osm", "murcia"]
+    assert keys(sources.selected(None, frozenset({"28"}))) == ["dgt", "osm", "dgt_invive", "madrid"]
+    # DGT runs no mobile-radar stretches in Catalonia
+    assert keys(sources.selected(None, frozenset({"08"}))) == ["dgt", "osm", "sct", "sct_remolc"]
+    assert keys(sources.selected(None, None)) == list(sources.REGISTRY)
     with pytest.raises(ValueError, match="nope"):
         sources.selected(["dgt", "nope"], None)
 
@@ -244,7 +260,7 @@ def test_a_reused_list_of_another_week_counts_as_missing_this_week():
     assert failed.result.lists == [WeeklyList("m", MONDAY)]  # not found, nothing skipped
     state = metrics.State(3600)
     state.collected(failed.result.radars, failed.result.lists, {"m": (False, 1000.0)})
-    text = state.render(now=time.mktime((2026, 9, 29, 0, 0, 0, 0, 0, -1)))
+    text = state.render(now=datetime(2026, 9, 29, tzinfo=SPAIN).timestamp())  # Tuesday 00:00
     assert 'radares_weekly_list_found{source="m"} 0' in text
     assert 'radares_weekly_list_missing_seconds{source="m"} 86400.0' in text
     assert "radares_street_skipped{" not in text
@@ -322,6 +338,27 @@ def test_collect_turns_last_weeks_street_dormant_and_back(monkeypatch):
     week["radars"] = announced(date(2026, 10, 5))
     found = cli.collect(date(2026, 10, 5)).radars
     assert len(found) == 2 and all(r.active for r in found)
+
+
+def test_a_remembered_street_gives_no_zone_once_its_source_or_province_is_deselected(monkeypatch):
+    src = fake_source(
+        "m", lambda: SourceResult(radars=announced(MONDAY)), provinces=frozenset({"30"})
+    )
+    other = fake_source("o", lambda: SourceResult())
+    monkeypatch.setattr(sources, "REGISTRY", {"m": src, "o": other})
+    monkeypatch.setenv("RADARES_PROVINCES", "all")
+    assert len(cli.collect(MONDAY).radars) == 2
+    monkeypatch.setenv("RADARES_SOURCES", "o")
+    assert cli.collect(MONDAY).radars == []
+    monkeypatch.delenv("RADARES_SOURCES")
+    monkeypatch.setenv("RADARES_PROVINCES", "28")
+    assert cli.collect(MONDAY).radars == []
+    # the history itself survives, so selecting it again brings the street back
+    monkeypatch.setenv("RADARES_PROVINCES", "all")
+    monkeypatch.setattr(
+        sources, "REGISTRY", {"m": fake_source("m", lambda: SourceResult()), "o": other}
+    )
+    assert len(cli.collect(MONDAY).radars) == 2
 
 
 @pytest.mark.parametrize(("weeks", "day"), [("0", date(2026, 10, 5)), ("1", date(2026, 10, 12))])

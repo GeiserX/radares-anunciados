@@ -5,11 +5,9 @@ zones in Home Assistant match that list. The iOS companion app does the alerting
 
 ## Sources
 
-| Source | How it is read | Refreshed |
-|---|---|---|
-| DGT fixed radars and average-speed sections | the [DGT NAP](https://nap.dgt.es/dataset/radares-fijos-dgt) DATEX II file, filtered by province | daily |
-| OpenStreetMap `highway=speed_camera` | one Overpass query over the bounding boxes of the selected provinces | daily |
-| Murcia's Policía Local weekly list | this week's article in La Opinión de Murcia (Murcia Actualidad as a fallback), found through the paper's sitemap | hourly, cached for the week |
+Thirteen sources: the DGT, the Servei Català de Trànsit, the Basque and Navarra governments, the cities
+of Madrid, Salamanca, Donostia, Murcia and León, and OpenStreetMap. [Sources](sources.md) lists what
+each gives, its licence, how often it changes and which need a Spanish IP.
 
 `RADARES_PROVINCES` picks the area by INE province code (`30` is Murcia, the default), or `all`. A
 radar whose source knows its province is kept only in a selected one, and a city's list is fetched
@@ -18,13 +16,16 @@ by an Overpass area lookup, which answers 504 under load. `all` is the 52 boxes 
 Ceuta and Melilla, so it reaches the Balearics and the Canaries too.
 
 A DGT average-speed section is a zone at each end, and the feed also carries it as a line from one end
-to the other. Lines never become zones: a stretch tens of kilometres long is no place for a circle.
+to the other. Lines never become zones: a stretch tens of kilometres long is no place for a circle. The
+one exception is opt-in: with `RADARES_STRETCH_ZONES=on` and a province list, DGT's mobile-radar
+stretches get circles along the road.
 
-An OpenStreetMap camera within 150 m of a DGT radar is the same camera mapped twice, so it's dropped.
+An OpenStreetMap camera within 150 m of a radar an authority publishes (the DGT, the Servei Català de
+Trànsit, a city) is the same camera mapped twice, so it's dropped.
 Two radars at the same spot become one zone. The DGT lists both directions of a section with the same
 two ends, and the phone has no slots to waste.
 
-The police post the list on X as an image. The press prints it as text: one street and district per
+Murcia's police post their weekly list on X as an image. The press prints it as text: one street and district per
 line, such as `Cno. Tiñosa, RM-F6, Los Dolores`. The first part is the street and the last the district.
 
 ## From a street name to circles
@@ -74,7 +75,8 @@ That choice gets slower with more zones: one pass of the app's filter took 21 ms
 316 ms at 5,000 on an Apple-silicon core, and it runs on every location event. So the service loads at most
 `RADARES_MAX_ZONES` zones, 1,000 by default. With more radars than that it keeps, in this order: the
 streets of a list in force this week, the fixed and section radars nearest to Home Assistant's home,
-then dormant streets, the most recently announced first. The rest get no zone. It logs how many and
+then the circles along mobile-radar stretches nearest to home, then dormant streets, the most recently
+announced first. The rest get no zone. It logs how many and
 exports `radares_zones_left_out`.
 
 ## Zones that don't change presence
@@ -118,7 +120,8 @@ An icon-only change needs nothing on the phone, so it does not notify.
 ## When a source is down
 
 Downloads are cached for each source's cache age. A failed refresh counts as a failed source, even
-with an older copy on disk. Each source's last good result is kept in the cache folder: when a source
+with an older copy on disk. An Overpass answer that reports an error is never cached, so the next run
+asks again. Each source's last good result is kept in the cache folder: when a source
 fails, its last good result is used and logged, so its zones stay. A weekly list in it counts only in
 its own week; in a later week the list shows as not found. A source that never answered adds nothing. `/metrics` exports, per source, whether it
 answered (`radares_source_up`) and how old its data is (`radares_source_data_age_seconds`). A run

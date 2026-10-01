@@ -19,6 +19,7 @@ from datetime import date, timedelta
 
 from .. import net
 from ..model import Radar, SourceResult
+from ..streetnames import expand
 from ..streets import STREET_TYPES, Announced, WeeklyList, place, places_query, ways_query
 from .base import Context, Source
 
@@ -40,13 +41,6 @@ BROWSER = {
     "Accept-Language": "es-ES,es;q=0.9",
 }
 
-_ABBREVIATIONS = [
-    (r"^Avda?\.?\s+", "Avenida "),
-    (r"^C/\s*", "Calle "),
-    (r"^Cno\.?\s+", "Camino "),
-    (r"^Ctra\.?\s+", "Carretera "),
-    (r"^Pza\.?\s+", "Plaza "),
-]
 _CONNECTOR = re.compile(
     r"^(a su paso por|en el entorno de|en la zona de|junto a|en)\s+"
     r"(la pedanía de\s+|el barrio de\s+)?",
@@ -68,10 +62,7 @@ def _clean(fragment: str) -> str:
 
 
 def _street(text: str) -> str:
-    text = text.strip(" .")
-    for pattern, full in _ABBREVIATIONS:
-        text = re.sub(pattern, full, text, flags=re.IGNORECASE)
-    return text[:1].upper() + text[1:]
+    return expand(text)
 
 
 def _place(text: str) -> str:
@@ -225,8 +216,11 @@ def fetch(
     log.info("Murcia list %s: %d streets", url, len(items))
     # Same list, same queries: fetched once a week, not every hour.
     week = 7 * 86_400
-    places = net.cached_get(OVERPASS, {"data": places_query(items, BBOX)}, max_age_s=week)
-    ways = net.cached_get(OVERPASS, {"data": ways_query(items, places, BBOX)}, max_age_s=week)
+    check = net.overpass_answer  # an error answer is never kept for the week
+    query = places_query(items, BBOX)
+    places = net.cached_get(OVERPASS, {"data": query}, max_age_s=week, validate=check)
+    query = ways_query(items, places, BBOX)
+    ways = net.cached_get(OVERPASS, {"data": query}, max_age_s=week, validate=check)
     overpass = json.dumps(
         {"elements": json.loads(places)["elements"] + json.loads(ways)["elements"]}
     ).encode()

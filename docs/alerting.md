@@ -55,7 +55,7 @@ services:
 | `radares_source_up` | `source` | 1 if the source answered in the last run, 0 if it failed and its last good result (if any) was used |
 | `radares_source_data_age_seconds` | `source` | seconds since the source last answered; a download still inside the source's cache age counts as an answer. Keeps growing while it fails; absent for a source that never answered |
 | `radares_weekly_list_found` | `source` | 1 if this week's police list was found, else 0 |
-| `radares_weekly_list_missing_seconds` | `source` | seconds since this week started (Monday 00:00 in the container's time zone) with no list found; 0 once found |
+| `radares_weekly_list_missing_seconds` | `source` | seconds since this week started (Monday 00:00 Spanish time) with no list found; 0 once found |
 | `radares_weekly_list_published_timestamp_seconds` | `source` | the list's publication day, midnight UTC |
 | `radares_weekly_list_streets` | `source` | streets announced in this week's list |
 | `radares_weekly_list_streets_skipped` | `source` | announced streets that could not be placed on the map |
@@ -132,7 +132,7 @@ also catches a run loop that hangs. Every rule above needs a scrape to fire, so 
 for the scrape target too. Without it a container that died goes unnoticed.
 
 `RadaresWeeklyListMissing` needs no calendar in Prometheus: the service counts from the start of its own
-week, which follows the container's `TZ` (UTC if unset).
+week, which starts at Monday 00:00 Spanish time whatever the container's `TZ` says.
 
 A skipped street is also named in the "Radares actualizados" notification, so the driver knows it has
 no warning without any of this set up. The phones get it after each zone change, and also when the set

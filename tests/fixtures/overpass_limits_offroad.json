@@ -1,0 +1,204 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-10-01T18:15:06Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "way",
+  "id": 23304407,
+  "bounds": {
+    "minlat": 39.5128000,
+    "minlon": -0.4337890,
+    "maxlat": 39.5172548,
+    "maxlon": -0.4324438
+  },
+  "geometry": [
+    { "lat": 39.5172548, "lon": -0.4329681 },
+    { "lat": 39.5171455, "lon": -0.4329413 },
+    { "lat": 39.5169111, "lon": -0.4327545 },
+    { "lat": 39.5167661, "lon": -0.4326913 },
+    { "lat": 39.5166042, "lon": -0.4326557 },
+    { "lat": 39.5158141, "lon": -0.4326735 },
+    { "lat": 39.5151687, "lon": -0.4324589 },
+    { "lat": 39.5149068, "lon": -0.4324438 },
+    { "lat": 39.5147708, "lon": -0.4324968 },
+    { "lat": 39.5146615, "lon": -0.4325760 },
+    { "lat": 39.5145531, "lon": -0.4327248 },
+    { "lat": 39.5144148, "lon": -0.4329754 },
+    { "lat": 39.5142413, "lon": -0.4331970 },
+    { "lat": 39.5140274, "lon": -0.4334188 },
+    { "lat": 39.5139219, "lon": -0.4334996 },
+    { "lat": 39.5137794, "lon": -0.4335917 },
+    { "lat": 39.5136041, "lon": -0.4336958 },
+    { "lat": 39.5133574, "lon": -0.4337685 },
+    { "lat": 39.5132065, "lon": -0.4337857 },
+    { "lat": 39.5130520, "lon": -0.4337890 },
+    { "lat": 39.5128000, "lon": -0.4337587 }
+  ],
+  "tags": {
+    "destination": "Paterna;Feria Valencia;À Punt",
+    "destination:colour": ";yellow;",
+    "destination:ref": "CV-31",
+    "destination:ref:to": "CV-365;;V-30",
+    "destination:symbol": "airport;;harbour",
+    "highway": "trunk_link",
+    "junction:ref": "5",
+    "lanes": "1",
+    "lit": "yes",
+    "maxspeed": "40",
+    "oneway": "yes"
+  }
+},
+{
+  "type": "way",
+  "id": 467787137,
+  "bounds": {
+    "minlat": 39.5128000,
+    "minlon": -0.4337587,
+    "maxlat": 39.5158757,
+    "maxlon": -0.4295249
+  },
+  "geometry": [
+    { "lat": 39.5158757, "lon": -0.4295249 },
+    { "lat": 39.5157410, "lon": -0.4297122 },
+    { "lat": 39.5156045, "lon": -0.4299483 },
+    { "lat": 39.5155023, "lon": -0.4301746 },
+    { "lat": 39.5153756, "lon": -0.4304830 },
+    { "lat": 39.5151034, "lon": -0.4312011 },
+    { "lat": 39.5145637, "lon": -0.4325350 },
+    { "lat": 39.5143696, "lon": -0.4329183 },
+    { "lat": 39.5142128, "lon": -0.4331247 },
+    { "lat": 39.5140440, "lon": -0.4333023 },
+    { "lat": 39.5137840, "lon": -0.4335058 },
+    { "lat": 39.5136183, "lon": -0.4336020 },
+    { "lat": 39.5133944, "lon": -0.4336919 },
+    { "lat": 39.5132006, "lon": -0.4337345 },
+    { "lat": 39.5128000, "lon": -0.4337587 }
+  ],
+  "tags": {
+    "highway": "primary",
+    "lanes": "1",
+    "lit": "yes",
+    "name": "Distribuïdor Nord",
+    "name:ca": "Distribuïdor Nord",
+    "name:es": "Distribuidor Norte",
+    "oneway": "yes",
+    "ref": "CV-31",
+    "ref:colour": "orange",
+    "ref:colour_tx": "black"
+  }
+},
+{
+  "type": "way",
+  "id": 1364609830,
+  "bounds": {
+    "minlat": 40.6342345,
+    "minlon": -3.3127142,
+    "maxlat": 40.6345536,
+    "maxlon": -3.3082738
+  },
+  "geometry": [
+    { "lat": 40.6345340, "lon": -3.3127142 },
+    { "lat": 40.6345536, "lon": -3.3125704 },
+    { "lat": 40.6345495, "lon": -3.3124524 },
+    { "lat": 40.6345241, "lon": -3.3123160 },
+    { "lat": 40.6344143, "lon": -3.3118271 },
+    { "lat": 40.6342760, "lon": -3.3112393 },
+    { "lat": 40.6342464, "lon": -3.3109867 },
+    { "lat": 40.6342345, "lon": -3.3103815 },
+    { "lat": 40.6342361, "lon": -3.3086650 },
+    { "lat": 40.6342433, "lon": -3.3083998 },
+    { "lat": 40.6342560, "lon": -3.3082738 }
+  ],
+  "tags": {
+    "highway": "trunk_link",
+    "lanes": "1",
+    "maxspeed": "60",
+    "oneway": "yes",
+    "removed:highway": "trunk",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 1374378553,
+  "bounds": {
+    "minlat": 40.6347868,
+    "minlon": -3.3126378,
+    "maxlat": 40.6350049,
+    "maxlon": -3.3125098
+  },
+  "geometry": [
+    { "lat": 40.6347868, "lon": -3.3126378 },
+    { "lat": 40.6348914, "lon": -3.3125985 },
+    { "lat": 40.6349435, "lon": -3.3125613 },
+    { "lat": 40.6350049, "lon": -3.3125098 }
+  ],
+  "tags": {
+    "highway": "unclassified",
+    "lanes": "1",
+    "maxspeed": "40",
+    "oneway": "yes",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 1499238235,
+  "bounds": {
+    "minlat": 40.6343864,
+    "minlon": -3.3134675,
+    "maxlat": 40.6347868,
+    "maxlon": -3.3126342
+  },
+  "geometry": [
+    { "lat": 40.6345417, "lon": -3.3134675 },
+    { "lat": 40.6344596, "lon": -3.3133677 },
+    { "lat": 40.6344060, "lon": -3.3132385 },
+    { "lat": 40.6343864, "lon": -3.3130936 },
+    { "lat": 40.6344030, "lon": -3.3129480 },
+    { "lat": 40.6344539, "lon": -3.3128169 },
+    { "lat": 40.6345340, "lon": -3.3127142 },
+    { "lat": 40.6346123, "lon": -3.3126602 },
+    { "lat": 40.6346985, "lon": -3.3126342 },
+    { "lat": 40.6347868, "lon": -3.3126378 }
+  ],
+  "tags": {
+    "highway": "unclassified",
+    "junction": "roundabout",
+    "lanes": "1",
+    "maxspeed": "40",
+    "name": "Gorieta de Nerea González",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 1499238236,
+  "bounds": {
+    "minlat": 40.6347868,
+    "minlon": -3.3127393,
+    "maxlat": 40.6349603,
+    "maxlon": -3.3126378
+  },
+  "geometry": [
+    { "lat": 40.6347868, "lon": -3.3126378 },
+    { "lat": 40.6348729, "lon": -3.3126717 },
+    { "lat": 40.6349603, "lon": -3.3127393 }
+  ],
+  "tags": {
+    "highway": "unclassified",
+    "junction": "roundabout",
+    "lanes": "1",
+    "maxspeed": "40",
+    "name": "Gorieta de Nerea González",
+    "surface": "asphalt"
+  }
+}
+
+  ]
+}

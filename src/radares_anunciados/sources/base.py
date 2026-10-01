@@ -28,6 +28,7 @@ class Context:
     boxes: tuple[Box, ...]  # (south, west, north, east) areas to search by bounding box
     radius: Radius  # use radius.street_m(limit) for the circles along an announced street
     max_age_s: int = 86_400  # the source's own cache age, from its Source entry
+    stretch_zones: bool = False  # RADARES_STRETCH_ZONES=on: stretch sources give zones too
 
 
 @dataclass(frozen=True)
@@ -41,3 +42,6 @@ class Source:
     # The provinces it covers (a city's list: its province). None: any. A source
     # is skipped when none of its provinces is selected.
     provinces: frozenset[str] | None = None
+    # True: an authority publishes these positions. False: a crowd-sourced map
+    # (OSM), whose camera within feed.DUPLICATE_M of an official radar is a copy.
+    official: bool = True
