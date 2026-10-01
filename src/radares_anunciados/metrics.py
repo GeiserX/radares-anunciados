@@ -73,18 +73,32 @@ class State:
         self.failed_runs = 0
         self.radars: dict[str, int] = {}
         self.zones: dict[str, int] = {}
+        self.left_out: int | None = None
         self.lists: list[WeeklyList] = []
+        # source -> (fetched this run, when the data in use was fetched or None)
+        self.sources: dict[str, tuple[bool, float | None]] = {}
 
-    def collected(self, radars: list[Radar], lists: list[WeeklyList]) -> None:
-        """The sources answered: count the radars and keep the weekly lists' status."""
+    def collected(
+        self,
+        radars: list[Radar],
+        lists: list[WeeklyList],
+        sources: dict[str, tuple[bool, float | None]] | None = None,
+    ) -> None:
+        """The sources ran: count the radars, keep the weekly lists' status and
+        whether each source answered."""
         with self._lock:
             # A weekly source with no list this week counts 0, not absent.
             self.radars = {w.source: 0 for w in lists} | Counter(r.source for r in radars)
             self.lists = list(lists)
+            if sources is not None:
+                self.sources = dict(sources)
 
-    def synced(self, keep: int, created: int, deleted: int) -> None:
+    def synced(
+        self, keep: int, created: int, deleted: int, updated: int = 0, left_out: int = 0
+    ) -> None:
         with self._lock:
-            self.zones = {"kept": keep, "created": created, "deleted": deleted}
+            self.zones = {"kept": keep, "created": created, "deleted": deleted, "updated": updated}
+            self.left_out = left_out
 
     def finished(self, ok: bool, now: float | None = None) -> None:
         now = time.time() if now is None else now
@@ -162,8 +176,31 @@ class State:
             metric(
                 "radares_sync_zones",
                 "gauge",
-                "Radar zones kept, created and deleted by the last sync.",
+                "Radar zones kept, created, deleted and updated (icon only) by the last sync.",
                 [({"action": a}, n) for a, n in self.zones.items()],
+            )
+            metric(
+                "radares_zones_left_out",
+                "gauge",
+                "Radars without a zone because there were more than RADARES_MAX_ZONES.",
+                [({}, self.left_out)] if self.left_out is not None else [],
+            )
+            metric(
+                "radares_source_up",
+                "gauge",
+                "1 if the source answered in the last run, 0 if it failed and its last "
+                "good result (if any) was used.",
+                [({"source": k}, int(up)) for k, (up, _) in sorted(self.sources.items())],
+            )
+            metric(
+                "radares_source_data_age_seconds",
+                "gauge",
+                "Age of the source data in use; grows while the source keeps failing.",
+                [
+                    ({"source": k}, max(0.0, now - at))
+                    for k, (_, at) in sorted(self.sources.items())
+                    if at is not None
+                ],
             )
             metric(
                 "radares_weekly_list_found",

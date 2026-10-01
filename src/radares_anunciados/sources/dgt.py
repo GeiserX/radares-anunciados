@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 
-from ..model import Radar
+from .. import net
+from ..model import Radar, SourceResult, Stretch
+from .base import Context, Source
 
 URL = "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml"
 ATTRIBUTION = "Dirección General de Tráfico (CC BY 4.0)"
@@ -30,6 +32,11 @@ def _coords(point: ET.Element) -> tuple[float, float]:
     )
 
 
+def _km(ref: ET.Element | None) -> float | None:
+    dist = _text(ref, f"{_D}referencePointDistance") if ref is not None else None
+    return round(float(dist) / 1000, 3) if dist else None
+
+
 def _label(ref: ET.Element | None) -> str:
     """'A-7 km 580.3 (sentido ALMERIA)' from a DATEX referencePoint."""
     if ref is None:
@@ -45,20 +52,31 @@ def _label(ref: ET.Element | None) -> str:
     return label
 
 
-def parse(xml: bytes, provinces: set[str], radius_m: int = 500) -> list[Radar]:
-    """Radars in the given INE province codes (e.g. {"30"} for Murcia)."""
+def parse(
+    xml: bytes, provinces: set[str] | frozenset[str] | None, radius_m: int = 500
+) -> list[Radar]:
+    """Radars in the given INE province codes (e.g. {"30"} for Murcia; None: all)."""
+    return parse_all(xml, provinces, radius_m).radars
+
+
+def parse_all(
+    xml: bytes, provinces: set[str] | frozenset[str] | None, radius_m: int = 500
+) -> SourceResult:
+    """Radars, and each average-speed section as a stretch, in ``provinces``."""
     root = ET.fromstring(xml)
     radars: list[Radar] = []
+    stretches: list[Stretch] = []
     for loc_set in root.iter(f"{_D}predefinedLocationSet"):
         for loc in loc_set.findall(f"{_D}predefinedLocation"):
             province = _text(loc, f".//{_D}provinceINEIdentifier")
-            if province not in provinces:
+            if provinces is not None and province not in provinces:
                 continue
             inner = loc.find(f"{_D}predefinedLocation")
             if inner is None:
                 continue
             source_id = loc.get("id", "").removeprefix("GUID_")
             kind = inner.get(_XSI_TYPE, "").split(":")[-1]
+            direction = _text(inner, f".//{_D}directionNamed")
             if kind == "Point":
                 point = inner.find(f"{_D}tpegpointLocation/{_D}point")
                 lat, lon = _coords(point)
@@ -74,19 +92,23 @@ def parse(xml: bytes, provinces: set[str], radius_m: int = 500) -> list[Radar]:
                         radius_m=radius_m,
                         url=URL,
                         attribution=ATTRIBUTION,
+                        direction=direction,
+                        province=province,
                     )
                 )
             elif kind == "Linear":
                 # An average-speed section has a camera at each end; direction
                 # is "unknown" in the data, so both ends get a circle.
                 linear = inner.find(f"{_D}tpeglinearLocation")
-                primary = f".//{_D}referencePointPrimaryLocation/{_D}referencePoint"
-                start = _label(inner.find(primary))
+                primary = inner.find(f".//{_D}referencePointPrimaryLocation/{_D}referencePoint")
+                second = inner.find(f".//{_D}referencePointSecondaryLocation/{_D}referencePoint")
+                start = _label(primary)
+                ends = {}
                 for end in ("from", "to"):
                     point = linear.find(f"{_D}{end}")
                     if point is None:
                         continue
-                    lat, lon = _coords(point)
+                    ends[end] = lat, lon = _coords(point)
                     radars.append(
                         Radar(
                             id=f"dgt-{source_id}-{end}",
@@ -98,6 +120,38 @@ def parse(xml: bytes, provinces: set[str], radius_m: int = 500) -> list[Radar]:
                             radius_m=radius_m,
                             url=URL,
                             attribution=ATTRIBUTION,
+                            direction=direction,
+                            province=province,
                         )
                     )
-    return radars
+                if len(ends) == 2:
+                    stretches.append(
+                        Stretch(
+                            id=f"dgt-{source_id}",
+                            source="dgt",
+                            name=f"Tramo {start}",
+                            road=_text(primary, f"{_D}roadNumber") if primary is not None else None,
+                            start=ends["from"],
+                            end=ends["to"],
+                            km_from=_km(primary),
+                            km_to=_km(second),
+                            direction=direction,
+                            province=province,
+                            url=URL,
+                            attribution=ATTRIBUTION,
+                        )
+                    )
+    return SourceResult(radars=radars, stretches=stretches)
+
+
+def fetch(ctx: Context) -> SourceResult:
+    return parse_all(net.cached_get(URL, max_age_s=ctx.max_age_s), ctx.provinces)
+
+
+SOURCE = Source(
+    key="dgt",
+    fetch=fetch,
+    attribution=ATTRIBUTION,
+    licence="CC BY 4.0",
+    max_age_s=86_400,
+)

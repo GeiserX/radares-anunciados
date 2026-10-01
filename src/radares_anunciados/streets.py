@@ -16,10 +16,12 @@ from __future__ import annotations
 import json
 import re
 import unicodedata
-from dataclasses import dataclass, field
-from datetime import date
+from collections import Counter
+from collections.abc import Callable
+from dataclasses import dataclass
 
 from .geo import cover, densify, distance_m
+from .model import Announced, WeeklyList  # noqa: F401  (sources import them from here)
 
 NEAR_M = 5000  # a street farther than this from its district is not it
 CLIP_M = 1500  # keep the stretch up to this much farther than the nearest point
@@ -46,24 +48,13 @@ _ACCENTS = {"a": "aá", "e": "eé", "i": "ií", "o": "oó", "u": "uúü", "n": "
 
 
 @dataclass(frozen=True)
-class Announced:
-    street: str  # "Camino de Tiñosa"
-    place: str | None  # "Los Dolores"
+class Placed:
+    """An announced street on the map: circle centres, the speed limit OSM gives
+    for most of the stretch (None if untagged), and the radius of the circles."""
 
-    def label(self) -> str:
-        return self.street + (f" ({self.place})" if self.place else "")
-
-
-@dataclass
-class WeeklyList:
-    """What one weekly police list gave this run: the metrics and the
-    notification report it, because a skipped street is a radar with no warning."""
-
-    source: str  # "murcia"
-    week: date  # the Monday
-    published: date | None = None  # None: no list found for this week yet
-    streets: list[Announced] = field(default_factory=list)
-    skipped: list[Announced] = field(default_factory=list)  # not placed on the map
+    centres: list[tuple[float, float]]
+    maxspeed: int | None
+    radius_m: float
 
 
 def fold(text: str) -> str:
@@ -159,9 +150,20 @@ def _places(elements: list[dict]) -> dict[str, list[tuple[float, float]]]:
     return places
 
 
-def _near(
-    lines: list[list[tuple[float, float]]], anchors: list[tuple[float, float]]
-) -> list[list[tuple[float, float]]]:
+Line = list[tuple[float, float]]
+Way = tuple[Line, int | None]  # points and the way's maxspeed
+
+
+def maxspeed_kmh(tag: str | None) -> int | None:
+    """km/h from an OSM ``maxspeed`` value: "50" and "50 km/h" give 50; "30 mph",
+    "ES:urban", "none" and "30;50" give None (not a single limit we can trust)."""
+    if not tag:
+        return None
+    match = re.fullmatch(r"\s*(\d{1,3})\s*(km/h|kmh|kph)?\s*", tag)
+    return int(match.group(1)) if match and int(match.group(1)) > 0 else None
+
+
+def _near(ways: list[Way], anchors: list[tuple[float, float]]) -> list[Way]:
     """The stretch of the street near the district, as runs of points.
 
     Keeps every point up to ``CLIP_M`` farther from the district than the
@@ -169,58 +171,85 @@ def _near(
     in; that costs an extra alert, while cutting a real stretch would cost a
     missed one.
     """
-    if not lines or not anchors:
+    if not ways or not anchors:
         return []
 
     def gap(p: tuple[float, float]) -> float:
         return min(distance_m(p, a) for a in anchors)
 
-    dense = [densify(line, 20.0) for line in lines]
-    best = min(gap(p) for line in dense for p in line)
+    dense = [(densify(line, 20.0), speed) for line, speed in ways]
+    best = min(gap(p) for line, _ in dense for p in line)
     if best > NEAR_M:
         return []
-    runs: list[list[tuple[float, float]]] = []
-    for line in dense:
-        run: list[tuple[float, float]] = []
+    runs: list[Way] = []
+    for line, speed in dense:
+        run: Line = []
         for p in line:
             if gap(p) <= best + CLIP_M:
                 run.append(p)
             elif run:
-                runs.append(run)
+                runs.append((run, speed))
                 run = []
         if run:
-            runs.append(run)
+            runs.append((run, speed))
     return runs
+
+
+def _limit(runs: list[Way]) -> int | None:
+    """The limit on most of the stretch, by points (20 m apart once densified).
+    A tie goes to the higher limit, which draws the larger circles."""
+    weight: Counter[int] = Counter()
+    for line, speed in runs:
+        if speed:
+            weight[speed] += len(line)
+    if not weight:
+        return None
+    return max(weight, key=lambda s: (weight[s], s))
+
+
+def place(
+    items: list[Announced],
+    overpass_json: bytes,
+    radius_m: float | Callable[[int | None], float],
+) -> dict[Announced, Placed]:
+    """Each announced street on the map. ``radius_m`` is a number, or a function
+    of the street's limit (None when OSM has no single limit for it). A street or
+    district not found gets no centres."""
+    elements = json.loads(overpass_json).get("elements", [])
+    places = _places(elements)
+    ways: dict[tuple[str | None, str], list[Way]] = {}
+    seen: set[int] = set()
+    for el in elements:
+        if el["type"] == "way" and "geometry" in el and el["id"] not in seen:
+            seen.add(el["id"])  # two districts' searches can return the same way
+            tags = el.get("tags", {})
+            line = [(g["lat"], g["lon"]) for g in el["geometry"]]
+            way = (line, maxspeed_kmh(tags.get("maxspeed")))
+            ways.setdefault(street_key(tags.get("name", "")), []).append(way)
+
+    result: dict[Announced, Placed] = {}
+    for item in items:
+        kind, core = street_key(item.street)
+        same_type = [w for (k, c), g in ways.items() if c == core and k == kind for w in g]
+        any_type = [w for (k, c), g in ways.items() if c == core for w in g]
+        if not item.place:
+            runs = same_type or any_type
+        else:
+            # A district we can't find means we can't tell which of the
+            # same-named streets it is: better no circle than a dozen wrong ones.
+            anchors = _anchors(item.place, places)
+            # The press writes "Calle Campillo" for what is mapped as "Carril
+            # Campillo": fall back to any street type only if none of the stated
+            # type is near the district.
+            runs = _near(same_type, anchors) or _near(any_type, anchors)
+        limit = _limit(runs)
+        radius = radius_m(limit) if callable(radius_m) else radius_m
+        result[item] = Placed(cover([line for line, _ in runs], radius), limit, radius)
+    return result
 
 
 def locate(
     items: list[Announced], overpass_json: bytes, radius_m: float
 ) -> dict[Announced, list[tuple[float, float]]]:
     """Circle centres per announced street. A street or district not found maps to []."""
-    elements = json.loads(overpass_json).get("elements", [])
-    places = _places(elements)
-    ways: dict[tuple[str | None, str], list[list[tuple[float, float]]]] = {}
-    seen: set[int] = set()
-    for el in elements:
-        if el["type"] == "way" and "geometry" in el and el["id"] not in seen:
-            seen.add(el["id"])  # two districts' searches can return the same way
-            line = [(g["lat"], g["lon"]) for g in el["geometry"]]
-            ways.setdefault(street_key(el.get("tags", {}).get("name", "")), []).append(line)
-
-    result: dict[Announced, list[tuple[float, float]]] = {}
-    for item in items:
-        kind, core = street_key(item.street)
-        same_type = [ln for (k, c), g in ways.items() if c == core and k == kind for ln in g]
-        any_type = [ln for (k, c), g in ways.items() if c == core for ln in g]
-        if not item.place:
-            result[item] = cover(same_type or any_type, radius_m)
-            continue
-        # A district we can't find means we can't tell which of the
-        # same-named streets it is: better no circle than a dozen wrong ones.
-        anchors = _anchors(item.place, places)
-        # The press writes "Calle Campillo" for what is mapped as "Carril
-        # Campillo": fall back to any street type only if none of the stated
-        # type is near the district.
-        runs = _near(same_type, anchors) or _near(any_type, anchors)
-        result[item] = cover(runs, radius_m)
-    return result
+    return {item: p.centres for item, p in place(items, overpass_json, radius_m).items()}

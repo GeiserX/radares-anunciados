@@ -14,16 +14,19 @@ import html
 import json
 import logging
 import re
+from collections.abc import Callable
 from datetime import date, timedelta
 
 from .. import net
-from ..model import Radar
-from ..streets import STREET_TYPES, Announced, WeeklyList, locate, places_query, ways_query
+from ..model import Radar, SourceResult
+from ..streets import STREET_TYPES, Announced, WeeklyList, place, places_query, ways_query
+from .base import Context, Source
 
 log = logging.getLogger(__name__)
 
 # Municipality of Murcia with a margin, (south, west, north, east)
 BBOX = (37.78, -1.40, 38.10, -0.93)
+PROVINCE = "30"
 ATTRIBUTION = "Policía Local de Murcia (lista semanal); geometría © OpenStreetMap"
 
 OVERPASS = "https://overpass-api.de/api/interpreter"
@@ -169,14 +172,16 @@ def to_radars(
     items: list[Announced],
     overpass_json: bytes,
     published: date,
-    radius_m: int,
+    radius_m: float | Callable[[int | None], float],
     url: str | None,
     skipped: list[Announced] | None = None,
 ) -> list[Radar]:
-    """Circles for every street placed on the map; the others go to ``skipped``."""
+    """Circles for every street placed on the map; the others go to ``skipped``.
+    ``radius_m`` is a number or a function of the street's limit in OSM."""
     start, end = week_of(published)
     radars: list[Radar] = []
-    for item, centres in locate(items, overpass_json, radius_m).items():
+    for item, placed in place(items, overpass_json, radius_m).items():
+        centres = placed.centres
         if not centres:
             log.warning("could not place %s (%s) on the map; skipped", item.street, item.place)
             if skipped is not None:
@@ -193,17 +198,21 @@ def to_radars(
                     name=label,
                     lat=lat,
                     lon=lon,
-                    radius_m=radius_m,
+                    radius_m=round(placed.radius_m),
                     valid_from=start,
                     valid_to=end,
                     url=url,
                     attribution=ATTRIBUTION,
+                    maxspeed=placed.maxspeed,
+                    province=PROVINCE,
                 )
             )
     return radars
 
 
-def fetch(day: date, radius_m: int = 300) -> tuple[list[Radar], WeeklyList]:
+def fetch(
+    day: date, radius_m: float | Callable[[int | None], float] = 300
+) -> tuple[list[Radar], WeeklyList]:
     """This week's radars ([] if the list is not published yet) and what the list gave."""
     status = WeeklyList("murcia", week_of(day)[0])
     found = find_article(day)
@@ -222,3 +231,18 @@ def fetch(day: date, radius_m: int = 300) -> tuple[list[Radar], WeeklyList]:
         {"elements": json.loads(places)["elements"] + json.loads(ways)["elements"]}
     ).encode()
     return to_radars(items, overpass, published, radius_m, url, status.skipped), status
+
+
+def fetch_source(ctx: Context) -> SourceResult:
+    radars, status = fetch(ctx.day, ctx.radius.street_m)
+    return SourceResult(radars=radars, lists=[status])
+
+
+SOURCE = Source(
+    key="murcia",
+    fetch=fetch_source,
+    attribution=ATTRIBUTION,
+    licence="the council's list as reprinted by the press; geometry ODbL 1.0",
+    max_age_s=7 * 86_400,
+    provinces=frozenset({PROVINCE}),
+)

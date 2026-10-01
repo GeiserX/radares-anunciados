@@ -1,8 +1,8 @@
-"""The one record every source produces."""
+"""The records every source produces."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 
 
@@ -25,6 +25,12 @@ class Radar:
     valid_to: date | None = None
     url: str | None = None  # where the position was published
     attribution: str = ""
+    maxspeed: int | None = None  # km/h, when the source or the map says it
+    direction: str | None = None  # as the source writes it: "ALMERIA", "200", "forward"
+    province: str | None = None  # INE province code, "30"; None when the source doesn't say
+    # False: a street from a periodic list whose period ended. It keeps its zone,
+    # with another icon, until it is announced again or ages out.
+    active: bool = True
 
     def active_on(self, day: date) -> bool:
         if self.valid_from and day < self.valid_from:
@@ -32,3 +38,57 @@ class Radar:
         if self.valid_to and day > self.valid_to:
             return False
         return True
+
+
+@dataclass(frozen=True)
+class Stretch:
+    """A road stretch where a control is published, such as a DGT section or a
+    stretch where mobile radars run. Written to the feed as a line; it never
+    becomes a zone by default (a 40 km stretch is no place for a circle)."""
+
+    id: str
+    source: str
+    name: str
+    road: str | None
+    start: tuple[float, float]  # (lat, lon)
+    end: tuple[float, float]
+    line: tuple[tuple[float, float], ...] | None = None  # (lat, lon) points, start to end
+    km_from: float | None = None
+    km_to: float | None = None
+    maxspeed: int | None = None
+    direction: str | None = None
+    province: str | None = None
+    url: str | None = None
+    attribution: str = ""
+
+
+@dataclass(frozen=True)
+class Announced:
+    """One line of a police list: a street and, usually, its district."""
+
+    street: str  # "Camino de Tiñosa"
+    place: str | None  # "Los Dolores"
+
+    def label(self) -> str:
+        return self.street + (f" ({self.place})" if self.place else "")
+
+
+@dataclass
+class WeeklyList:
+    """What one periodic police list gave this run: the metrics and the
+    notification report it, because a skipped street is a radar with no warning."""
+
+    source: str  # "murcia"
+    week: date  # the Monday
+    published: date | None = None  # None: no list found for this week yet
+    streets: list[Announced] = field(default_factory=list)
+    skipped: list[Announced] = field(default_factory=list)  # not placed on the map
+
+
+@dataclass
+class SourceResult:
+    """Everything one source gave in one fetch."""
+
+    radars: list[Radar] = field(default_factory=list)
+    stretches: list[Stretch] = field(default_factory=list)
+    lists: list[WeeklyList] = field(default_factory=list)
