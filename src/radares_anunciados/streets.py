@@ -16,7 +16,8 @@ from __future__ import annotations
 import json
 import re
 import unicodedata
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import date
 
 from .geo import cover, densify, distance_m
 
@@ -48,6 +49,21 @@ _ACCENTS = {"a": "aá", "e": "eé", "i": "ií", "o": "oó", "u": "uúü", "n": "
 class Announced:
     street: str  # "Camino de Tiñosa"
     place: str | None  # "Los Dolores"
+
+    def label(self) -> str:
+        return self.street + (f" ({self.place})" if self.place else "")
+
+
+@dataclass
+class WeeklyList:
+    """What one weekly police list gave this run: the metrics and the
+    notification report it, because a skipped street is a radar with no warning."""
+
+    source: str  # "murcia"
+    week: date  # the Monday
+    published: date | None = None  # None: no list found for this week yet
+    streets: list[Announced] = field(default_factory=list)
+    skipped: list[Announced] = field(default_factory=list)  # not placed on the map
 
 
 def fold(text: str) -> str:

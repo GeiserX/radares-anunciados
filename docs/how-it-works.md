@@ -31,8 +31,10 @@ Murcia has a dozen streets called Avenida Juan Carlos I, so a name alone is not 
 3. Only the stretch near the district is kept, then covered with 300 m circles that overlap, so a car
    anywhere on it is inside one.
 
-A street or district it can't find is skipped and logged, never guessed. Over five real weeks (26
-streets) one was skipped: "Carril Molino Batán", which OpenStreetMap only has as "Camino del Batán".
+A street or district it can't find is skipped and logged, never guessed. The "Radares actualizados"
+notification names it and [`/metrics`](alerting.md) exports it, so you know that street has no
+warning. Over five real weeks (26 streets) one was skipped: "Carril Molino Batán", which
+OpenStreetMap only has as "Camino del Batán".
 
 ## Why 20 zones is enough
 

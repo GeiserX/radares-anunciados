@@ -60,6 +60,9 @@ The iOS app only downloads new zones while it is open on screen. After every cha
 "Radares actualizados" to the phones in `RADARES_NOTIFY`; tap it and the new zones load. Until you do,
 the phone keeps warning about last week's streets.
 
+If a street from the week's list can't be placed on the map, that notification names it after "Sin
+aviso". That street gets no zone, so it gives no warning this week.
+
 ## Settings
 
 | Variable | Default | What it does |
@@ -73,6 +76,13 @@ the phone keeps warning about last week's streets.
 | `RADARES_NOTIFY` | | notify services told to open the app after a change |
 | `RADARES_INTERVAL` | `3600` | seconds between runs |
 | `RADARES_CACHE` | `~/.cache/radares-anunciados` | where downloads are cached |
+| `RADARES_METRICS_PORT` | `9464` | port of `/metrics` and `/healthz`; empty or `0` turns them off |
 
 `radares feed` prints the merged list as GeoJSON, for anyone who wants the data without Home
 Assistant. [How it works](how-it-works.md) covers the sources and the zone logic.
+
+## Know when it stops warning
+
+A failing run, a week without a list and a street it can't place on the map all leave you without a
+warning while the container keeps running. [Alerting](alerting.md) covers the `/metrics` and `/healthz`
+endpoints and has Prometheus alert rules for all three.

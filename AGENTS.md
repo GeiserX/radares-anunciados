@@ -28,6 +28,7 @@ interferes with a radar signal is out of scope, whoever asks for it.
 - `src/radares_anunciados/sources/`: one module per source (`dgt`, `osm`, `murcia`), each returning `Radar`s
 - `streets.py`: street + district from a police list to circle centres (two Overpass queries)
 - `feed.py`: merge, dedupe, GeoJSON; `ha.py`: Home Assistant zone sync over the websocket API
+- `metrics.py`: `/metrics` and `/healthz` of `radares run`, standard library only ([`docs/alerting.md`](docs/alerting.md))
 - [`blueprints/radar_zone_alert.yaml`](blueprints/radar_zone_alert.yaml): the automation that sends the alert
 - [`tests/fixtures/`](tests/fixtures/): real pages and responses, trimmed. Tests never touch the network.
 - [`docs/how-it-works.md`](docs/how-it-works.md) explains the design in full.
@@ -40,7 +41,8 @@ interferes with a radar signal is out of scope, whoever asks for it.
 - Never send Overpass a name regex over the whole municipality. It answers 504. Look up the districts
   first, then search `around` them.
 - La Opinión's street list is `ul.ft-list--primary`. A plain `ft-list` on the same page holds headlines.
-- A street or district not found is skipped and logged, never guessed.
+- A street or district not found is skipped, never guessed. It is logged, exported as
+  `radares_street_skipped` and named in the "Radares actualizados" notification.
 - One radar drawn as several circles is named `Radar anunciado …` (police list) or `Radar de tramo …`
   (section). The blueprint alerts once per such name; every other zone alerts on its own, because
   names like OSM's `Radar (límite 50)` repeat across different cameras.
