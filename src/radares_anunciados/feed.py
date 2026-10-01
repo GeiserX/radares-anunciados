@@ -10,7 +10,8 @@ from datetime import date, timedelta
 from .geo import distance_m
 from .model import Radar, Stretch
 
-# An OSM camera this close to a DGT radar is the same camera mapped twice.
+# An OSM camera this close to a radar an authority publishes (DGT, SCT, any
+# official source) is the same camera mapped twice.
 DUPLICATE_M = 150
 
 
@@ -18,14 +19,16 @@ def merge(radars: list[Radar], day: date) -> list[Radar]:
     """Radars in force on ``day`` and dormant ones, active first, then by id,
     without duplicates.
 
-    Dropped: OSM cameras that copy a DGT radar, and any radar at exactly the
+    Dropped: OSM cameras that copy an official radar, and any radar at exactly the
     spot of one already kept (the DGT lists both directions of a section with
     the same two end points). The phone watches only 20 zones; two at one spot
     waste one. A dormant circle under an active one gives way to it.
     """
     wanted = (r for r in radars if not r.active or r.active_on(day))
     ordered = sorted(wanted, key=lambda r: (not r.active, r.id))
-    official = [r for r in ordered if r.source == "dgt"]
+    # Every source but OSM publishes official positions. A street from a police
+    # list is not a camera, so an OSM camera on it is no copy of it.
+    official = [r for r in ordered if r.source != "osm" and r.kind != "mobile_announced"]
     kept: list[Radar] = []
     spots: set[tuple[float, float]] = set()
     for r in ordered:

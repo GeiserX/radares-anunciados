@@ -33,7 +33,7 @@ def ctx(**kw) -> Context:
 
 
 def test_every_source_is_registered_with_its_terms():
-    assert list(sources.REGISTRY) == ["dgt", "osm", "murcia"]
+    assert list(sources.REGISTRY) == ["dgt", "osm", "murcia", "sct", "sct_remolc"]
     for key, source in sources.REGISTRY.items():
         assert source.key == key
         assert callable(source.fetch)
@@ -49,7 +49,8 @@ def test_selected_sources():
     assert keys(sources.selected(["osm", "dgt"], None)) == ["dgt", "osm"]
     # a city list outside the selected provinces is not fetched
     assert keys(sources.selected(None, frozenset({"28"}))) == ["dgt", "osm"]
-    assert keys(sources.selected(None, None)) == ["dgt", "osm", "murcia"]
+    assert keys(sources.selected(None, None)) == ["dgt", "osm", "murcia", "sct", "sct_remolc"]
+    assert keys(sources.selected(None, frozenset({"08"}))) == ["dgt", "osm", "sct", "sct_remolc"]
     with pytest.raises(ValueError, match="nope"):
         sources.selected(["dgt", "nope"], None)
 
