@@ -26,17 +26,23 @@ measured against this file's own radars on 2026-10-01: median 34 m, but 27 of
 carry two km sequences (the C-58 motorway and the old C-58 by Montserrat). No
 check at run time can tell which placements are wrong, so none are drawn.
 
+A file that loses more than ``MAX_SKIPPED`` of its rows is refused as a whole:
+on 2026-10-01 17 of 247 rows were broken, and an export that breaks a third of
+them would otherwise replace the last good result and delete valid zones.
+
 Reuse: the files fall under the gencat.cat reuse terms, the "Llicència oberta
 d'ús d'informació – Catalunya" (the open-data catalogue lists radars.txt as
 dataset re3y-fftf with that licence). It asks to cite the source as
 "Generalitat de Catalunya. Departament de ... . [organisme]" and to state the
-date of the last update.
+date of the last update: the file's ``Last-Modified``, asked with a HEAD
+request on each fetch and added to the attribution.
 """
 
 from __future__ import annotations
 
 import logging
 import re
+import time
 from collections.abc import Callable, Iterator
 from dataclasses import replace
 
@@ -45,6 +51,7 @@ from ..geo import utm_to_wgs84
 from ..model import Radar, SourceResult
 from .base import Context, Source
 from .catalonia_shapes import province
+from .dgt_freshness import head, parse_last_modified
 
 log = logging.getLogger(__name__)
 
@@ -57,6 +64,7 @@ ATTRIBUTION = (
 LICENCE = "Llicència oberta d'ús d'informació – Catalunya"
 PROVINCES = frozenset({"08", "17", "25", "43"})
 UTM_ZONE = 31
+MAX_SKIPPED = 1 / 3  # share of unusable rows past which the file is refused
 
 # ETRS89 UTM 31N of Catalonia with a margin. Outside it a row's coordinates are
 # broken, and some broken ones would overflow the projection.
@@ -151,8 +159,9 @@ def _radar(row: list[str], key: str, url: str, trailer: bool) -> Radar | None:
 def _parse(rows: Iterator[list[str]], key: str, url: str, trailer: bool) -> list[Radar]:
     """Every usable row. Two rows at one PK (a radar in each direction, two
     trailer spots) get "-2", "-3" on their ids, in file order. A file that
-    yields no radar at all raises: its format changed, and the last good result
-    is better than none."""
+    yields no radar at all, or loses more than ``MAX_SKIPPED`` of its rows,
+    raises: its format changed or the export broke, and the last good result is
+    better than a gutted one."""
     radars: list[Radar] = []
     seen: dict[str, int] = {}
     total = 0
@@ -167,8 +176,11 @@ def _parse(rows: Iterator[list[str]], key: str, url: str, trailer: bool) -> list
         radars.append(radar)
     if not radars:
         raise ValueError(f"{key}: no usable row in {url}")
-    if len(radars) < total:
-        log.warning("%s: %d of %d rows skipped", key, total - len(radars), total)
+    skipped = total - len(radars)
+    if skipped > MAX_SKIPPED * total:
+        raise ValueError(f"{key}: {skipped} of {total} rows unusable in {url}; file refused")
+    if skipped:
+        log.warning("%s: %d of %d rows skipped", key, skipped, total)
     return radars
 
 
@@ -180,9 +192,26 @@ def parse_trailer(text: str) -> list[Radar]:
     return _parse(trailer_rows(text), "sct_remolc", TRAILER_URL, trailer=True)
 
 
+def last_update(url: str) -> str | None:
+    """The day the file last changed (its Last-Modified), or None. Never raises:
+    without the date the radars still come, credited without it."""
+    try:
+        modified = parse_last_modified(head(url).get("last-modified"))
+    except Exception as exc:
+        log.warning("could not read Last-Modified of %s: %s", url, exc)
+        return None
+    if modified is None:
+        log.warning("%s sent no Last-Modified; credited without a date", url)
+        return None
+    return time.strftime("%Y-%m-%d", time.gmtime(modified))
+
+
 def _fetch(ctx: Context, url: str, parse: Callable[[str], list[Radar]]) -> SourceResult:
     text = net.cached_get(url, max_age_s=ctx.max_age_s).decode("utf-8", errors="replace")
     radars = parse(text)
+    updated = last_update(url)
+    if updated:
+        radars = [replace(r, attribution=f"{r.attribution}, actualizado {updated}") for r in radars]
     if ctx.provinces is not None:
         radars = [r for r in radars if r.province in ctx.provinces]
     return SourceResult(radars=radars)

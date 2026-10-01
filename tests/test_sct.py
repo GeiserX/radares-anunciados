@@ -1,3 +1,4 @@
+import logging
 from datetime import date
 from pathlib import Path
 
@@ -14,6 +15,22 @@ FIX = Path(__file__).parent / "fixtures"
 # broken rows the publisher ships (a missing decimal comma, two northings).
 FIXED = (FIX / "sct_radars.txt").read_text()
 TRAILER = (FIX / "sct_radars-remolc.txt").read_text()
+
+
+# The real HEAD answer for radars.txt on 2026-10-01.
+HEAD = dict(
+    line.split(": ", 1)
+    for line in (FIX / "sct_radars_head.txt").read_text().splitlines()
+    if ": " in line
+)
+
+
+@pytest.fixture(autouse=True)
+def offline_head(monkeypatch):
+    def head(url):
+        raise OSError("tests never touch the network")
+
+    monkeypatch.setattr(sct, "head", head)
 
 
 def by_id(radars: list[Radar]) -> dict[str, Radar]:
@@ -115,7 +132,9 @@ def test_province_of_points_in_and_out_of_catalonia():
     assert province(41.2500, 2.2500) is None  # 9.5 km out to sea
 
 
-def test_a_row_inside_the_utm_box_but_outside_catalonia_is_skipped():
+def test_a_row_inside_the_utm_box_but_outside_catalonia_is_skipped(monkeypatch):
+    # a fifth unusable row of 14 crosses MAX_SKIPPED, which is not under test here
+    monkeypatch.setattr(sct, "MAX_SKIPPED", 1.0)
     # The TV-3141 row moved to Fraga, in Aragon: plausible numbers, wrong place.
     moved = FIXED.replace("340194,8559 4554277,8842", "279000,0000 4599500,0000")
     ids = {r.id for r in sct.parse_fixed(moved)}
@@ -172,3 +191,29 @@ def test_merge_keeps_an_osm_camera_on_an_announced_street():
     )
     camera = _osm(37.9805, -1.13)  # 55 m away: a fixed camera, not the police's van
     assert len(feed.merge([street, camera], date(2026, 10, 1))) == 2
+
+
+def test_a_file_that_lost_a_large_share_of_its_rows_is_refused(caplog):
+    # The fixture keeps 4 broken rows of 14 and passes, with the count logged. Two
+    # more rows without their decimal comma (6 of 14) look like a bad export: the
+    # source raises and the registry keeps the last good result.
+    with caplog.at_level(logging.WARNING):
+        assert len(sct.parse_fixed(FIXED)) == 10
+    assert "4 of 14 rows skipped" in caplog.text
+    worse = FIXED.replace("441144,0836", "4411440836 ").replace("416219,5211", "4162195211 ")
+    assert worse != FIXED
+    with pytest.raises(ValueError, match="6 of 14 rows"):
+        sct.parse_fixed(worse)
+
+
+def test_the_attribution_carries_the_date_of_the_files_last_update(monkeypatch):
+    # The gencat reuse terms ask for the date of the last update.
+    payloads = {sct.FIXED_URL: FIXED.encode(), sct.TRAILER_URL: TRAILER.encode()}
+    monkeypatch.setattr(net, "cached_get", lambda url, **kw: payloads[url])
+    every = Context(day=date(2026, 10, 1), provinces=None, boxes=(), radius=Radius())
+    monkeypatch.setattr(sct, "head", lambda url: {k.lower(): v for k, v in HEAD.items()})
+    radars = sct.SOURCE.fetch(every).radars
+    assert {r.attribution for r in radars} == {sct.ATTRIBUTION + ", actualizado 2026-09-17"}
+    # no date to be had: the radars still come, credited without it
+    monkeypatch.setattr(sct, "head", lambda url: {})
+    assert {r.attribution for r in sct.SOURCE.fetch(every).radars} == {sct.ATTRIBUTION}
