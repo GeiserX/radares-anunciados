@@ -24,10 +24,12 @@ published one.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import math
 import re
+import time
 from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -565,20 +567,45 @@ def to_radars(
     return radars, status
 
 
+def load_street_map(max_age_s: int = 30 * 86_400) -> StreetMap:
+    """The map changes slowly: one download a month. Unlike ``net.cached_get``, an
+    answer is cached only once it reads as a map: Overpass answers 200 with an
+    error remark when it is busy, and a cached bad copy would keep León down
+    until the month is over."""
+    query = hashlib.sha256(OVERPASS_QUERY.encode()).hexdigest()[:16]
+    path = net.cache_dir() / f"leon-overpass-{query}.json"
+    if path.exists() and time.time() - path.stat().st_mtime < max_age_s:
+        try:
+            return StreetMap(path.read_bytes())
+        except (OSError, ValueError) as exc:
+            log.warning("the cached map of León is unreadable (%s); downloading it again", exc)
+    body = net.get(OVERPASS, {"data": OVERPASS_QUERY})
+    try:
+        street_map = StreetMap(body)
+    except ValueError as exc:  # not JSON: a proxy's error page
+        raise OSError(f"Overpass did not answer with a map: {exc}") from exc
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".tmp")
+        tmp.write_bytes(body)
+        tmp.replace(path)
+    except OSError as exc:  # an unwritable cache must not fail a download that worked
+        log.warning("could not cache the map of León in %s: %s", path.parent, exc)
+    return street_map
+
+
 def fetch(ctx: Context) -> SourceResult:
     week = week_of(ctx.day)
     found, failed = schedules(ctx.day, ctx.max_age_s)
     covered = {s.day for f in found for s in f.slots}
-    if failed and not set(week) <= covered:
-        # an empty or partial week would delete zones; a failed run keeps the last good ones
+    if failed and any(d >= ctx.day and d not in covered for d in week):
+        # an empty or partial week ahead would delete zones; a failed run keeps the
+        # last good ones. Past days no schedule covers no longer matter.
         raise OSError(f"could not read the León radar schedule: {failed[0]}") from failed[0]
     if not found:
         log.info("no León radar schedule found for the week of %s", week[0])
         return SourceResult(lists=[WeeklyList("leon", week[0])])
-    # the map changes slowly; one download a month
-    street_map = StreetMap(
-        net.cached_get(OVERPASS, {"data": OVERPASS_QUERY}, max_age_s=30 * 86_400)
-    )
+    street_map = load_street_map()
     radars, status = to_radars(found, street_map, ctx.radius.street_m, week)
     return SourceResult(radars=radars, lists=[status])
 

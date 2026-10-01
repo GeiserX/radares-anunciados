@@ -267,7 +267,11 @@ def fake_net(monkeypatch, pages):
             raise OSError(f"404 {url}")
         return body if isinstance(body, bytes) else body.encode()
 
+    def get(url, data=None, headers=None, timeout=90, tries=3):
+        return cached_get(url, data, headers)
+
     monkeypatch.setattr(net, "cached_get", cached_get)
+    monkeypatch.setattr(net, "get", get)
     return calls
 
 
@@ -316,6 +320,50 @@ def test_fetch_raises_when_downloads_fail_and_the_week_is_not_covered(monkeypatc
     fake_net(monkeypatch, {})
     with pytest.raises(OSError):
         leon.fetch(ctx())
+
+
+def test_a_failed_fallback_does_not_matter_when_today_on_is_covered(monkeypatch):
+    # Thursday 1 Oct: the October post covers today to Sunday; 28-30 Sep are
+    # past, so iLeón failing to answer must not take León down.
+    fake_net(monkeypatch, pages(**{SITEMAP_SEP: OSError("timed out")}))
+    result = leon.fetch(ctx())
+    assert {r.valid_from for r in result.radars} >= {date(2026, 10, d) for d in range(1, 5)}
+    assert all(r.valid_from.month == 10 for r in result.radars)
+
+
+def test_a_failed_fallback_still_fails_when_a_day_ahead_is_uncovered(monkeypatch):
+    # Monday 28 Sep: 28-30 Sep are still ahead and only iLeón has them.
+    fake_net(monkeypatch, pages(**{SITEMAP_SEP: OSError("timed out")}))
+    with pytest.raises(OSError):
+        leon.fetch(ctx(date(2026, 9, 28)))
+
+
+def test_a_bad_overpass_answer_is_not_kept(monkeypatch):
+    # Overpass answers 200 with an error remark when busy. Caching that copy
+    # would keep León down for the month the map is cached. Real file cache here.
+    busy = b'{"elements":[],"remark":"runtime error: Query timed out in \\"query\\" at line 3"}'
+    answers = pages()
+    calls = []
+
+    def get(url, data=None, headers=None, timeout=90, tries=3):
+        calls.append(url)
+        return answers[url] if isinstance(answers[url], bytes) else answers[url].encode()
+
+    monkeypatch.setattr(net, "get", get)
+    for bad in (busy, b"<html>502 Bad Gateway</html>"):
+        answers[leon.OVERPASS] = bad
+        with pytest.raises(OSError):
+            leon.fetch(ctx())
+        assert not list(net.cache_dir().glob("leon-overpass-*"))  # nothing kept
+    answers[leon.OVERPASS] = (FIX / "leon_overpass.json").read_bytes()
+    assert leon.fetch(ctx()).radars  # Overpass healthy again: the next run recovers
+    assert calls.count(leon.OVERPASS) == 3
+    assert leon.fetch(ctx()).radars  # and the good map is now cached
+    assert calls.count(leon.OVERPASS) == 3
+    (cached,) = net.cache_dir().glob("leon-overpass-*")
+    cached.write_bytes(busy)  # a copy cached before this check existed is not trusted
+    assert leon.fetch(ctx()).radars
+    assert calls.count(leon.OVERPASS) == 4
 
 
 def test_nothing_published_yet_is_an_empty_week(monkeypatch):
