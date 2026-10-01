@@ -15,7 +15,8 @@ DAY = 86_400
 
 
 def dgt(id_, name, lat, lon, kind="fixed"):
-    return Radar(f"dgt-{id_}", "dgt", kind, name, lat, lon, 500)
+    credit = "Dirección General de Tráfico (CC BY 4.0)"
+    return Radar(f"dgt-{id_}", "dgt", kind, name, lat, lon, 500, attribution=credit)
 
 
 # Real DGT radars (feed of 2026-10-01) and what OpenStreetMap says of their road.
@@ -151,6 +152,8 @@ def test_fill_batches_and_keeps_what_has_a_limit(monkeypatch, cache):
     filled = osm_limits.fill([*radars, street, published], now=NOW)
     assert [len(c) for c in calls] == [4, 4, 4]  # 12 radars, 3 queries, never one each
     assert [r.maxspeed for r in filled[: len(CASES)]] == [kmh for _, kmh in CASES]
+    assert filled[0].attribution == f"{radars[0].attribution}; {osm_limits.ATTRIBUTION}"
+    assert filled[4].attribution == radars[4].attribution  # no limit found, no OSM data
     assert filled[-2] == street  # a street's circles keep theirs
     assert filled[-1].maxspeed == 100  # a published limit is never replaced
 

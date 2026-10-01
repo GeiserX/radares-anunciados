@@ -22,7 +22,8 @@ Every answer, a limit or none, is kept 30 days per radar position in the cache
 folder, so a run asks only for radars it has not seen. A failed query leaves its
 radars without a limit (the road fallback sizes them) and is retried next run.
 
-Data (c) OpenStreetMap contributors, ODbL 1.0.
+Data (c) OpenStreetMap contributors, ODbL 1.0. A radar given a limit here
+credits OpenStreetMap in its attribution as well as its own source.
 """
 
 from __future__ import annotations
@@ -40,6 +41,9 @@ from .model import Radar
 log = logging.getLogger(__name__)
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+# Added to the attribution of a radar whose limit came from here: the feed then
+# carries OpenStreetMap data even when no OSM camera is in it.
+ATTRIBUTION = "speed limit © OpenStreetMap contributors (ODbL 1.0)"
 AROUND_M = 30  # how far from a radar its road may be; a dual carriageway's two halves fit
 TIE_M = 5  # this close, the radar is on the way (and two pieces of one road meet)
 BATCH = 250  # radars per Overpass query
@@ -264,7 +268,8 @@ def fill(radars: list[Radar], now: float | None = None) -> list[Radar]:
         entry = cache.get(_key(r)) if r.maxspeed is None and r.kind != "mobile_announced" else None
         if entry and entry[0] is not None:
             found += 1
-            r = replace(r, maxspeed=entry[0])
+            credit = f"{r.attribution}; {ATTRIBUTION}" if r.attribution else ATTRIBUTION
+            r = replace(r, maxspeed=entry[0], attribution=credit)
         out.append(r)
     log.info(
         "OSM speed limits: %d of %d radars without a limit got one (%d queries)",
