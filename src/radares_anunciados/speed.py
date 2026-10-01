@@ -22,6 +22,7 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 
+from . import osm_limits
 from .model import Radar
 
 MIN_RADIUS_M = 100  # under 100 m the iOS app splits a zone into 3 of its 20 regions
@@ -37,7 +38,7 @@ _ROAD = re.compile(r"\b[A-Z]{1,3}-\d")
 # every collected radar before the radii are set. Each takes the whole list and
 # returns it with the limits it could find; a radar it can't place keeps
 # ``maxspeed=None`` and the road fallback above.
-LOOKUPS: list[Callable[[list[Radar]], list[Radar]]] = []
+LOOKUPS: list[Callable[[list[Radar]], list[Radar]]] = [osm_limits.fill]
 
 
 def fill_limits(radars: list[Radar]) -> list[Radar]:
