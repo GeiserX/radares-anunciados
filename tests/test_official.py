@@ -54,3 +54,19 @@ def test_a_radar_of_an_unknown_source_is_neither():
     assert len(merged) == 2
     merged = feed.merge([_radar("dgt", 41.0), _radar("gone", 41.0009)], DAY)
     assert len(merged) == 2
+
+
+def test_a_mapped_camera_beside_a_mobile_stretch_circle_stays():
+    # A stretch circle is no camera: the OSM camera 100 m away keeps its own zone
+    # (named as a fixed camera, and ranked before every stretch circle by ha.select).
+    circle = _radar("dgt_invive", 41.0, kind="mobile_stretch")
+    camera = _radar("osm", 41.0009)
+    assert len(feed.merge([circle, camera], DAY)) == 2
+    # a street of a police list is no camera either
+    street = _radar("dgt", 41.0, kind="mobile_announced")
+    assert len(feed.merge([street, camera], DAY)) == 2
+
+
+def test_an_official_trailer_wins_over_a_mapped_copy():
+    trailer = _radar("sct", 41.0, kind="trailer")
+    assert [r.id for r in feed.merge([trailer, _radar("osm", 41.0009)], DAY)] == ["sct-1"]

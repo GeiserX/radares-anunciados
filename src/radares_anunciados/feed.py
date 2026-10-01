@@ -15,13 +15,17 @@ from .sources import REGISTRY
 # camera mapped twice.
 DUPLICATE_M = 150
 
+# Kinds that stand for one camera at one place. A street from a police list
+# (mobile_announced) and a circle of a DGT mobile-radar stretch (mobile_stretch)
+# are no camera, so a mapped camera near one is no copy of it.
+CAMERAS = ("fixed", "section", "trailer")
+
 
 def _official(r: Radar) -> bool:
     """A camera whose position an authority publishes: its source is marked
-    ``official`` in the registry. A street from a police list is not a camera,
-    so a mapped camera on it is no copy of it."""
+    ``official`` in the registry and its kind is in ``CAMERAS``."""
     source = REGISTRY.get(r.source)
-    return source is not None and source.official and r.kind != "mobile_announced"
+    return source is not None and source.official and r.kind in CAMERAS
 
 
 def _mapped(r: Radar) -> bool:
