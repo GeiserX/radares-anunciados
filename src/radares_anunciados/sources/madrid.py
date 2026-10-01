@@ -22,6 +22,7 @@ import logging
 import unicodedata
 
 from .. import net
+from ..geo import distance_m
 from ..model import Radar, SourceResult, Stretch
 from ..provinces import PROVINCES
 from .base import Context, Source
@@ -47,6 +48,11 @@ _LIMIT = "velocidad limite"
 _NEEDED = (_NUMBER, _PLACE, _DIRECTION, _TYPE, _START_LON, _START_LAT, _LON, _LAT, _LIMIT)
 
 _FIXED = "fijo"
+# Madrid lists one row per lane and per section end, so one gantry can be two
+# or three rows a few metres apart (the furthest pair in the 2026 file is 34 m).
+# The phone watches only 20 zones: a camera within this distance of an earlier
+# row with the same limit is the same place and gives no zone of its own.
+SAME_SITE_M = 50
 _SECTION = "radar de tramo"
 
 
@@ -197,7 +203,28 @@ def parse(payload: bytes, url: str, updated: str | None = None) -> SourceResult:
             )
     if not radars:
         raise ValueError("no radar could be read from the CSV")
-    return SourceResult(radars=radars, stretches=stretches)
+    return SourceResult(radars=_one_per_site(radars), stretches=stretches)
+
+
+def _one_per_site(radars: list[Radar]) -> list[Radar]:
+    """The radars in file order, without a camera that sits within SAME_SITE_M
+    of an earlier one with the same limit (the lowest Nº keeps its id)."""
+    kept: list[Radar] = []
+    for r in radars:
+        twin = next(
+            (
+                k
+                for k in kept
+                if k.maxspeed == r.maxspeed
+                and distance_m((k.lat, k.lon), (r.lat, r.lon)) <= SAME_SITE_M
+            ),
+            None,
+        )
+        if twin is None:
+            kept.append(r)
+        else:
+            log.info("madrid: %s is at the site of %s; one zone kept", r.id, twin.id)
+    return kept
 
 
 def fetch(ctx: Context) -> SourceResult:

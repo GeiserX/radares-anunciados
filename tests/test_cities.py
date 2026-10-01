@@ -1,5 +1,6 @@
 """Madrid and Salamanca fixed and section radars, from their open data portals."""
 
+import json
 import logging
 from dataclasses import replace
 from datetime import date
@@ -8,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from radares_anunciados import feed
+from radares_anunciados.geo import distance_m
 from radares_anunciados.sources import Context, madrid, salamanca
 from radares_anunciados.speed import Radius
 
@@ -33,9 +35,10 @@ def test_madrid_reads_every_row_of_the_real_file():
     result = madrid.parse(madrid_csv(), CSV_URL, "2026-07-31")
     fixed = [r for r in result.radars if r.kind == "fixed"]
     sections = [r for r in result.radars if r.kind == "section"]
-    # 27 fixed rows; 9 section rows, each with its start and exit camera
-    assert len(fixed) == 27
-    assert len(sections) == 18
+    # 27 fixed rows and 9 section rows (a start and an exit camera each) are 26
+    # sites: lanes of one gantry and section ends that share a camera are one
+    assert len(fixed) == 20
+    assert len(sections) == 6
     assert len(result.stretches) == 9
     first = next(r for r in fixed if r.id == "madrid-1")
     assert (first.lat, first.lon) == (40.47934148, -3.67433808)
@@ -69,16 +72,19 @@ def test_madrid_skips_and_logs_rows_it_cannot_read(caplog):
     blank_type = "41;" + lines[1].split(";", 1)[1].replace(";Fijo;", ";;", 1)  # no type
     outside = "42;" + lines[1].split(";", 1)[1].replace("40.47934148", "41.47934148")
     no_number = ";" + lines[1].split(";", 1)[1]
-    text = "\r\n".join([*lines, shifted, blank_type, outside, no_number]) + "\r\n"
+    repeated = "1;" + lines[3].split(";", 1)[1]  # Nº 1 again, at row 3's camera
+    text = "\r\n".join([*lines, shifted, blank_type, outside, no_number, repeated]) + "\r\n"
     with caplog.at_level(logging.WARNING):
         result = madrid.parse(("﻿" + text).encode(), CSV_URL)
     assert not {"madrid-40", "madrid-41", "madrid-42"} & {r.id for r in result.radars}
-    assert len(result.radars) == 27 + 18
+    assert len(result.radars) == 26
+    assert len({r.id for r in result.radars}) == 26
     log = caplog.text
     assert "has 17 columns, not 16" in log
     assert "unknown type ''" in log
     assert "outside Madrid" in log
     assert "radar number '' is not a number" in log
+    assert "radar number 1 appears twice" in log
 
 
 def test_madrid_refuses_a_changed_header_rather_than_emptying_the_feed():
@@ -97,16 +103,37 @@ def test_madrid_fetch_goes_through_ckan(monkeypatch):
     }
     monkeypatch.setattr(madrid.net, "cached_get", lambda url, **kw: answers[url])
     result = madrid.SOURCE.fetch(replace(CTX, provinces=frozenset({"28"})))
-    assert len(result.radars) == 45
+    assert len(result.radars) == 26
     assert madrid.SOURCE.provinces == {"28"}
 
 
-def test_madrid_merge_keeps_one_circle_per_spot():
-    # rows 23 and 24 are two lanes of one camera at the same point
-    radars = madrid.parse(madrid_csv(), CSV_URL).radars
-    merged = feed.merge(radars, date(2026, 10, 1))
-    assert len(merged) == len({(round(r.lat, 5), round(r.lon, 5)) for r in radars})
-    assert len(merged) < len(radars)
+def test_madrid_keeps_one_radar_per_site(caplog):
+    with caplog.at_level(logging.INFO):
+        radars = madrid.parse(madrid_csv(), CSV_URL).radars
+    ids = {r.id for r in radars}
+    # lanes of one gantry, 0 to 12 m apart: the lowest Nº stays
+    for kept, gone in [(1, 2), (4, 5), (6, 7), (8, 9), (18, 19), (21, 22), (23, 24)]:
+        assert f"madrid-{kept}" in ids and f"madrid-{gone}" not in ids
+    # a section end 34 m from fixed radar 20, and section ends 11 to 18 m apart
+    assert "madrid-29-from" not in ids and "madrid-20" in ids
+    assert "madrid-35-to" not in ids and "madrid-31-from" in ids
+    assert "madrid-34-from" not in ids and "madrid-32-to" in ids
+    # 148 m apart on the same tunnel: two cameras, two zones
+    assert {"madrid-14", "madrid-15"} <= ids
+    for i, a in enumerate(radars):
+        for b in radars[i + 1 :]:
+            near = distance_m((a.lat, a.lon), (b.lat, b.lon)) <= madrid.SAME_SITE_M
+            assert not (near and a.maxspeed == b.maxspeed), (a.id, b.id)
+    assert "madrid-2 is at the site of madrid-1" in caplog.text
+    assert len(feed.merge(radars, date(2026, 10, 1))) == len(radars) == 26
+
+
+def test_madrid_keeps_two_limits_at_one_site_apart():
+    lines = madrid_csv().decode("utf-8-sig").splitlines()
+    slower = lines[2].rsplit(";", 2)
+    lines[2] = ";".join([slower[0], "70", slower[2]])  # Nº 2, 4 m from Nº 1, limit 70
+    radars = madrid.parse("\r\n".join(lines).encode(), CSV_URL).radars
+    assert {"madrid-1", "madrid-2"} <= {r.id for r in radars}
 
 
 SA_FIXED = (
@@ -122,20 +149,32 @@ SA_TRAMO = (
 
 
 def test_salamanca_finds_both_layers_through_ckan():
-    urls, updated = salamanca.geojson_resources((FIX / "salamanca_package.json").read_bytes())
-    assert urls == [SA_FIXED, SA_TRAMO]
-    assert updated == "2025-10-22"
+    package = (FIX / "salamanca_package.json").read_bytes()
+    # each layer's own date; the catalogue entry's metadata_modified (2025-10-22)
+    # moves when its description is edited and is never the data's date
+    assert salamanca.geojson_resources(package) == [
+        (SA_FIXED, "2024-08-08"),  # last_modified
+        (SA_TRAMO, "2025-01-22"),  # never modified: created
+    ]
+    undated = json.loads(package)
+    for r in undated["result"]["resources"]:
+        r.pop("last_modified"), r.pop("created")
+    assert [d for _, d in salamanca.geojson_resources(json.dumps(undated).encode())] == [None] * 2
+    undated["result"]["modified"] = "2026-01-02T00:00:00"
+    assert [d for _, d in salamanca.geojson_resources(json.dumps(undated).encode())] == [
+        "2026-01-02"
+    ] * 2
 
 
 def test_salamanca_fixed_points():
-    result = salamanca.parse((FIX / "salamanca_fijos.json").read_bytes(), SA_FIXED, "2025-10-22")
+    result = salamanca.parse((FIX / "salamanca_fijos.json").read_bytes(), SA_FIXED, "2024-08-08")
     assert len(result.radars) == 20 and not result.stretches
     first = next(r for r in result.radars if r.id == "salamanca-1")
     # GeoJSON is (lon, lat); the "Latitud"/"Longitud" properties are UTM and unused
     assert (first.lat, first.lon) == (40.95233426, -5.67012994)
     assert first.name == "Radar fijo Avenida Saavedra y Fajardo"
     assert first.maxspeed == 50 and first.kind == "fixed" and first.province == "37"
-    assert first.attribution.endswith("actualizado 2025-10-22")
+    assert first.attribution.endswith("actualizado 2024-08-08")
     assert {r.maxspeed for r in result.radars} == {30, 50}
     assert all(r.name.startswith("Radar fijo ") for r in result.radars)
 
@@ -160,11 +199,14 @@ def test_salamanca_skips_and_logs_features_it_cannot_read(caplog):
         '"geometry":{"type":"MultiPoint","coordinates":[[-5.66292203,40.94945195]]}',
         '"geometry":null',
     )
-    assert no_geometry != swapped != payload
+    no_fid = no_geometry.replace('"properties":{"fid":3,', '"properties":{', 1)
+    assert no_fid != no_geometry != swapped != payload
     with caplog.at_level(logging.WARNING):
-        result = salamanca.parse(no_geometry.encode(), SA_FIXED)
-    assert {r.id for r in result.radars}.isdisjoint({"salamanca-1", "salamanca-2"})
-    assert len(result.radars) == 18
+        result = salamanca.parse(no_fid.encode(), SA_FIXED)
+    ids = {r.id for r in result.radars}
+    assert ids.isdisjoint({"salamanca-1", "salamanca-2", "salamanca-3", "salamanca-None"})
+    assert len(result.radars) == 17
+    assert "Radares_Fijos.3 skipped (no numeric fid (None))" in caplog.text
     assert "Radares_Fijos.1 skipped" in caplog.text and "outside Salamanca" in caplog.text
     assert "Radares_Fijos.2 skipped" in caplog.text
 
@@ -178,6 +220,8 @@ def test_salamanca_fetch_refuses_an_empty_layer(monkeypatch):
     monkeypatch.setattr(salamanca.net, "cached_get", lambda url, **kw: answers[url])
     result = salamanca.SOURCE.fetch(CTX)
     assert len(result.radars) == 28 and len(result.stretches) == 4
+    dates = {r.kind: r.attribution.rsplit(" ", 1)[1] for r in result.radars}
+    assert dates == {"fixed": "2024-08-08", "section": "2025-01-22"}
     answers[SA_TRAMO] = b'{"type":"FeatureCollection","features":[]}'
     with pytest.raises(ValueError, match="no radar"):
         salamanca.SOURCE.fetch(CTX)
