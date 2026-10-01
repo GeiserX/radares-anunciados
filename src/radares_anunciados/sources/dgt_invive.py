@@ -12,8 +12,15 @@ along the road, one at each end and the rest at most 1.8 radii apart, so every
 metre of the road is within 0.9 radii of a centre. The radius is the speed rule
 of a fixed radar. The road between the two
 ends comes from OpenStreetMap ways carrying the stretch's road ref, one Overpass
-query per province, cached for months. A stretch whose road can't be followed
-is drawn as a straight line and its feature says so.
+query per province, cached for months. A failed or incomplete Overpass answer
+fails the fetch, so the registry keeps the last good result (and its zones)
+instead of moving them onto straight lines; such an answer is never cached.
+
+A stretch whose road is not in the answer is drawn as a straight line and its
+feature says so; its zones are only the two published end points, named so. A
+line that does not fit the published km range (two points 20 km apart for a
+150 m stretch, or the same point given as start and end of an 11 km one) gets no
+zones at all, and its feature says that too.
 
 The file declares ``xmlns:xsd="http:www.w3.org/2001/XMLSchema"`` (no ``//``).
 No element uses that prefix and ElementTree does not check URIs, so it parses;
@@ -22,12 +29,14 @@ the fixture keeps the declaration as served.
 
 from __future__ import annotations
 
+import hashlib
 import heapq
 import json
 import logging
 import math
 import os
 import re
+import time
 import unicodedata
 import xml.etree.ElementTree as ET
 from collections.abc import Iterable
@@ -52,15 +61,22 @@ LICENCE = (
 )
 ZONES_ENV = "RADARES_STRETCH_ZONES"
 GEOMETRY_MAX_AGE_S = 90 * 86_400  # roads barely move; the query changes when the roads do
+OVERPASS_TIMEOUT_S = 180  # the query's own [timeout:]
+OVERPASS_WAIT_S = OVERPASS_TIMEOUT_S + 30  # the client waits for Overpass to give up first
 SNAP_M = 3000  # an end point further than this from every way of its road is not on it
 BRIDGE_M = 500  # joins two ways of the road across an untagged roundabout or a gap
 STRAIGHT_NOTE = " (línea recta: trazado de la carretera no encontrado)"
+ENDS_NOTE = " (solo inicio y fin: trazado no encontrado)"
+MISMATCH_NOTE = " (puntos publicados que no cuadran con los km: sin zonas)"
 
 # DGT does not police interurban roads in Catalonia and the Basque Country.
 COVERED = frozenset(PROVINCES) - {"01", "08", "17", "20", "25", "43", "48"}
 
 _D = "{http://datex2.eu/schema/1_0/1_0}"
-_REF = re.compile(r"^[A-Za-z]{1,3}-[A-Za-z]?\d{1,5}[A-Za-z]?$")
+# What may reach the Overpass regex: letters, digits, '-' and '.' (escaped as
+# [.]). That takes every ref in the file (N-IIa, ZA-P-1405, CG-2.1, EX-A2-R1)
+# and nothing that could close the string or change the regex.
+_REF = re.compile(r"^[A-Za-z0-9][A-Za-z0-9.-]{0,19}$")
 Point = tuple[float, float]
 
 
@@ -163,17 +179,58 @@ def parse(xml: bytes, provinces: Iterable[str] | None = None) -> list[Stretch]:
 # --- road geometry from OpenStreetMap --------------------------------------
 
 
-def geometry_query(box: Box, roads: Iterable[str]) -> str:
-    """Overpass QL for the ways of ``roads`` in one province's box. Exact refs
-    in one alternation, also inside a ';' list ('N-332;E-15'); no name regex."""
+def geometry_query(box: Box, roads: Iterable[str]) -> str | None:
+    """Overpass QL for the ways of ``roads`` in one province's box, or None when
+    no road ref can be looked up. Exact refs in one alternation, also inside a
+    ';' list ('N-332;E-15'); no name regex."""
+    roads = set(roads)  # may be a generator: read it once
     refs = sorted({r for r in roads if _REF.match(r)}, key=str.upper)
-    alt = "|".join(refs)
+    for r in sorted(roads - set(refs)):
+        log.warning("%s: road ref %r not looked up in OpenStreetMap", KEY, r)
+    if not refs:
+        return None
+    alt = "|".join(r.replace(".", "[.]") for r in refs)
     south, west, north, east = box
     return (
-        f"[out:json][timeout:180][bbox:{south},{west},{north},{east}];"
+        f"[out:json][timeout:{OVERPASS_TIMEOUT_S}][bbox:{south},{west},{north},{east}];"
         f'way["highway"]["ref"~"^({alt})(;|$)|;({alt})(;|$)",i];'
         "out geom qt;"
     )
+
+
+class GeometryError(RuntimeError):
+    """Overpass answered, but not with the ways asked for."""
+
+
+def check_answer(payload: bytes) -> None:
+    """Raise unless ``payload`` is a complete Overpass answer with ways in it. A
+    query that ran out of time or memory still answers 200, with a ``remark``
+    and whatever it had found so far (often nothing)."""
+    data = json.loads(payload)
+    if data.get("remark"):
+        raise GeometryError(f"Overpass remark: {data['remark']}")
+    if not any(el.get("type") == "way" for el in data.get("elements", [])):
+        raise GeometryError("Overpass answered with no ways")
+
+
+def overpass(query: str, max_age_s: int) -> bytes:
+    """The answer to ``query``, through the file cache. Like ``net.cached_get``,
+    but an answer is cached only once ``check_answer`` takes it, and the client
+    waits longer than the query's own timeout."""
+    digest = hashlib.sha256(query.encode()).hexdigest()[:32]
+    path = net.cache_dir() / f"{KEY}-overpass-{digest}.json"
+    if path.exists() and time.time() - path.stat().st_mtime < max_age_s:
+        return path.read_bytes()
+    body = net.get(OVERPASS_URL, data={"data": query}, timeout=OVERPASS_WAIT_S, tries=2)
+    check_answer(body)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".tmp")
+        tmp.write_bytes(body)
+        tmp.replace(path)
+    except OSError as exc:  # an unwritable cache must not fail a download that worked
+        log.warning("could not cache the Overpass answer in %s: %s", path.parent, exc)
+    return body
 
 
 def _refs(tags: dict) -> set[str]:
@@ -269,17 +326,23 @@ def route(ways: list[list[tuple[int, Point]]], start: Point, end: Point) -> list
     return [start] + [where[n] for n in reversed(path)] + [end]
 
 
-def plausible(line: list[Point], stretch: Stretch) -> bool:
-    """A path far longer than the published km range took a wrong turn."""
+def plausible(line: list[Point], stretch: Stretch, followed: bool = True) -> bool:
+    """Does ``line`` fit the published km range? A path far longer took a wrong
+    turn or joins two wrong points; one far shorter snapped both ends to one
+    place. A straight line may be far shorter than its road (LP-1 km 0-102 has
+    its ends 17 km apart), so for it "far shorter" means the two points are one
+    place: under a twentieth of the range, less 100 m."""
     if stretch.km_from is None or stretch.km_to is None:
         return True
     published = abs(stretch.km_to - stretch.km_from) * 1000
-    return _length(line) <= 1.5 * published + 2000
+    low = 0.5 * published - 1000 if followed else 0.05 * published - 100
+    return low <= _length(line) <= 1.5 * published + 2000
 
 
 def follow(stretches: list[Stretch], payload: bytes | None) -> list[Stretch]:
-    """Each stretch with its road as ``line``; one not found (or no ``payload``)
-    keeps the straight line and a name that says so."""
+    """Each stretch with its road as ``line``. One not found (or no ``payload``)
+    keeps the straight line and a name that says so; when the straight line does
+    not fit the published km range either, the name says that instead."""
     ways: dict[str, list] = {}
     out = []
     for s in stretches:
@@ -290,7 +353,16 @@ def follow(stretches: list[Stretch], payload: bytes | None) -> list[Stretch]:
             line = route(ways[s.road], s.start, s.end)
             if line is not None and not plausible(line, s):
                 line = None
-        if line is None:
+        if line is None and not plausible([s.start, s.end], s, followed=False):
+            log.warning(
+                "%s %s: %s, points %.0f m apart, do not fit the published km; no zones",
+                KEY,
+                s.id,
+                _span(s.road or "?", s.km_from, s.km_to),
+                distance_m(s.start, s.end),
+            )
+            out.append(replace(s, name=s.name + MISMATCH_NOTE))
+        elif line is None:
             log.warning("%s %s: road %s not followed; straight line", KEY, s.id, s.road)
             out.append(replace(s, name=s.name + STRAIGHT_NOTE))
         else:
@@ -308,13 +380,11 @@ def roads_by_province(stretches: list[Stretch], wanted: frozenset[str]) -> dict[
 
 
 def geometry(code: str, stretches: list[Stretch], max_age_s: int) -> bytes | None:
-    """The Overpass answer for one province's roads, or None if it failed."""
+    """The Overpass answer for one province's roads; None when there is no ref
+    to look up. A failed or incomplete answer raises: the registry then keeps the
+    last good result rather than moving every zone onto a straight line."""
     query = geometry_query(PROVINCES[code][1], (s.road for s in stretches if s.road))
-    try:
-        return net.cached_get(OVERPASS_URL, {"data": query}, max_age_s=max_age_s)
-    except Exception as exc:  # a road not followed costs a straight line, not the source
-        log.warning("%s: Overpass failed for province %s (%s); straight lines", KEY, code, exc)
-        return None
+    return overpass(query, max_age_s) if query is not None else None
 
 
 # --- zones ------------------------------------------------------------------
@@ -344,8 +414,16 @@ def along(line: list[Point], every_m: float) -> list[Point]:
 def zones(stretch: Stretch, ctx: Context) -> list[Radar]:
     """Circles along one stretch. Each circle reaches 0.9 of its radius along the
     road both ways, so circles 1.8 radii apart leave no road uncovered, and a
-    radar at either end of the stretch sits at a circle's centre."""
+    radar at either end of the stretch sits at a circle's centre.
+
+    A stretch whose road was not followed gets circles only at its two published
+    end points, named so: a circle between them could sit off the road. One whose
+    end points do not fit the published km range gets none."""
     name = f"Radar móvil {_span(stretch.road or '?', stretch.km_from, stretch.km_to)}"
+    if stretch.line is None:
+        if not plausible([stretch.start, stretch.end], stretch, followed=False):
+            return []
+        name += ENDS_NOTE
     template = Radar(
         id="",
         source=KEY,
@@ -360,10 +438,13 @@ def zones(stretch: Stretch, ctx: Context) -> list[Radar]:
         province=stretch.province,
     )
     radius = ctx.radius.point(template)
-    line = list(stretch.line or (stretch.start, stretch.end))
+    if stretch.line is None:
+        points = along([stretch.start, stretch.end], math.inf)  # the end points, once each
+    else:
+        points = along(list(stretch.line), 1.8 * radius)
     return [
         replace(template, id=f"{stretch.id}-{i}", lat=lat, lon=lon, radius_m=radius)
-        for i, (lat, lon) in enumerate(along(line, 1.8 * radius))
+        for i, (lat, lon) in enumerate(points)
     ]
 
 
