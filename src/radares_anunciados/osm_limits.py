@@ -7,7 +7,9 @@ of each radar, many radars per Overpass query (the ~800 DGT points of Spain
 cost 3), and keeps the ``maxspeed`` of the way the radar is on:
 
 - the radar's road, when its name gives one ("A-7") and a way near it has that
-  ``ref``; with none, never a way of another road unless the radar is on it;
+  ``ref``; with none, only a carriageway the radar is on (``TIE_M``) of a class
+  that road could be (``CARRIAGEWAY``): never a slip road, a roundabout street
+  or another road nearby;
 - a main carriageway before a service road or a slip road;
 - of those, the nearest. Its limit, or nothing: a limit is never borrowed from
   another road, nor from the other carriageway.
@@ -18,9 +20,14 @@ anything that is no single limit ("ES:urban", "none", "walk", "80;90", a
 ``maxspeed:forward`` that differs from ``:backward`` on a two-way road) gives
 none: a wrong limit in the zone's name is worse than none.
 
-Every answer, a limit or none, is kept 30 days per radar position in the cache
-folder, so a run asks only for radars it has not seen. A failed query leaves its
-radars without a limit (the road fallback sizes them) and is retried next run.
+Every answer, a limit or none, is kept per radar position in the cache folder
+and asked again after 30 days, so a run asks only for radars it has not seen or
+whose answer is that old. An answer is replaced only by a query that worked: a
+failed query (an error, or Overpass's "remark" of a timeout or out of memory)
+keeps the old answer, leaves a new radar without a limit (the road fallback
+sizes it), caches nothing and is retried next run. A zone's name and radius
+follow its limit, so a limit that came and went with Overpass's health would
+delete and recreate the zone.
 
 Data (c) OpenStreetMap contributors, ODbL 1.0. A radar given a limit here
 credits OpenStreetMap in its attribution as well as its own source.
@@ -57,6 +64,8 @@ MAIN += ("living_street", "road")
 MINOR = tuple("motorway_link trunk_link primary_link secondary_link tertiary_link".split())
 MINOR += ("service",)
 _DRIVABLE = "|".join(MAIN + MINOR)
+# what an interurban road named in a DGT radar can be in OSM, when its ref is missing
+CARRIAGEWAY = ("motorway", "trunk", "primary", "secondary")
 
 # "A-7", "N-121-A", "CG-1.5", "Ma-13", "N-II" in a radar's name
 _ROAD = re.compile(
@@ -130,8 +139,15 @@ def query(points: list[Point]) -> str:
 
 
 def _ways(payload: bytes) -> list[tuple[dict[str, str], list[Point]]]:
+    """The ways in an Overpass answer. Raises on an answer that is not whole:
+    Overpass reports a timeout or running out of memory as HTTP 200 with a
+    ``remark`` and the elements it had so far, often none."""
+    data = json.loads(payload)
+    if not isinstance(data, dict) or "remark" in data or "elements" not in data:
+        remark = data.get("remark") if isinstance(data, dict) else None
+        raise ValueError(f"incomplete Overpass answer: {remark or 'no elements'}")
     out = []
-    for el in json.loads(payload).get("elements", []):
+    for el in data["elements"]:
         if el.get("type") == "way" and el.get("geometry"):
             out.append((el.get("tags", {}), [(g["lat"], g["lon"]) for g in el["geometry"]]))
     return out
@@ -164,12 +180,12 @@ def choose(
         if d <= AROUND_M:
             near.append((d, tags))
     if road:
-        # The radar's road. Without it near: a way with no ref may be that road
-        # untagged, and a way under the radar may carry it under another ref
-        # (A-30 and A-7 share a carriageway; OSM tags one); any other way with
-        # another ref is another road.
+        # The radar's road. Without it near: a carriageway under the radar may
+        # be that road untagged, or carry it under another ref (A-30 and A-7
+        # share a carriageway; OSM tags one). A slip road, a roundabout street
+        # or a way a few metres off is another road, whatever its ref.
         same = [(d, t) for d, t in near if road in _refs(t)]
-        near = same or [(d, t) for d, t in near if not _refs(t) or d <= TIE_M]
+        near = same or [(d, t) for d, t in near if d <= TIE_M and t.get("highway") in CARRIAGEWAY]
     main = [(d, t) for d, t in near if t.get("highway") in MAIN]
     near = sorted(main or near, key=lambda dt: dt[0])
     if not near:
@@ -207,10 +223,24 @@ def _key(radar: Radar) -> str:
 
 
 def _ask(points: list[Point]) -> bytes:
-    return net.get(OVERPASS_URL, data={"data": query(points)}, timeout=240)
+    # One try, a little over the query's own 180 s: an optional lookup must not
+    # hold the sync for minutes of retries; the next run asks again.
+    return net.get(OVERPASS_URL, data={"data": query(points)}, timeout=200, tries=1)
 
 
-def _load(now: float) -> dict[str, list]:
+def _entry(value: object) -> bool:
+    """A cached answer: [limit or None, time asked]."""
+    return (
+        isinstance(value, list)
+        and len(value) == 2
+        and (value[0] is None or type(value[0]) is int)
+        and type(value[1]) in (int, float)
+    )
+
+
+def _load() -> dict[str, list]:
+    """Every well-formed cached answer, however old; anything else is dropped
+    and asked again."""
     path = net.cache_dir() / CACHE_FILE
     try:
         data = json.loads(path.read_text())
@@ -218,7 +248,10 @@ def _load(now: float) -> dict[str, list]:
         return {}
     if not isinstance(data, dict) or data.get("version") != VERSION:
         return {}
-    return {k: v for k, v in data.get("limits", {}).items() if now - v[1] < MAX_AGE_S}
+    limits = data.get("limits")
+    if not isinstance(limits, dict):
+        return {}
+    return {k: v for k, v in limits.items() if _entry(v)}
 
 
 def _save(cache: dict[str, list]) -> None:
@@ -240,10 +273,17 @@ def fill(radars: list[Radar], now: float | None = None) -> list[Radar]:
     wanted = [r for r in radars if r.maxspeed is None and r.kind != "mobile_announced"]
     if not wanted:
         return radars
-    cache = _load(now)
+    cache = _load()
+    keys = {_key(r) for r in wanted}
+
+    def stale(key: str) -> bool:
+        return now - cache[key][1] >= MAX_AGE_S
+
+    # an old answer of a radar no longer here is not worth keeping
+    cache = {k: v for k, v in cache.items() if k in keys or not stale(k)}
     todo: dict[str, Radar] = {}
     for r in wanted:
-        if _key(r) not in cache:
+        if _key(r) not in cache or stale(_key(r)):
             todo.setdefault(_key(r), r)
     pending = list(todo.items())
     asked = 0
@@ -253,7 +293,8 @@ def fill(radars: list[Radar], now: float | None = None) -> list[Radar]:
             ways = _ways(_ask([(r.lat, r.lon) for _, r in batch]))
         except Exception as exc:  # Overpass down or busy: the rest waits for the next run
             log.warning(
-                "OSM speed limits: query failed (%s); %d radars keep the road fallback",
+                "OSM speed limits: query failed (%s); %d radars keep their last answer"
+                " or the road fallback",
                 exc,
                 len(pending) - start,
             )

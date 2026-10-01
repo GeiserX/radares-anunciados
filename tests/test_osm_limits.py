@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from radares_anunciados import osm_limits, speed
+from radares_anunciados import net, osm_limits, speed
 from radares_anunciados.model import Radar
 
 FIX = Path(__file__).parent / "fixtures"
@@ -12,6 +12,7 @@ PAYLOAD = (FIX / "overpass_limits.json").read_bytes()
 WAYS = osm_limits._ways(PAYLOAD)
 NOW = 1_790_000_000.0
 DAY = 86_400
+REAL_ASK = osm_limits._ask  # conftest swaps it for an offline one in every test
 
 
 def dgt(id_, name, lat, lon, kind="fixed"):
@@ -61,6 +62,36 @@ CASES = [
 @pytest.mark.parametrize(("radar", "kmh"), CASES, ids=[r.name for r, _ in CASES])
 def test_the_limit_of_the_road_the_radar_is_on(radar, kmh):
     assert osm_limits.choose((radar.lat, radar.lon), osm_limits.road_of(radar), WAYS) == kmh
+
+
+# Real DGT radars (feed of 2026-10-01) with no way of their road within 30 m;
+# Overpass answer of 2026-10-01.
+OFFROAD = osm_limits._ways((FIX / "overpass_limits_offroad.json").read_bytes())
+
+
+@pytest.mark.parametrize(
+    "radar",
+    [
+        # an unclassified roundabout (40, 21 m) and a trunk_link (60, 22 m) near
+        # a national road: neither is the N-320
+        dgt("n320", "Radar fijo N-320 km 300.5", 40.634655, -3.312912),
+        # a trunk_link with no ref (40, 7 m) beside a motorway radar, CV-31 at 17 m
+        dgt("v21", "Radar fijo V-21 km 13.6", 39.514683, -0.4326693),
+    ],
+    ids=lambda r: r.name,
+)
+def test_a_slip_road_or_side_street_is_not_the_radars_road(radar):
+    assert osm_limits.choose((radar.lat, radar.lon), osm_limits.road_of(radar), OFFROAD) is None
+
+
+def test_a_carriageway_under_the_radar_may_be_its_road_untagged():
+    p = (40.0, -3.0)
+    line = [(39.999, -3.00001), (40.001, -3.00001)]  # ~1 m east of the radar
+    assert osm_limits.choose(p, "A1", [({"highway": "motorway", "maxspeed": "120"}, line)]) == 120
+    for highway in ("motorway_link", "trunk_link", "unclassified", "residential", "service"):
+        assert osm_limits.choose(p, "A1", [({"highway": highway, "maxspeed": "40"}, line)]) is None
+    far = [(39.999, -3.0001), (40.001, -3.0001)]  # ~8.5 m off: beside the road, not on it
+    assert osm_limits.choose(p, "A1", [({"highway": "motorway", "maxspeed": "120"}, far)]) is None
 
 
 @pytest.mark.parametrize(
@@ -184,6 +215,89 @@ def test_a_failed_query_leaves_the_limit_unknown_and_asks_again(monkeypatch, cac
     calls = asked_by(monkeypatch)
     assert osm_limits.fill(radars, now=NOW + 60)[0].maxspeed == 120
     assert len(calls) == 3
+
+
+def test_an_old_answer_outlives_a_failed_refresh(monkeypatch, cache):
+    # A limit names and sizes the zone: losing it to a failed query would delete
+    # and recreate every zone, and again when Overpass came back.
+    radars = [r for r, _ in CASES]
+    expected = [kmh for _, kmh in CASES]
+    monkeypatch.setattr(osm_limits, "BATCH", 4)
+    asked_by(monkeypatch)
+    osm_limits.fill(radars, now=NOW)
+    calls = asked_by(monkeypatch, OSError("504"))
+    later = NOW + 31 * DAY
+    assert [r.maxspeed for r in osm_limits.fill(radars, now=later)] == expected
+    assert len(calls) == 1  # it was asked again, and failed
+    # the first batch refreshed, the second failed: both keep a limit
+    answers = iter([PAYLOAD, OSError("504")])
+
+    def half(points):
+        calls.append(points)
+        answer = next(answers)
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
+
+    monkeypatch.setattr(osm_limits, "_ask", half)
+    assert [r.maxspeed for r in osm_limits.fill(radars, now=later + 60)] == expected
+    assert len(calls) == 3
+    calls = asked_by(monkeypatch)
+    assert [r.maxspeed for r in osm_limits.fill(radars, now=later + 120)] == expected
+    assert [len(c) for c in calls] == [4, 4]  # only the 8 still old are asked
+    osm_limits.fill(radars, now=later + 180)
+    assert len(calls) == 2  # all fresh again
+
+
+def test_an_old_answer_of_a_radar_gone_is_dropped(monkeypatch, cache):
+    asked_by(monkeypatch)
+    gone, kept = CASES[0][0], CASES[1][0]
+    osm_limits.fill([gone, kept], now=NOW)
+    osm_limits.fill([kept], now=NOW + 31 * DAY)
+    saved = json.loads((cache / osm_limits.CACHE_FILE).read_text())["limits"]
+    assert list(saved) == [osm_limits._key(kept)]
+
+
+def test_an_overpass_remark_is_a_failed_query(monkeypatch, cache):
+    # Overpass answers a timeout or running out of memory with HTTP 200, the
+    # elements it had (here none) and a remark (real answer of 2026-10-01).
+    remark = (FIX / "overpass_limits_remark.json").read_bytes()
+    with pytest.raises(ValueError, match="ran out of memory"):
+        osm_limits._ways(remark)
+    with pytest.raises(ValueError, match="no elements"):
+        osm_limits._ways(b"{}")
+    radar = CASES[1][0]
+    calls = asked_by(monkeypatch, remark)
+    assert osm_limits.fill([radar], now=NOW)[0].maxspeed is None
+    calls = asked_by(monkeypatch)
+    assert osm_limits.fill([radar], now=NOW + 60)[0].maxspeed == 80
+    assert len(calls) == 1  # the remark cached nothing
+
+
+@pytest.mark.parametrize(
+    "limits",
+    [{"k": None}, {"k": [80]}, {"k": "80"}, {"k": [True, NOW]}, {"k": [80, "x"]}, [], None],
+)
+def test_a_malformed_cache_entry_is_asked_again(monkeypatch, cache, limits):
+    radar = CASES[0][0]
+    if isinstance(limits, dict):
+        limits = {osm_limits._key(radar): limits["k"]}
+    (cache / osm_limits.CACHE_FILE).write_text(json.dumps({"version": 1, "limits": limits}))
+    calls = asked_by(monkeypatch)
+    assert osm_limits.fill([radar], now=NOW)[0].maxspeed == 120
+    assert len(calls) == 1
+
+
+def test_one_try_for_the_optional_lookup(monkeypatch):
+    seen = {}
+
+    def get(url, **kwargs):
+        seen.update(kwargs)
+        return b"{}"
+
+    monkeypatch.setattr(net, "get", get)
+    REAL_ASK([(38.0, -1.0)])
+    assert seen["tries"] == 1 and seen["timeout"] <= 200
 
 
 def test_an_unreadable_cache_is_asked_again(monkeypatch, cache):
