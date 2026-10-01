@@ -14,12 +14,15 @@ from datetime import date
 
 from .. import store
 from ..model import SourceResult, WeeklyList
-from . import dgt, murcia, osm
+from . import dgt, donostia, donostia_movil, euskadi, murcia, navarra, osm
 from .base import Context, Source
 
 log = logging.getLogger(__name__)
 
 REGISTRY: dict[str, Source] = {s.key: s for s in (dgt.SOURCE, osm.SOURCE, murcia.SOURCE)}
+REGISTRY |= {
+    s.key: s for s in (euskadi.SOURCE, navarra.SOURCE, donostia.SOURCE, donostia_movil.SOURCE)
+}
 
 
 @dataclass
