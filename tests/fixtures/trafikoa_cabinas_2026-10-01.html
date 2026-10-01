@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html><head><title> </title></head><body>
+<!-- Trimmed: 9 of the 98 radar blocks of the live page, fetched 2026-10-01. -->
+<script>
+var arrPointsAraba = [];
+		var arrPointsBizkaia = [];
+		var arrPointsGipuzkoa = [];
+		
+		var tooltip = "{" + i18municipio + "}, sentido {"+i18sentido+"} ({" + i18carretera + "}, PK {" + i18km + "})";		
+		switch (themeDisplay.getLanguageId()) {
+		case "eu_ES":			
+			var tooltip = "{" + i18municipio + "},{"+i18sentido+"} noranzkoan ({" + i18carretera + "}, {" + i18km + "} kilometro-puntua)";		
+			break;
+		}
+		
+		var idLayerAraba;
+		var idLayerBizkaia;
+		var idLayerGipuzkoa;
+		
+		
+		var url = "/lfr/o/com.gvdi.a97.a97-p-radares-trafiko/imagenes/icono.png";
+		var wkid = WKID_TYPE.ETRS89;
+		var coordType = COORD_TYPE.UTM;
+		var imgHeight = "16px"
+		var imgWidth = "16px"
+		var imgXOffset = "1px";
+		var imgYOffset = "1px";
+
+		var symbol = fGetPointImageSymbol(url, imgHeight, imgWidth, imgXOffset, imgYOffset);
+		
+				
+			//---------------------------
+			var x = 499983.69;
+			var y = 4792619.83;		
+			var th = "Bizkaia";
+			var popupTitle = "MAX CENTER";
+	         //--añadido para el radar con camara
+            if (popupTitle == "TRABAKUA TRAMO 1"){   
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];          
+                var popupValores = ["MAX CENTER","DONOSTIA / SAN SEBASTIÁN","BARAKALDO","Bizkaia","A-8","123.500","80 km/h","https://www.euskadi.eus/web01-aprat/es/contenidos/informacion/rat/es_def/es/contenidos/informacion/rat/es_def/adjuntos/1452_es.html"];
+            } else {
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                var popupValores = ["MAX CENTER","DONOSTIA / SAN SEBASTIÁN","BARAKALDO","Bizkaia","A-8","123.500","80 km/h"];
+            }
+			switch (themeDisplay.getLanguageId()) {
+			case "eu_ES":		
+				var popupTitle = "MAX CENTER";
+                if(popupTitle == "TRABAKUA 1 ZATIA"){       
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];      
+                    var popupValores = ["MAX CENTER","DONOSTIA / SAN SEBASTIÁN","BARAKALDO","Bizkaia","A-8","123.500","80 km/h","https://www.euskadi.eus/tratamendu-jardueren-erregistroa-tje/web01-aprat/eu/eu/contenidos/informacion/rat/eu_def/adjuntos/1452_eu.html"];
+                }
+                else{
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                    var popupValores = ["MAX CENTER","DONOSTIA / SAN SEBASTIÁN","BARAKALDO","Bizkaia","A-8","123.500","80 km/h"];
+                }
+                break;
+			}
+			var aux= [];
+			aux.push(coordType);
+			aux.push(wkid);
+			aux.push(x);
+			aux.push(y);	
+			aux.push(symbol);
+			aux.push(popupTitle);	
+			aux.push(popupCampos);
+			aux.push(popupValores);
+			
+			if(th == "Bizkaia"){
+				idLayerBizkaia="Bizkaia";
+				arrPointsBizkaia.push(aux);
+			}
+			else{
+				if(th == "Gipuzkoa"){
+					idLayerGipuzkoa="Gipuzkoa";
+					arrPointsGipuzkoa.push(aux);
+				}
+				else{
+					idLayerAraba="Araba";
+					arrPointsAraba.push(aux);
+				}
+			}
+					
+			//---------------------------
+			var x = 503223.41118690657;
+			var y = 4794319.276740251;		
+			var th = "Bizkaia";
+			var popupTitle = "KUKULARRA";
+	         //--añadido para el radar con camara
+            if (popupTitle == "TRABAKUA TRAMO 1"){   
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];          
+                var popupValores = ["KUKULARRA","GETXO / BARAKALDO","ERANDIO","Bizkaia","N-637","11.475","60/80 km/h","https://www.euskadi.eus/web01-aprat/es/contenidos/informacion/rat/es_def/es/contenidos/informacion/rat/es_def/adjuntos/1452_es.html"];
+            } else {
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                var popupValores = ["KUKULARRA","GETXO / BARAKALDO","ERANDIO","Bizkaia","N-637","11.475","60/80 km/h"];
+            }
+			switch (themeDisplay.getLanguageId()) {
+			case "eu_ES":		
+				var popupTitle = "KUKULARRA";
+                if(popupTitle == "TRABAKUA 1 ZATIA"){       
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];      
+                    var popupValores = ["KUKULARRA","GETXO / BARAKALDO","ERANDIO","Bizkaia","N-637","11.475","60/80 km/h","https://www.euskadi.eus/tratamendu-jardueren-erregistroa-tje/web01-aprat/eu/eu/contenidos/informacion/rat/eu_def/adjuntos/1452_eu.html"];
+                }
+                else{
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                    var popupValores = ["KUKULARRA","GETXO / BARAKALDO","ERANDIO","Bizkaia","N-637","11.475","60/80 km/h"];
+                }
+                break;
+			}
+			var aux= [];
+			aux.push(coordType);
+			aux.push(wkid);
+			aux.push(x);
+			aux.push(y);	
+			aux.push(symbol);
+			aux.push(popupTitle);	
+			aux.push(popupCampos);
+			aux.push(popupValores);
+			
+			if(th == "Bizkaia"){
+				idLayerBizkaia="Bizkaia";
+				arrPointsBizkaia.push(aux);
+			}
+			else{
+				if(th == "Gipuzkoa"){
+					idLayerGipuzkoa="Gipuzkoa";
+					arrPointsGipuzkoa.push(aux);
+				}
+				else{
+					idLayerAraba="Araba";
+					arrPointsAraba.push(aux);
+				}
+			}
+					
+			//---------------------------
+			var x = 537352.62;
+			var y = 4709034.159999999;		
+			var th = "Araba";
+			var popupTitle = "LAGUARDIA VI";
+	         //--añadido para el radar con camara
+            if (popupTitle == "TRABAKUA TRAMO 1"){   
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];          
+                var popupValores = ["LAGUARDIA VI","VITORIA - GASTEIZ","LAGUARDIA","Araba","A-124","68.600","90 km/h","https://www.euskadi.eus/web01-aprat/es/contenidos/informacion/rat/es_def/es/contenidos/informacion/rat/es_def/adjuntos/1452_es.html"];
+            } else {
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                var popupValores = ["LAGUARDIA VI","VITORIA - GASTEIZ","LAGUARDIA","Araba","A-124","68.600","90 km/h"];
+            }
+			switch (themeDisplay.getLanguageId()) {
+			case "eu_ES":		
+				var popupTitle = "LAGUARDIA VI";
+                if(popupTitle == "TRABAKUA 1 ZATIA"){       
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];      
+                    var popupValores = ["LAGUARDIA VI","VITORIA - GASTEIZ","LAGUARDIA","Araba","A-124","68.600","90 km/h","https://www.euskadi.eus/tratamendu-jardueren-erregistroa-tje/web01-aprat/eu/eu/contenidos/informacion/rat/eu_def/adjuntos/1452_eu.html"];
+                }
+                else{
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                    var popupValores = ["LAGUARDIA VI","VITORIA - GASTEIZ","LAGUARDIA","Araba","A-124","68.600","90 km/h"];
+                }
+                break;
+			}
+			var aux= [];
+			aux.push(coordType);
+			aux.push(wkid);
+			aux.push(x);
+			aux.push(y);	
+			aux.push(symbol);
+			aux.push(popupTitle);	
+			aux.push(popupCampos);
+			aux.push(popupValores);
+			
+			if(th == "Bizkaia"){
+				idLayerBizkaia="Bizkaia";
+				arrPointsBizkaia.push(aux);
+			}
+			else{
+				if(th == "Gipuzkoa"){
+					idLayerGipuzkoa="Gipuzkoa";
+					arrPointsGipuzkoa.push(aux);
+				}
+				else{
+					idLayerAraba="Araba";
+					arrPointsAraba.push(aux);
+				}
+			}
+					
+			//---------------------------
+			var x = 582853.0;
+			var y = 4794938.0;		
+			var th = "Gipuzkoa";
+			var popupTitle = "CARLOS I";
+	         //--añadido para el radar con camara
+            if (popupTitle == "TRABAKUA TRAMO 1"){   
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];          
+                var popupValores = ["CARLOS I","DONOSTIA / SAN SEBASTIÁN","DONOSTIA / SAN SEBASTIÁN","Gipuzkoa","GI-20-9-2-S","0.675","50 km/h","https://www.euskadi.eus/web01-aprat/es/contenidos/informacion/rat/es_def/es/contenidos/informacion/rat/es_def/adjuntos/1452_es.html"];
+            } else {
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                var popupValores = ["CARLOS I","DONOSTIA / SAN SEBASTIÁN","DONOSTIA / SAN SEBASTIÁN","Gipuzkoa","GI-20-9-2-S","0.675","50 km/h"];
+            }
+			switch (themeDisplay.getLanguageId()) {
+			case "eu_ES":		
+				var popupTitle = "KARLOS I";
+                if(popupTitle == "TRABAKUA 1 ZATIA"){       
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];      
+                    var popupValores = ["KARLOS I","DONOSTIA / SAN SEBASTIÁN","DONOSTIA / SAN SEBASTIÁN","Gipuzkoa","GI-20-9-2-S","0.675","50 km/h","https://www.euskadi.eus/tratamendu-jardueren-erregistroa-tje/web01-aprat/eu/eu/contenidos/informacion/rat/eu_def/adjuntos/1452_eu.html"];
+                }
+                else{
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                    var popupValores = ["CARLOS I","DONOSTIA / SAN SEBASTIÁN","DONOSTIA / SAN SEBASTIÁN","Gipuzkoa","GI-20-9-2-S","0.675","50 km/h"];
+                }
+                break;
+			}
+			var aux= [];
+			aux.push(coordType);
+			aux.push(wkid);
+			aux.push(x);
+			aux.push(y);	
+			aux.push(symbol);
+			aux.push(popupTitle);	
+			aux.push(popupCampos);
+			aux.push(popupValores);
+			
+			if(th == "Bizkaia"){
+				idLayerBizkaia="Bizkaia";
+				arrPointsBizkaia.push(aux);
+			}
+			else{
+				if(th == "Gipuzkoa"){
+					idLayerGipuzkoa="Gipuzkoa";
+					arrPointsGipuzkoa.push(aux);
+				}
+				else{
+					idLayerAraba="Araba";
+					arrPointsAraba.push(aux);
+				}
+			}
+					
+			//---------------------------
+			var x = 535605.0;
+			var y = 4782670.0;		
+			var th = "Bizkaia";
+			var popupTitle = "TRABAKUA TRAMO 1";
+	         //--añadido para el radar con camara
+            if (popupTitle == "TRABAKUA TRAMO 1"){   
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];          
+                var popupValores = ["TRABAKUA TRAMO 1","MARKINA","MALLABIA","Bizkaia","BI-633","36.990","60 km/h","https://www.euskadi.eus/web01-aprat/es/contenidos/informacion/rat/es_def/es/contenidos/informacion/rat/es_def/adjuntos/1452_es.html"];
+            } else {
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                var popupValores = ["TRABAKUA TRAMO 1","MARKINA","MALLABIA","Bizkaia","BI-633","36.990","60 km/h"];
+            }
+			switch (themeDisplay.getLanguageId()) {
+			case "eu_ES":		
+				var popupTitle = "TRABAKUA 1 ZATIA";
+                if(popupTitle == "TRABAKUA 1 ZATIA"){       
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];      
+                    var popupValores = ["TRABAKUA 1 ZATIA","MARKINA","MALLABIA","Bizkaia","BI-633","36.990","60 km/h","https://www.euskadi.eus/tratamendu-jardueren-erregistroa-tje/web01-aprat/eu/eu/contenidos/informacion/rat/eu_def/adjuntos/1452_eu.html"];
+                }
+                else{
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                    var popupValores = ["TRABAKUA TRAMO 1","MARKINA","MALLABIA","Bizkaia","BI-633","36.990","60 km/h"];
+                }
+                break;
+			}
+			var aux= [];
+			aux.push(coordType);
+			aux.push(wkid);
+			aux.push(x);
+			aux.push(y);	
+			aux.push(symbol);
+			aux.push(popupTitle);	
+			aux.push(popupCampos);
+			aux.push(popupValores);
+			
+			if(th == "Bizkaia"){
+				idLayerBizkaia="Bizkaia";
+				arrPointsBizkaia.push(aux);
+			}
+			else{
+				if(th == "Gipuzkoa"){
+					idLayerGipuzkoa="Gipuzkoa";
+					arrPointsGipuzkoa.push(aux);
+				}
+				else{
+					idLayerAraba="Araba";
+					arrPointsAraba.push(aux);
+				}
+			}
+					
+			//---------------------------
+			var x = 564605.0;
+			var y = 4794652.0;		
+			var th = "Gipuzkoa";
+			var popupTitle = "FOTO-ROJO GETARIA";
+	         //--añadido para el radar con camara
+            if (popupTitle == "TRABAKUA TRAMO 1"){   
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];          
+                var popupValores = ["FOTO-ROJO GETARIA","BILBAO","GETARIA","Gipuzkoa","N-634","22.634","-","https://www.euskadi.eus/web01-aprat/es/contenidos/informacion/rat/es_def/es/contenidos/informacion/rat/es_def/adjuntos/1452_es.html"];
+            } else {
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                var popupValores = ["FOTO-ROJO GETARIA","BILBAO","GETARIA","Gipuzkoa","N-634","22.634","-"];
+            }
+			switch (themeDisplay.getLanguageId()) {
+			case "eu_ES":		
+				var popupTitle = "GETARIAKO ARGAZKI-GORRIA";
+                if(popupTitle == "TRABAKUA 1 ZATIA"){       
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];      
+                    var popupValores = ["GETARIAKO ARGAZKI-GORRIA","BILBAO","GETARIA","Gipuzkoa","N-634","22.634","-","https://www.euskadi.eus/tratamendu-jardueren-erregistroa-tje/web01-aprat/eu/eu/contenidos/informacion/rat/eu_def/adjuntos/1452_eu.html"];
+                }
+                else{
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                    var popupValores = ["FOTO-ROJO GETARIA","BILBAO","GETARIA","Gipuzkoa","N-634","22.634","-"];
+                }
+                break;
+			}
+			var aux= [];
+			aux.push(coordType);
+			aux.push(wkid);
+			aux.push(x);
+			aux.push(y);	
+			aux.push(symbol);
+			aux.push(popupTitle);	
+			aux.push(popupCampos);
+			aux.push(popupValores);
+			
+			if(th == "Bizkaia"){
+				idLayerBizkaia="Bizkaia";
+				arrPointsBizkaia.push(aux);
+			}
+			else{
+				if(th == "Gipuzkoa"){
+					idLayerGipuzkoa="Gipuzkoa";
+					arrPointsGipuzkoa.push(aux);
+				}
+				else{
+					idLayerAraba="Araba";
+					arrPointsAraba.push(aux);
+				}
+			}
+					
+			//---------------------------
+			var x = 553964.45;
+			var y = 4792635.81;		
+			var th = "Gipuzkoa";
+			var popupTitle = "TUNEL ITZIAR";
+	         //--añadido para el radar con camara
+            if (popupTitle == "TRABAKUA TRAMO 1"){   
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];          
+                var popupValores = ["TUNEL ITZIAR","BILBAO","DEBA","Gipuzkoa","AP-8","55.252","80","https://www.euskadi.eus/web01-aprat/es/contenidos/informacion/rat/es_def/es/contenidos/informacion/rat/es_def/adjuntos/1452_es.html"];
+            } else {
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                var popupValores = ["TUNEL ITZIAR","BILBAO","DEBA","Gipuzkoa","AP-8","55.252","80"];
+            }
+			switch (themeDisplay.getLanguageId()) {
+			case "eu_ES":		
+				var popupTitle = "ITZIAR TUNELA";
+                if(popupTitle == "TRABAKUA 1 ZATIA"){       
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];      
+                    var popupValores = ["ITZIAR TUNELA","BILBAO","DEBA","Gipuzkoa","AP-8","55.252","80","https://www.euskadi.eus/tratamendu-jardueren-erregistroa-tje/web01-aprat/eu/eu/contenidos/informacion/rat/eu_def/adjuntos/1452_eu.html"];
+                }
+                else{
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                    var popupValores = ["TUNEL ITZIAR","BILBAO","DEBA","Gipuzkoa","AP-8","55.252","80"];
+                }
+                break;
+			}
+			var aux= [];
+			aux.push(coordType);
+			aux.push(wkid);
+			aux.push(x);
+			aux.push(y);	
+			aux.push(symbol);
+			aux.push(popupTitle);	
+			aux.push(popupCampos);
+			aux.push(popupValores);
+			
+			if(th == "Bizkaia"){
+				idLayerBizkaia="Bizkaia";
+				arrPointsBizkaia.push(aux);
+			}
+			else{
+				if(th == "Gipuzkoa"){
+					idLayerGipuzkoa="Gipuzkoa";
+					arrPointsGipuzkoa.push(aux);
+				}
+				else{
+					idLayerAraba="Araba";
+					arrPointsAraba.push(aux);
+				}
+			}
+					
+			//---------------------------
+			var x = 510697.92;
+			var y = 4728687.279999999;		
+			var th = "Araba";
+			var popupTitle = "ARMIÑON";
+	         //--añadido para el radar con camara
+            if (popupTitle == "TRABAKUA TRAMO 1"){   
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];          
+                var popupValores = ["ARMIÑON","IRUN","ARMIÑON","Araba","AP-1","82.300","80 Km/h","https://www.euskadi.eus/web01-aprat/es/contenidos/informacion/rat/es_def/es/contenidos/informacion/rat/es_def/adjuntos/1452_es.html"];
+            } else {
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                var popupValores = ["ARMIÑON","IRUN","ARMIÑON","Araba","AP-1","82.300","80 Km/h"];
+            }
+			switch (themeDisplay.getLanguageId()) {
+			case "eu_ES":		
+				var popupTitle = "ARMIÑON";
+                if(popupTitle == "TRABAKUA 1 ZATIA"){       
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];      
+                    var popupValores = ["ARMIÑON","IRUN","ARMIÑON","Araba","AP-1","82.300","80 Km/h","https://www.euskadi.eus/tratamendu-jardueren-erregistroa-tje/web01-aprat/eu/eu/contenidos/informacion/rat/eu_def/adjuntos/1452_eu.html"];
+                }
+                else{
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                    var popupValores = ["ARMIÑON","IRUN","ARMIÑON","Araba","AP-1","82.300","80 Km/h"];
+                }
+                break;
+			}
+			var aux= [];
+			aux.push(coordType);
+			aux.push(wkid);
+			aux.push(x);
+			aux.push(y);	
+			aux.push(symbol);
+			aux.push(popupTitle);	
+			aux.push(popupCampos);
+			aux.push(popupValores);
+			
+			if(th == "Bizkaia"){
+				idLayerBizkaia="Bizkaia";
+				arrPointsBizkaia.push(aux);
+			}
+			else{
+				if(th == "Gipuzkoa"){
+					idLayerGipuzkoa="Gipuzkoa";
+					arrPointsGipuzkoa.push(aux);
+				}
+				else{
+					idLayerAraba="Araba";
+					arrPointsAraba.push(aux);
+				}
+			}
+					
+			//---------------------------
+			var x = 546058.0;
+			var y = 4782306.0;		
+			var th = "Gipuzkoa";
+			var popupTitle = "TUNEL MALTZAGA";
+	         //--añadido para el radar con camara
+            if (popupTitle == "TRABAKUA TRAMO 1"){   
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];          
+                var popupValores = ["TUNEL MALTZAGA","SAN SEBASTIAN","PLACENCIA DE LAS ARMAS","Gipuzkoa","AP-1","145.505","60 km/h","https://www.euskadi.eus/web01-aprat/es/contenidos/informacion/rat/es_def/es/contenidos/informacion/rat/es_def/adjuntos/1452_es.html"];
+            } else {
+                var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                var popupValores = ["TUNEL MALTZAGA","SAN SEBASTIAN","PLACENCIA DE LAS ARMAS","Gipuzkoa","AP-1","145.505","60 km/h"];
+            }
+			switch (themeDisplay.getLanguageId()) {
+			case "eu_ES":		
+				var popupTitle = "MALTZAGAKO TUNELA";
+                if(popupTitle == "TRABAKUA 1 ZATIA"){       
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad,i18camara];      
+                    var popupValores = ["MALTZAGAKO TUNELA","DONOSTI","SORALUZE","Gipuzkoa","AP-1","145.505","60 km/h","https://www.euskadi.eus/tratamendu-jardueren-erregistroa-tje/web01-aprat/eu/eu/contenidos/informacion/rat/eu_def/adjuntos/1452_eu.html"];
+                }
+                else{
+                    var popupCampos = [i18nombre,i18sentido,i18municipio,i18territorio,i18carretera,i18km,i18velocidad];            
+                    var popupValores = ["TUNEL MALTZAGA","SAN SEBASTIAN","PLACENCIA DE LAS ARMAS","Gipuzkoa","AP-1","145.505","60 km/h"];
+                }
+                break;
+			}
+			var aux= [];
+			aux.push(coordType);
+			aux.push(wkid);
+			aux.push(x);
+			aux.push(y);	
+			aux.push(symbol);
+			aux.push(popupTitle);	
+			aux.push(popupCampos);
+			aux.push(popupValores);
+			
+			if(th == "Bizkaia"){
+				idLayerBizkaia="Bizkaia";
+				arrPointsBizkaia.push(aux);
+			}
+			else{
+				if(th == "Gipuzkoa"){
+					idLayerGipuzkoa="Gipuzkoa";
+					arrPointsGipuzkoa.push(aux);
+				}
+				else{
+					idLayerAraba="Araba";
+					arrPointsAraba.push(aux);
+				}
+			}
+					
+			
+		fDrawPoints(idLayerAraba,tooltip,arrPointsAraba,false).then(fDrawPoints(idLayerBizkaia,tooltip,arrPointsBizkaia,false)).then(fDrawPoints(idLayerGipuzkoa,tooltip,arrPointsGipuzkoa,false));
+</script>
+</body></html>

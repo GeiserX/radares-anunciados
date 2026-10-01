@@ -1,0 +1,429 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<_0:d2LogicalModel xmlns:_0="http://datex2.eu/schema/1_0/1_0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" modelBaseVersion="1.0" xsi:schemaLocation="http://datex2.eu/schema/1_0/1_0 http://datex2.eu/schema/1_0/1_0/DATEXIISchema_1_0_1_0.xsd">
+ <_0:exchange>
+  <_0:supplierIdentification>
+   <_0:country>es</_0:country>
+   <_0:nationalIdentifier>dgt</_0:nationalIdentifier>
+  </_0:supplierIdentification>
+ </_0:exchange>
+ <_0:payloadPublication lang="es" xsi:type="_0:PredefinedLocationsPublication">
+  <_0:publicationTime>2025-12-18T09:56:52.406+01:00</_0:publicationTime>
+  <_0:publicationCreator>
+   <_0:country>es</_0:country>
+   <_0:nationalIdentifier>dgt_its</_0:nationalIdentifier>
+  </_0:publicationCreator>
+  <_0:headerInformation>
+   <_0:areaOfInterest>national</_0:areaOfInterest>
+   <_0:confidentiality>noRestriction</_0:confidentiality>
+   <_0:informationUsage>broadcast</_0:informationUsage>
+   <_0:informationStatus>real</_0:informationStatus>
+  </_0:headerInformation>
+  <_0:predefinedLocationSet id="GUID_Inventario_CinemometrosVelocidadMedia">
+   <_0:predefinedLocationSetName>
+    <_0:value lang="es">CinemometrosVelocidadMedia</_0:value>
+   </_0:predefinedLocationSetName>
+  </_0:predefinedLocationSet>
+  <_0:predefinedLocationSet id="GUID_Inventario_CabinasCinemometro">
+   <_0:predefinedLocationSetName>
+    <_0:value lang="es">CabinasCinemometro</_0:value>
+   </_0:predefinedLocationSetName>
+   <_0:predefinedLocation id="GUID_CABINACINEMOMETRO_120206">
+    <_0:predefinedLocationName>
+     <_0:value lang="es">CABINACINEMOMETRO_120206</_0:value>
+    </_0:predefinedLocationName>
+    <_0:predefinedLocation xsi:type="_0:Point">
+     <_0:tpegpointLocation xsi:type="_0:TPEGSimplePoint">
+      <_0:tpegDirection>unknown</_0:tpegDirection>
+      <_0:tpegLocationType>nonLinkedPoint</_0:tpegLocationType>
+      <_0:point xsi:type="_0:TPEGNonJunctionPoint">
+       <_0:pointCoordinates>
+        <_0:latitude>43.01765</_0:latitude>
+        <_0:longitude>-1.90732</_0:longitude>
+       </_0:pointCoordinates>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>A-15</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>linkName</_0:tpegDescriptorType>
+       </_0:name>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>NAVARRA</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>other</_0:tpegDescriptorType>
+       </_0:name>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>NAVARRA</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>townName</_0:tpegDescriptorType>
+       </_0:name>
+      </_0:point>
+     </_0:tpegpointLocation>
+     <_0:referencePoint>
+      <_0:referencePointIdentifier>CABINACINEMOMETRO_120206</_0:referencePointIdentifier>
+      <_0:administrativeArea>
+       <_0:value>NAVARRA</_0:value>
+      </_0:administrativeArea>
+      <_0:roadName>
+       <_0:value lang="es">A-15</_0:value>
+      </_0:roadName>
+      <_0:roadNumber>A-15</_0:roadNumber>
+      <_0:directionRelative>negative</_0:directionRelative>
+      <_0:referencePointDistance>127670.0</_0:referencePointDistance>
+      <_0:referencePointExtension>
+       <_0:ExtendedReferencePoint>
+        <_0:referencePointIdentifier>CABINACINEMOMETRO_120206</_0:referencePointIdentifier>
+        <_0:directionNamed>PAMPLONA</_0:directionNamed>
+        <_0:provinceINEIdentifier>31</_0:provinceINEIdentifier>
+        <_0:roadIdentifier>55759</_0:roadIdentifier>
+        <_0:segmentIdentifier>55857</_0:segmentIdentifier>
+        <_0:singularity>AUTOPISTA / AUTOVÍA</_0:singularity>
+       </_0:ExtendedReferencePoint>
+      </_0:referencePointExtension>
+     </_0:referencePoint>
+    </_0:predefinedLocation>
+   </_0:predefinedLocation>
+   <_0:predefinedLocation id="GUID_CABINACINEMOMETRO_120209">
+    <_0:predefinedLocationName>
+     <_0:value lang="es">CABINACINEMOMETRO_120209</_0:value>
+    </_0:predefinedLocationName>
+    <_0:predefinedLocation xsi:type="_0:Point">
+     <_0:tpegpointLocation xsi:type="_0:TPEGSimplePoint">
+      <_0:tpegDirection>unknown</_0:tpegDirection>
+      <_0:tpegLocationType>nonLinkedPoint</_0:tpegLocationType>
+      <_0:point xsi:type="_0:TPEGNonJunctionPoint">
+       <_0:pointCoordinates>
+        <_0:latitude>42.03742</_0:latitude>
+        <_0:longitude>-1.64604</_0:longitude>
+       </_0:pointCoordinates>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>AP-68</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>linkName</_0:tpegDescriptorType>
+       </_0:name>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>NAVARRA</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>other</_0:tpegDescriptorType>
+       </_0:name>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>NAVARRA</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>townName</_0:tpegDescriptorType>
+       </_0:name>
+      </_0:point>
+     </_0:tpegpointLocation>
+     <_0:referencePoint>
+      <_0:referencePointIdentifier>CABINACINEMOMETRO_120209</_0:referencePointIdentifier>
+      <_0:administrativeArea>
+       <_0:value>NAVARRA</_0:value>
+      </_0:administrativeArea>
+      <_0:roadName>
+       <_0:value lang="es">AP-68</_0:value>
+      </_0:roadName>
+      <_0:roadNumber>AP-68</_0:roadNumber>
+      <_0:directionRelative>positive</_0:directionRelative>
+      <_0:referencePointDistance>218200.0</_0:referencePointDistance>
+      <_0:referencePointExtension>
+       <_0:ExtendedReferencePoint>
+        <_0:referencePointIdentifier>CABINACINEMOMETRO_120209</_0:referencePointIdentifier>
+        <_0:directionNamed>ZARAGOZA</_0:directionNamed>
+        <_0:provinceINEIdentifier>31</_0:provinceINEIdentifier>
+        <_0:roadIdentifier>55147</_0:roadIdentifier>
+        <_0:segmentIdentifier>55864</_0:segmentIdentifier>
+        <_0:singularity>AUTOPISTA / AUTOVÍA</_0:singularity>
+       </_0:ExtendedReferencePoint>
+      </_0:referencePointExtension>
+     </_0:referencePoint>
+    </_0:predefinedLocation>
+   </_0:predefinedLocation>
+   <_0:predefinedLocation id="GUID_CABINACINEMOMETRO_120218">
+    <_0:predefinedLocationName>
+     <_0:value lang="es">CABINACINEMOMETRO_120218</_0:value>
+    </_0:predefinedLocationName>
+    <_0:predefinedLocation xsi:type="_0:Point">
+     <_0:tpegpointLocation xsi:type="_0:TPEGSimplePoint">
+      <_0:tpegDirection>unknown</_0:tpegDirection>
+      <_0:tpegLocationType>nonLinkedPoint</_0:tpegLocationType>
+      <_0:point xsi:type="_0:TPEGNonJunctionPoint">
+       <_0:pointCoordinates>
+        <_0:latitude>42.07934</_0:latitude>
+        <_0:longitude>-1.79527</_0:longitude>
+       </_0:pointCoordinates>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>N-113</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>linkName</_0:tpegDescriptorType>
+       </_0:name>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>NAVARRA</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>other</_0:tpegDescriptorType>
+       </_0:name>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>NAVARRA</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>townName</_0:tpegDescriptorType>
+       </_0:name>
+      </_0:point>
+     </_0:tpegpointLocation>
+     <_0:referencePoint>
+      <_0:referencePointIdentifier>CABINACINEMOMETRO_120218</_0:referencePointIdentifier>
+      <_0:administrativeArea>
+       <_0:value>NAVARRA</_0:value>
+      </_0:administrativeArea>
+      <_0:roadName>
+       <_0:value lang="es">N-113</_0:value>
+      </_0:roadName>
+      <_0:roadNumber>N-113</_0:roadNumber>
+      <_0:directionRelative>negative</_0:directionRelative>
+      <_0:referencePointDistance>91358.0</_0:referencePointDistance>
+      <_0:referencePointExtension>
+       <_0:ExtendedReferencePoint>
+        <_0:referencePointIdentifier>CABINACINEMOMETRO_120218</_0:referencePointIdentifier>
+        <_0:directionNamed>PAMPLONA</_0:directionNamed>
+        <_0:provinceINEIdentifier>31</_0:provinceINEIdentifier>
+        <_0:roadIdentifier>60743</_0:roadIdentifier>
+        <_0:segmentIdentifier>61783</_0:segmentIdentifier>
+        <_0:singularity>CARRETERA NACIONAL</_0:singularity>
+       </_0:ExtendedReferencePoint>
+      </_0:referencePointExtension>
+     </_0:referencePoint>
+    </_0:predefinedLocation>
+   </_0:predefinedLocation>
+   <_0:predefinedLocation id="GUID_CABINACINEMOMETRO_120219">
+    <_0:predefinedLocationName>
+     <_0:value lang="es">CABINACINEMOMETRO_120219</_0:value>
+    </_0:predefinedLocationName>
+    <_0:predefinedLocation xsi:type="_0:Point">
+     <_0:tpegpointLocation xsi:type="_0:TPEGSimplePoint">
+      <_0:tpegDirection>unknown</_0:tpegDirection>
+      <_0:tpegLocationType>nonLinkedPoint</_0:tpegLocationType>
+      <_0:point xsi:type="_0:TPEGNonJunctionPoint">
+       <_0:pointCoordinates>
+        <_0:latitude>43.065994</_0:latitude>
+        <_0:longitude>-1.617763</_0:longitude>
+       </_0:pointCoordinates>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>N-121-A</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>linkName</_0:tpegDescriptorType>
+       </_0:name>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>NAVARRA</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>other</_0:tpegDescriptorType>
+       </_0:name>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>NAVARRA</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>townName</_0:tpegDescriptorType>
+       </_0:name>
+      </_0:point>
+     </_0:tpegpointLocation>
+     <_0:referencePoint>
+      <_0:referencePointIdentifier>CABINACINEMOMETRO_120219</_0:referencePointIdentifier>
+      <_0:administrativeArea>
+       <_0:value>NAVARRA</_0:value>
+      </_0:administrativeArea>
+      <_0:roadName>
+       <_0:value lang="es">N-121-A</_0:value>
+      </_0:roadName>
+      <_0:roadNumber>N-121-A</_0:roadNumber>
+      <_0:directionRelative>positive</_0:directionRelative>
+      <_0:referencePointDistance>32560.002</_0:referencePointDistance>
+      <_0:referencePointExtension>
+       <_0:ExtendedReferencePoint>
+        <_0:referencePointIdentifier>CABINACINEMOMETRO_120219</_0:referencePointIdentifier>
+        <_0:directionNamed>FRANCIA</_0:directionNamed>
+        <_0:provinceINEIdentifier>31</_0:provinceINEIdentifier>
+        <_0:roadIdentifier>55686</_0:roadIdentifier>
+        <_0:segmentIdentifier>63044</_0:segmentIdentifier>
+        <_0:singularity>CARRETERA NACIONAL</_0:singularity>
+       </_0:ExtendedReferencePoint>
+      </_0:referencePointExtension>
+     </_0:referencePoint>
+    </_0:predefinedLocation>
+   </_0:predefinedLocation>
+   <_0:predefinedLocation id="GUID_CABINACINEMOMETRO_120220">
+    <_0:predefinedLocationName>
+     <_0:value lang="es">CABINACINEMOMETRO_120220</_0:value>
+    </_0:predefinedLocationName>
+    <_0:predefinedLocation xsi:type="_0:Point">
+     <_0:tpegpointLocation xsi:type="_0:TPEGSimplePoint">
+      <_0:tpegDirection>unknown</_0:tpegDirection>
+      <_0:tpegLocationType>nonLinkedPoint</_0:tpegLocationType>
+      <_0:point xsi:type="_0:TPEGNonJunctionPoint">
+       <_0:pointCoordinates>
+        <_0:latitude>42.91613</_0:latitude>
+        <_0:longitude>-2.19164</_0:longitude>
+       </_0:pointCoordinates>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>A-1</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>linkName</_0:tpegDescriptorType>
+       </_0:name>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>NAVARRA</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>other</_0:tpegDescriptorType>
+       </_0:name>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>NAVARRA</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>townName</_0:tpegDescriptorType>
+       </_0:name>
+      </_0:point>
+     </_0:tpegpointLocation>
+     <_0:referencePoint>
+      <_0:referencePointIdentifier>CABINACINEMOMETRO_120220</_0:referencePointIdentifier>
+      <_0:administrativeArea>
+       <_0:value>NAVARRA</_0:value>
+      </_0:administrativeArea>
+      <_0:roadName>
+       <_0:value lang="es">A-1</_0:value>
+      </_0:roadName>
+      <_0:roadNumber>A-1</_0:roadNumber>
+      <_0:directionRelative>positive</_0:directionRelative>
+      <_0:referencePointDistance>401561.0</_0:referencePointDistance>
+      <_0:referencePointExtension>
+       <_0:ExtendedReferencePoint>
+        <_0:referencePointIdentifier>CABINACINEMOMETRO_120220</_0:referencePointIdentifier>
+        <_0:directionNamed>GUIPÚZCOA</_0:directionNamed>
+        <_0:provinceINEIdentifier>31</_0:provinceINEIdentifier>
+        <_0:roadIdentifier>55001</_0:roadIdentifier>
+        <_0:segmentIdentifier>55865</_0:segmentIdentifier>
+        <_0:singularity>AUTOPISTA / AUTOVÍA</_0:singularity>
+       </_0:ExtendedReferencePoint>
+      </_0:referencePointExtension>
+     </_0:referencePoint>
+    </_0:predefinedLocation>
+   </_0:predefinedLocation>
+   <_0:predefinedLocation id="GUID_CABINACINEMOMETRO_166103">
+    <_0:predefinedLocationName>
+     <_0:value lang="es">N-121a 25+900D</_0:value>
+    </_0:predefinedLocationName>
+    <_0:predefinedLocation xsi:type="_0:Point">
+     <_0:tpegpointLocation xsi:type="_0:TPEGSimplePoint">
+      <_0:tpegDirection>unknown</_0:tpegDirection>
+      <_0:tpegLocationType>nonLinkedPoint</_0:tpegLocationType>
+      <_0:point xsi:type="_0:TPEGNonJunctionPoint">
+       <_0:pointCoordinates>
+        <_0:latitude>43.01334</_0:latitude>
+        <_0:longitude>-1.6364053</_0:longitude>
+       </_0:pointCoordinates>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>N-121-A</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>linkName</_0:tpegDescriptorType>
+       </_0:name>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>NAVARRA</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>other</_0:tpegDescriptorType>
+       </_0:name>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>NAVARRA</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>townName</_0:tpegDescriptorType>
+       </_0:name>
+      </_0:point>
+     </_0:tpegpointLocation>
+     <_0:referencePoint>
+      <_0:referencePointIdentifier>CABINACINEMOMETRO_166103</_0:referencePointIdentifier>
+      <_0:administrativeArea>
+       <_0:value>NAVARRA</_0:value>
+      </_0:administrativeArea>
+      <_0:roadName>
+       <_0:value lang="es">N-121-A</_0:value>
+      </_0:roadName>
+      <_0:roadNumber>N-121-A</_0:roadNumber>
+      <_0:directionRelative>negative</_0:directionRelative>
+      <_0:referencePointDistance>25900.0</_0:referencePointDistance>
+      <_0:referencePointExtension>
+       <_0:ExtendedReferencePoint>
+        <_0:referencePointIdentifier>CABINACINEMOMETRO_166103</_0:referencePointIdentifier>
+        <_0:provinceINEIdentifier>31</_0:provinceINEIdentifier>
+        <_0:roadIdentifier>55686</_0:roadIdentifier>
+        <_0:segmentIdentifier>63044</_0:segmentIdentifier>
+        <_0:singularity>CARRETERA NACIONAL</_0:singularity>
+       </_0:ExtendedReferencePoint>
+      </_0:referencePointExtension>
+     </_0:referencePoint>
+    </_0:predefinedLocation>
+   </_0:predefinedLocation>
+   <_0:predefinedLocation id="GUID_CABINACINEMOMETRO_166986">
+    <_0:predefinedLocationName>
+     <_0:value lang="es">N-121a 60+230c</_0:value>
+    </_0:predefinedLocationName>
+    <_0:predefinedLocation xsi:type="_0:Point">
+     <_0:tpegpointLocation xsi:type="_0:TPEGSimplePoint">
+      <_0:tpegDirection>unknown</_0:tpegDirection>
+      <_0:tpegLocationType>nonLinkedPoint</_0:tpegLocationType>
+      <_0:point xsi:type="_0:TPEGNonJunctionPoint">
+       <_0:pointCoordinates>
+        <_0:latitude>43.25122</_0:latitude>
+        <_0:longitude>-1.67496</_0:longitude>
+       </_0:pointCoordinates>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>N-121-A</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>linkName</_0:tpegDescriptorType>
+       </_0:name>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>NAVARRA</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>other</_0:tpegDescriptorType>
+       </_0:name>
+       <_0:name>
+        <_0:descriptor>
+         <_0:value>NAVARRA</_0:value>
+        </_0:descriptor>
+        <_0:tpegDescriptorType>townName</_0:tpegDescriptorType>
+       </_0:name>
+      </_0:point>
+     </_0:tpegpointLocation>
+     <_0:referencePoint>
+      <_0:referencePointIdentifier>CABINACINEMOMETRO_166986</_0:referencePointIdentifier>
+      <_0:administrativeArea>
+       <_0:value>NAVARRA</_0:value>
+      </_0:administrativeArea>
+      <_0:roadName>
+       <_0:value lang="es">N-121-A</_0:value>
+      </_0:roadName>
+      <_0:roadNumber>N-121-A</_0:roadNumber>
+      <_0:directionRelative>positive</_0:directionRelative>
+      <_0:referencePointDistance>60230.0</_0:referencePointDistance>
+      <_0:referencePointExtension>
+       <_0:ExtendedReferencePoint>
+        <_0:referencePointIdentifier>CABINACINEMOMETRO_166986</_0:referencePointIdentifier>
+        <_0:provinceINEIdentifier>31</_0:provinceINEIdentifier>
+        <_0:roadIdentifier>55686</_0:roadIdentifier>
+        <_0:segmentIdentifier>63044</_0:segmentIdentifier>
+        <_0:singularity>CARRETERA NACIONAL</_0:singularity>
+       </_0:ExtendedReferencePoint>
+      </_0:referencePointExtension>
+     </_0:referencePoint>
+    </_0:predefinedLocation>
+   </_0:predefinedLocation>
+  </_0:predefinedLocationSet>
+ </_0:payloadPublication>
+</_0:d2LogicalModel>

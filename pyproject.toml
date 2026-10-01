@@ -6,6 +6,7 @@ readme = "README.md"
 license = "GPL-3.0-or-later"
 requires-python = ">=3.12"
 dependencies = [
+    "tzdata>=2025.2",  # Europe/Madrid for zoneinfo: the slim base image has no zone files
     "websockets>=13",
 ]
 

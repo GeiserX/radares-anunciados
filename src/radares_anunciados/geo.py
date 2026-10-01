@@ -45,3 +45,47 @@ def cover(lines: list[list[tuple[float, float]]], radius_m: float) -> list[tuple
             if all(distance_m(point, c) > reach for c in centres):
                 centres.append(point)
     return centres
+
+
+# ETRS89 (GRS80 ellipsoid). ETRS89 and WGS84 differ by well under a metre in
+# Spain, far below the size of a radar zone, so ETRS89 lat/lon is used as WGS84.
+_GRS80_A = 6_378_137.0
+_GRS80_F = 1 / 298.257222101
+_UTM_K0 = 0.9996
+_UTM_E0 = 500_000.0
+
+
+def utm_to_wgs84(easting: float, northing: float, zone: int) -> tuple[float, float]:
+    """(lat, lon) of an ETRS89 UTM point in a northern zone (29, 30 or 31 in Spain;
+    EPSG:25829, 25830, 25831). The Canaries' zone 28 works the same way.
+
+    Inverse transverse Mercator by Krüger's series in the third flattening ``n``
+    (Karney 2011, eq. 11-15 to third order): sub-millimetre inside a zone.
+    """
+    if not 1 <= zone <= 60:
+        raise ValueError(f"UTM zone {zone} does not exist")
+    n = _GRS80_F / (2 - _GRS80_F)
+    big_a = _GRS80_A / (1 + n) * (1 + n**2 / 4 + n**4 / 64)
+    beta = (
+        n / 2 - 2 * n**2 / 3 + 37 * n**3 / 96,
+        n**2 / 48 + n**3 / 15,
+        17 * n**3 / 480,
+    )
+    delta = (
+        2 * n - 2 * n**2 / 3 - 2 * n**3,
+        7 * n**2 / 3 - 8 * n**3 / 5,
+        56 * n**3 / 15,
+    )
+    xi = northing / (_UTM_K0 * big_a)
+    eta = (easting - _UTM_E0) / (_UTM_K0 * big_a)
+    xi_p = xi - sum(
+        b * math.sin(2 * j * xi) * math.cosh(2 * j * eta) for j, b in enumerate(beta, 1)
+    )
+    eta_p = eta - sum(
+        b * math.cos(2 * j * xi) * math.sinh(2 * j * eta) for j, b in enumerate(beta, 1)
+    )
+    chi = math.asin(math.sin(xi_p) / math.cosh(eta_p))
+    lat = chi + sum(d * math.sin(2 * j * chi) for j, d in enumerate(delta, 1))
+    lon0 = math.radians(zone * 6 - 183)
+    lon = lon0 + math.atan2(math.sinh(eta_p), math.cos(xi_p))
+    return math.degrees(lat), math.degrees(lon)
