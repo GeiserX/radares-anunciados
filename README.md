@@ -13,8 +13,8 @@ Radares Anunciados is a Docker service that gathers the speed radars announced i
 ## Features
 
 - One GeoJSON feed with every announced radar, each point tagged with its source and license
-- The weekly mobile-radar lists that municipal police publish, starting with Murcia's Policía Local
-- Fixed DGT radars from the [DGT National Access Point](https://nap.dgt.es/dataset/radares-fijos-dgt), published as DATEX II
+- The mobile-radar lists that councils publish: Murcia (weekly), León (monthly, every day) and Donostia (daily)
+- Fixed, section and mobile-stretch radars from the DGT, the Servei Català de Trànsit, the Basque and Navarra governments, and the cities of Madrid, Salamanca and Donostia
 - Speed cameras mapped in [OpenStreetMap](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera)
 - Home Assistant zones kept in sync with the radars around you, for alerts through the companion app
 - Warns from published positions only; it never senses or jams a radar signal
@@ -35,14 +35,19 @@ Then import the [alert blueprint](blueprints/radar_zone_alert.yaml). Full steps 
 - [Getting started](docs/getting-started.md): token, container, blueprint, settings
 - [How it works](docs/how-it-works.md): sources, street matching, the 20-zone limit, passive zones
 - [Alerting](docs/alerting.md): Prometheus metrics, the health check, alert rules for a failing service
+- [Sources](docs/sources.md): every source, its licence and cadence, and what we checked that publishes nothing usable
 
 ## Data sources
 
 | Source | License |
 |---|---|
-| Municipal police weekly lists | each council's reuse terms |
-| [DGT NAP](https://nap.dgt.es/dataset/radares-fijos-dgt), fixed radars | CC BY 4.0 |
-| [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors | ODbL 1.0 |
+| [DGT NAP](https://nap.dgt.es/dataset/radares-fijos-dgt): fixed radars, sections and mobile-radar stretches | Creative Commons Attribution |
+| [Servei Català de Trànsit](https://transit.gencat.cat/ca/seguretat_viaria/cinemometres-fixos-trams-mobils/): fixed, section and trailer radars | Llicència oberta d'ús d'informació – Catalunya |
+| [Madrid](https://datos.madrid.es/dataset/300049-0-radares-fijos-moviles) and [Salamanca](https://opendata.aytosalamanca.es/datosabiertos/catalogo/dataset/radares-fijos) open data | CC BY 4.0; GNU FDL |
+| Basque and Navarra governments, Donostia, Murcia and León councils | no reuse terms published |
+| [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors: cameras, speed limits, street geometry | ODbL 1.0 |
+
+The full table, with cadence and which sources need a Spanish IP, is in [docs/sources.md](docs/sources.md).
 
 ## Legal
 
