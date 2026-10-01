@@ -225,3 +225,25 @@ def test_salamanca_fetch_refuses_an_empty_layer(monkeypatch):
     answers[SA_TRAMO] = b'{"type":"FeatureCollection","features":[]}'
     with pytest.raises(ValueError, match="no radar"):
         salamanca.SOURCE.fetch(CTX)
+
+
+def _osm_copy(r, north_m: float):
+    from radares_anunciados.model import Radar
+
+    return Radar(
+        id=f"osm-copy-of-{r.id}", source="osm", kind="fixed", name="Radar",
+        lat=r.lat + north_m / 111_320, lon=r.lon, radius_m=500,
+    )  # fmt: skip
+
+
+def test_a_madrid_or_salamanca_radar_drops_its_osm_copy():
+    # Both are official sources (the registry default), so an OpenStreetMap camera
+    # within feed.DUPLICATE_M of one is the same camera mapped twice.
+    day = date(2026, 10, 1)
+    city = [
+        madrid.parse(madrid_csv(), CSV_URL, "2026-07-31").radars[0],
+        salamanca.parse((FIX / "salamanca_fijos.json").read_bytes(), SA_FIXED).radars[0],
+    ]
+    for r in city:
+        assert [x.id for x in feed.merge([r, _osm_copy(r, 5)], day)] == [r.id]
+        assert len(feed.merge([r, _osm_copy(r, 300)], day)) == 2  # another camera
