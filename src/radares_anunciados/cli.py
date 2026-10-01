@@ -108,6 +108,15 @@ def collect(day: date, save_history: bool = True) -> Collected:
     remembered, history = feed.remember(store.load_announced(), radars, day, weeks)
     if save_history:
         store.save_announced(history)
+    # the history outlives a change of settings; a street of a source or a
+    # province no longer selected stays in it but gives no zone
+    keys_run = {o.key for o in outcomes}
+    remembered = [
+        r
+        for r in remembered
+        if r.source in keys_run
+        and (ctx.provinces is None or r.province is None or r.province in ctx.provinces)
+    ]
     return Collected(feed.merge(radars + remembered, day), lists, stretches, outcomes)
 
 

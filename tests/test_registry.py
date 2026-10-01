@@ -324,6 +324,27 @@ def test_collect_turns_last_weeks_street_dormant_and_back(monkeypatch):
     assert len(found) == 2 and all(r.active for r in found)
 
 
+def test_a_remembered_street_gives_no_zone_once_its_source_or_province_is_deselected(monkeypatch):
+    src = fake_source(
+        "m", lambda: SourceResult(radars=announced(MONDAY)), provinces=frozenset({"30"})
+    )
+    other = fake_source("o", lambda: SourceResult())
+    monkeypatch.setattr(sources, "REGISTRY", {"m": src, "o": other})
+    monkeypatch.setenv("RADARES_PROVINCES", "all")
+    assert len(cli.collect(MONDAY).radars) == 2
+    monkeypatch.setenv("RADARES_SOURCES", "o")
+    assert cli.collect(MONDAY).radars == []
+    monkeypatch.delenv("RADARES_SOURCES")
+    monkeypatch.setenv("RADARES_PROVINCES", "28")
+    assert cli.collect(MONDAY).radars == []
+    # the history itself survives, so selecting it again brings the street back
+    monkeypatch.setenv("RADARES_PROVINCES", "all")
+    monkeypatch.setattr(
+        sources, "REGISTRY", {"m": fake_source("m", lambda: SourceResult()), "o": other}
+    )
+    assert len(cli.collect(MONDAY).radars) == 2
+
+
 @pytest.mark.parametrize(("weeks", "day"), [("0", date(2026, 10, 5)), ("1", date(2026, 10, 12))])
 def test_only_a_real_sync_writes_the_history_of_announced_streets(monkeypatch, weeks, day):
     # Trying another RADARES_DORMANT_WEEKS with `feed` or `sync --dry-run` must
