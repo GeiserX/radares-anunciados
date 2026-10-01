@@ -14,7 +14,20 @@ from datetime import date
 
 from .. import store
 from ..model import SourceResult, WeeklyList
-from . import dgt, dgt_freshness, dgt_invive, donostia, donostia_movil, euskadi, murcia, navarra, osm, sct
+from . import (
+    dgt,
+    dgt_freshness,
+    dgt_invive,
+    donostia,
+    donostia_movil,
+    euskadi,
+    madrid,
+    murcia,
+    navarra,
+    osm,
+    salamanca,
+    sct,
+)
 from .base import Context, Source
 
 log = logging.getLogger(__name__)
@@ -32,6 +45,8 @@ REGISTRY: dict[str, Source] = {
         navarra.SOURCE,
         donostia.SOURCE,
         donostia_movil.SOURCE,
+        madrid.SOURCE,
+        salamanca.SOURCE,
     )
 }
 

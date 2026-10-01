@@ -1,0 +1,36 @@
+{
+ "success": true,
+ "result": {
+  "id": "300049-0-radares-fijos-moviles",
+  "name": "300049-0-radares-fijos-moviles",
+  "title": "Radares",
+  "license_id": "cc-by",
+  "license_title": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/legalcode.es",
+  "metadata_modified": "2026-07-31T00:00:00",
+  "modified": "2026-07-31T00:00:00.000000",
+  "organization": {
+   "title": "Ayuntamiento de Madrid"
+  },
+  "resources": [
+   {
+    "id": "300049-0-radares-fijos-moviles-geo",
+    "name": "300049-0-radares-fijos-moviles-geo",
+    "format": "GEO",
+    "url": "https://datos.madrid.es/dataset/300049-0-radares-fijos-moviles/resource/300049-0-radares-fijos-moviles-geo/download/300049-0-radares-fijos-moviles-geo.geo"
+   },
+   {
+    "id": "300049-1-radares-fijos-moviles-csv",
+    "name": "300049-1-radares-fijos-moviles-csv",
+    "format": "CSV",
+    "url": "https://datos.madrid.es/dataset/300049-0-radares-fijos-moviles/resource/300049-1-radares-fijos-moviles-csv/download/300049-1-radares-fijos-moviles-csv.csv"
+   },
+   {
+    "id": "300049-2-radares-fijos-moviles-xlsx",
+    "name": "300049-2-radares-fijos-moviles-xlsx",
+    "format": "XLSX",
+    "url": "https://datos.madrid.es/dataset/300049-0-radares-fijos-moviles/resource/300049-2-radares-fijos-moviles-xlsx/download/300049-2-radares-fijos-moviles-xlsx.xlsx"
+   }
+  ]
+ }
+}
