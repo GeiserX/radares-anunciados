@@ -16,20 +16,27 @@
     "id": "f2620192-7d89-44aa-a086-090cf595b052",
     "name": "Radares_fijos.csv",
     "format": "CSV",
-    "url": "https://opendata.aytosalamanca.es/datosabiertos/catalogo/dataset/1d58945b-23e2-4b63-b86d-12fd3683b6b7/resource/f2620192-7d89-44aa-a086-090cf595b052/download/radares_fijos.csv"
+    "url": "https://opendata.aytosalamanca.es/datosabiertos/catalogo/dataset/1d58945b-23e2-4b63-b86d-12fd3683b6b7/resource/f2620192-7d89-44aa-a086-090cf595b052/download/radares_fijos.csv",
+    "created": "2024-08-08T10:32:54.545829",
+    "last_modified": "2024-08-08T10:48:15.900481"
    },
    {
     "id": "c1976bb0-0c9d-488a-bd54-753de9821772",
     "name": "Radares fijos.geojson",
     "format": "GeoJSON",
-    "url": "https://ide.aytosalamanca.es/geoserver/ide_salamanca_tic/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=ide_salamanca_tic%3ARadares_Fijos&outputFormat=application%2Fjson&srsName=EPSG%3A4326"
+    "url": "https://ide.aytosalamanca.es/geoserver/ide_salamanca_tic/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=ide_salamanca_tic%3ARadares_Fijos&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+    "created": "2024-08-08T10:42:40.040464",
+    "last_modified": "2024-08-08T10:44:34.480874"
    },
    {
     "id": "17481072-7d2b-4e08-8a1d-b79c3e5f44ac",
     "name": "Radares de tramo.geojson",
     "format": "GeoJSON",
-    "url": "https://ide.aytosalamanca.es/geoserver/ide_salamanca_movilidad/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=ide_salamanca_movilidad%3ARADAR_TRAMO&outputFormat=application%2Fjson&srsName=EPSG%3A4326"
+    "url": "https://ide.aytosalamanca.es/geoserver/ide_salamanca_movilidad/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=ide_salamanca_movilidad%3ARADAR_TRAMO&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+    "created": "2025-01-22T12:24:54.207404",
+    "last_modified": null
    }
-  ]
+  ],
+  "modified": null
  }
 }

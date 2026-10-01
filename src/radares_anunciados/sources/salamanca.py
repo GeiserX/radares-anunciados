@@ -29,21 +29,26 @@ API = f"{CATALOGUE}/api/3/action/package_show?id={DATASET}"
 ATTRIBUTION = "Ayuntamiento de Salamanca, Radares Municipales (GNU Free Documentation License)"
 
 
-def geojson_resources(package: bytes) -> tuple[list[str], str | None]:
-    """(GeoJSON layer URLs, last update day) from a CKAN package_show answer."""
+def geojson_resources(package: bytes) -> list[tuple[str, str | None]]:
+    """(URL, last update day) of each GeoJSON layer in a CKAN package_show answer.
+
+    The day is the layer's own ``last_modified``, else its ``created``, else the
+    dataset's ``modified``. The package's ``metadata_modified`` is never used: it
+    moves when anyone edits the catalogue entry, not when the radars change.
+    """
     data = json.loads(package)
     if not data.get("success"):
         raise ValueError(f"CKAN package_show for {DATASET} did not succeed")
     result = data["result"]
-    urls = [
-        r["url"]
-        for r in result.get("resources", [])
-        if str(r.get("format", "")).lower() == "geojson"
-    ]
-    if not urls:
+    layers = []
+    for r in result.get("resources", []):
+        if str(r.get("format", "")).lower() != "geojson":
+            continue
+        updated = r.get("last_modified") or r.get("created") or result.get("modified")
+        layers.append((r["url"], str(updated)[:10] if updated else None))
+    if not layers:
         raise ValueError(f"no GeoJSON resource in {DATASET}")
-    updated = result.get("modified") or result.get("metadata_modified")
-    return urls, (str(updated)[:10] if updated else None)
+    return layers
 
 
 def _in_salamanca(lat: float, lon: float) -> bool:
@@ -160,10 +165,10 @@ def parse(payload: bytes, url: str, updated: str | None = None) -> SourceResult:
 
 
 def fetch(ctx: Context) -> SourceResult:
-    urls, updated = geojson_resources(net.cached_get(API, max_age_s=ctx.max_age_s))
+    layers = geojson_resources(net.cached_get(API, max_age_s=ctx.max_age_s))
     radars: list[Radar] = []
     stretches: list[Stretch] = []
-    for url in urls:
+    for url, updated in layers:
         part = parse(net.cached_get(url, max_age_s=ctx.max_age_s), url, updated)
         if not part.radars:
             # An empty layer would drop every zone of the city; a layer that
