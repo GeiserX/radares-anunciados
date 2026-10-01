@@ -49,7 +49,10 @@ services:
 | `radares_last_success_timestamp_seconds` | | when the last run that synced Home Assistant ended |
 | `radares_consecutive_failed_runs` | | runs failed in a row; 0 after a success |
 | `radares_radars` | `source` | radars per source in the last collected list |
-| `radares_sync_zones` | `action` (`kept`, `created`, `deleted`) | what the last sync did |
+| `radares_sync_zones` | `action` (`kept`, `created`, `deleted`, `updated`) | what the last sync did; `updated` counts kept zones whose icon changed |
+| `radares_zones_left_out` | | radars with no zone because there were more than `RADARES_MAX_ZONES` |
+| `radares_source_up` | `source` | 1 if the source answered in the last run, 0 if it failed and its last good result was used |
+| `radares_source_data_age_seconds` | `source` | age of the data in use from that source; keeps growing while it fails |
 | `radares_weekly_list_found` | `source` | 1 if this week's police list was found, else 0 |
 | `radares_weekly_list_missing_seconds` | `source` | seconds since this week started (Monday 00:00 in the container's time zone) with no list found; 0 once found |
 | `radares_weekly_list_published_timestamp_seconds` | `source` | the list's publication day, midnight UTC |

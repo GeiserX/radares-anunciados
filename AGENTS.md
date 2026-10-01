@@ -25,9 +25,17 @@ interferes with a radar signal is out of scope, whoever asks for it.
 
 ## Layout
 
-- `src/radares_anunciados/sources/`: one module per source (`dgt`, `osm`, `murcia`), each returning `Radar`s
+- `src/radares_anunciados/sources/`: one module per source (`dgt`, `osm`, `murcia`). Each exposes
+  `SOURCE = Source(key, fetch, attribution, licence, spanish_ip, max_age_s, provinces)` and is listed
+  once in `sources/__init__.py`. `fetch(Context)` returns a `SourceResult` (radars, stretches, weekly
+  lists) and raises on any failure; the registry then reuses its last good result. Contract in
+  `sources/base.py`.
+- `model.py`: `Radar`, `Stretch`, `SourceResult`; `provinces.py`: INE codes and bounding boxes
+- `speed.py`: radius by speed limit; `LOOKUPS` is the hook for a limit lookup; `geo.py`: distances,
+  street cover, ETRS89 UTM to WGS84
 - `streets.py`: street + district from a police list to circle centres (two Overpass queries)
-- `feed.py`: merge, dedupe, GeoJSON; `ha.py`: Home Assistant zone sync over the websocket API
+- `feed.py`: merge, dedupe, dormant streets, GeoJSON; `ha.py`: Home Assistant zone sync over the websocket API
+- `store.py`: each source's last good result and the announced streets, in the cache folder
 - `metrics.py`: `/metrics` and `/healthz` of `radares run`, standard library only ([`docs/alerting.md`](docs/alerting.md))
 - [`blueprints/radar_zone_alert.yaml`](blueprints/radar_zone_alert.yaml): the automation that sends the alert
 - [`tests/fixtures/`](tests/fixtures/): real pages and responses, trimmed. Tests never touch the network.
@@ -35,9 +43,17 @@ interferes with a radar signal is out of scope, whoever asks for it.
 
 ## Rules that keep it working
 
-- Zones are passive, icon `mdi:camera-timer`, name starting with "Radar". `ha.py` touches no other zone.
+- Zones are passive, name starting with "Radar", icon `mdi:camera-timer` (alerts) or `mdi:camera-off`
+  (a dormant street, silent). `ha.py` touches no other zone.
+- A dormant street changes only its icon, with `zone/update` on the same zone id. Never delete and
+  create a zone whose place did not change: the phone would keep the old id.
 - Radius never under 100 m: the iOS app splits smaller zones into three regions of its 20.
-- The iOS app loads new zones only in the foreground; every change notifies the phones.
+- At most `RADARES_MAX_ZONES` (1,000) zones. Over it, drop zones in order; never refuse to sync.
+- The iOS app loads new zones only in the foreground, and drops a change within 15 s of the last one it
+  stored. Every create or delete notifies the phones, and every change is followed 20 s later by a
+  1 cm move of one zone, below the 6 decimals a plan compares.
+- A failing source never fails the run and never costs its zones. Only Home Assistant fails a run.
+- Overpass by bounding boxes (`provinces.py`), never an area lookup: it answers 504.
 - Never send Overpass a name regex over the whole municipality. It answers 504. Look up the districts
   first, then search `around` them.
 - La Opinión's street list is `ul.ft-list--primary`. A plain `ft-list` on the same page holds headlines.

@@ -31,7 +31,7 @@ The container runs as user 65534, so give it the cache folder first: `mkdir -p d
 
 ```
 INFO Murcia list https://www.laopiniondemurcia.es/murcia/2026/09/28/...: 6 streets
-INFO zones: 0 kept, 89 to create, 0 to delete
+INFO zones: 0 kept (0 with a new icon), 89 to create, 0 to delete
 ```
 
 To see what it would do without touching Home Assistant:
@@ -52,7 +52,9 @@ notification titled with the radar. It's marked time-sensitive, so it shows thro
 
 The iOS app only downloads new zones while it is open on screen. After every change the service sends
 "Radares actualizados" to the phones in `RADARES_NOTIFY`; tap it and the new zones load. Until you do,
-the phone keeps warning about last week's streets.
+the phone has only the zones it loaded before: last week's streets, now silent, and none of this
+week's. If the app is already open during a change, it loads the new zones on its own within half a
+minute.
 
 If a street from the week's list can't be placed on the map, that notification names it after "Sin
 aviso". That street gets no zone, so it gives no warning this week.
@@ -62,14 +64,16 @@ aviso". That street gets no zone, so it gives no warning this week.
 | Variable | Default | What it does |
 |---|---|---|
 | `HA_URL`, `HA_TOKEN` | | Home Assistant address and long-lived token |
-| `RADARES_SOURCES` | `dgt,osm,murcia` | which sources to use |
-| `RADARES_DGT_PROVINCES` | `30` | INE province codes for DGT radars (30 is Murcia) |
-| `RADARES_OSM_BBOX` | Región de Murcia | `south,west,north,east` for OpenStreetMap cameras |
-| `RADARES_FIXED_RADIUS` | `500` | metres around a fixed radar |
-| `RADARES_STREET_RADIUS` | `300` | metres of each circle along an announced street |
+| `RADARES_SOURCES` | all of them | which sources to use, such as `dgt,osm,murcia` |
+| `RADARES_PROVINCES` | `30` | INE province codes, such as `30` (Murcia) or `3,46`, or `all` for the whole country. `RADARES_DGT_PROVINCES` is the old name and still works |
+| `RADARES_OSM_BBOX` | the provinces' boxes | `south,west,north,east` for OpenStreetMap cameras, or `all` for the whole country |
+| `RADARES_FIXED_RADIUS` | `auto` | metres around a fixed radar; `auto` is 200 m plus 40 s at the speed limit |
+| `RADARES_STREET_RADIUS` | `auto` | metres of each circle along an announced street; `auto` is 200 m plus 20 s at the limit |
+| `RADARES_MAX_ZONES` | `1000` | most radar zones in Home Assistant; past it, the farthest fixed radars and the oldest silent streets get none |
+| `RADARES_DORMANT_WEEKS` | `26` | weeks an announced street keeps its zones, silent, after its week; `0` deletes them when the week ends |
 | `RADARES_NOTIFY` | | notify services told to open the app after a change |
 | `RADARES_INTERVAL` | `3600` | seconds between runs |
-| `RADARES_CACHE` | `~/.cache/radares-anunciados` | where downloads are cached |
+| `RADARES_CACHE` | `~/.cache/radares-anunciados` | where downloads, each source's last good result and the announced streets are kept |
 | `RADARES_METRICS_PORT` | `9464` | port of `/metrics` and `/healthz`; empty or `0` turns them off |
 
 `radares feed` prints the merged list as GeoJSON, for anyone who wants the data without Home
