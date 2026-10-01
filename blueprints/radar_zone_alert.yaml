@@ -3,8 +3,12 @@ blueprint:
   description: >-
     Sends a notification to the iPhone that just entered a radar zone created by
     radares-anunciados. The iOS companion app fires `ios.zone_entered` for passive
-    zones too, so presence (home / not_home) is untouched.
+    zones too, so presence (home / not_home) is untouched. A street is covered by
+    several zones with the same name, so each phone is alerted once per radar name
+    within the cooldown.
   domain: automation
+  homeassistant:
+    min_version: 2024.10.0
   source_url: https://github.com/GeiserX/radares-anunciados/blob/main/blueprints/radar_zone_alert.yaml
   input:
     sound:
@@ -28,26 +32,55 @@ blueprint:
       default: false
       selector:
         boolean:
+    cooldown:
+      name: Cooldown
+      description: >-
+        Minutes before the same phone is alerted again for a radar with the same
+        name. A street is several overlapping zones with one name, and an
+        average-speed section has a zone at each end. A different radar, or
+        another phone, is alerted at once. 0 alerts on every zone.
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 120
+          unit_of_measurement: min
+          mode: box
 
 triggers:
   - trigger: event
     event_type: ios.zone_entered
 
-conditions:
-  - condition: template
-    value_template: >-
-      {{ state_attr(trigger.event.data.zone, 'icon') == 'mdi:camera-timer'
-         and (state_attr(trigger.event.data.zone, 'friendly_name') or '').startswith('Radar') }}
-
 variables:
   sound: !input sound
   time_sensitive: !input time_sensitive
   critical: !input critical
+  cooldown: !input cooldown
+  radar: "{{ state_attr(trigger.event.data.zone, 'friendly_name') or '' }}"
+  # While a phone is in cooldown for a radar name, a scene named after both
+  # exists. It needs no helper, and Home Assistant forgets it on restart.
+  marker: "radares_anunciados_{{ (trigger.event.data.sourceDeviceID ~ ' ' ~ radar) | slugify }}"
+
+conditions:
+  - condition: template
+    value_template: >-
+      {{ state_attr(trigger.event.data.zone, 'icon') == 'mdi:camera-timer'
+         and radar.startswith('Radar') }}
+  # Skip if this phone was alerted for this radar name within the cooldown.
+  # The age check also covers a marker whose run was cut short by a reload.
+  - condition: template
+    value_template: >-
+      {% set m = states['scene.' ~ marker] %}
+      {{ m is none or now() - m.last_changed >= timedelta(minutes=cooldown | float(0)) }}
 
 actions:
+  - action: scene.create
+    data:
+      scene_id: "{{ marker }}"
+      snapshot_entities: "{{ trigger.event.data.zone }}"
   - action: "notify.mobile_app_{{ trigger.event.data.sourceDeviceID }}"
     data:
-      title: "{{ state_attr(trigger.event.data.zone, 'friendly_name') }}"
+      title: "{{ radar }}"
       message: Radar publicado cerca. Revisa tu velocidad.
       data:
         push:
@@ -55,6 +88,13 @@ actions:
             {{ {'name': sound, 'critical': 1, 'volume': 1.0} if critical else sound }}
           interruption-level: >-
             {{ 'critical' if critical else ('time-sensitive' if time_sensitive else 'active') }}
+  - delay:
+      minutes: "{{ cooldown | float(0) }}"
+  - action: scene.delete
+    target:
+      entity_id: "scene.{{ marker }}"
+    continue_on_error: true
 
-mode: queued
-max: 10
+# Each alert's run lives for the cooldown, so allow many at once.
+mode: parallel
+max: 100

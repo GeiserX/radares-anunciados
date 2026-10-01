@@ -48,6 +48,10 @@ Or copy [`blueprints/radar_zone_alert.yaml`](../blueprints/radar_zone_alert.yaml
 by hand. Create one automation from it. When a phone enters a radar zone, that phone gets a
 notification titled with the radar. It's marked time-sensitive, so it shows through Focus modes.
 
+A street is several zones with the same name, so each phone gets one alert per radar name and then
+stays quiet about that name for the **Cooldown** (10 minutes by default). Another radar, or another
+phone, is alerted at once. No helper is needed.
+
 ## 4. Open the app once after each change
 
 The iOS app only downloads new zones while it is open on screen. After every change the service sends

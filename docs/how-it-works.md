@@ -51,6 +51,20 @@ Every radar zone is *passive*. Home Assistant never sets a person's state to a p
 The service only touches zones with the icon `mdi:camera-timer` whose name starts with "Radar". It
 refuses to sync more than 400 zones, so a broken parser can't flood Home Assistant.
 
+## One alert per street
+
+A street is a row of overlapping circles with one name, and an average-speed section is a circle at
+each end with one name. The app fires `ios.zone_entered` for each circle, so the blueprint alerts a
+phone once per radar name and then ignores that name for that phone until the cooldown ends (10
+minutes by default). A different name, or a different phone, is alerted at once.
+
+The blueprint remembers without a helper. When it alerts, it creates a scene named after the phone and
+the radar, such as `scene.radares_anunciados_iphone_radar_calle_mayor`, waits for the cooldown and
+deletes it. If that scene exists and is younger than the cooldown, the blueprint skips the entry. Each
+alert keeps one automation run open for the cooldown, so the automation shows as running while you
+drive. Home Assistant forgets these scenes on restart, so a street can alert once more after a
+restart.
+
 ## When a source is down
 
 Downloads are cached. If a refresh fails, the last copy is used. If a whole run fails, Home Assistant
