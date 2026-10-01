@@ -101,3 +101,16 @@ def test_osm_and_murcia_check_their_overpass_answers_before_caching(tmp_path, mo
     assert osm.fetch(ctx).radars
     murcia.fetch(date(2026, 7, 8))
     assert len(calls) == 5  # each source asked again: the error answers were not kept
+
+
+def test_a_cached_copy_that_fails_the_check_is_asked_again(tmp_path, monkeypatch):
+    # An error answer cached before the check existed must not be served for the
+    # rest of its cache lifetime.
+    monkeypatch.setenv("RADARES_CACHE", str(tmp_path))
+    monkeypatch.setattr(net, "get", lambda url, **kw: REMARK)
+    net.cached_get("https://x/p", {"data": "q"})  # cached with no check
+    calls = []
+    monkeypatch.setattr(net, "get", lambda url, **kw: calls.append(url) or GOOD)
+    for _ in range(2):
+        assert net.cached_get("https://x/p", {"data": "q"}, validate=net.overpass_answer) == GOOD
+    assert len(calls) == 1  # the bad copy was replaced, the good one then served

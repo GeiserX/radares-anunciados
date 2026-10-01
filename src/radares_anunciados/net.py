@@ -56,11 +56,19 @@ def cached_get(
     (``sources.run``), instead of looking like a source that answered.
 
     ``validate`` raises on a body that is no answer (``overpass_answer``). It runs
-    before the write, so an error answer is never kept for the cache lifetime."""
+    before the write, so an error answer is never kept for the cache lifetime, and
+    on a cached copy too: a copy that fails it (kept before the check existed) is
+    stale and asked again."""
     key = hashlib.sha256(json.dumps([url, data], sort_keys=True).encode()).hexdigest()[:32]
     path = cache_dir() / key
     if path.exists() and time.time() - path.stat().st_mtime < max_age_s:
-        return path.read_bytes()
+        cached = path.read_bytes()
+        try:
+            if validate is not None:
+                validate(cached)
+            return cached
+        except ValueError as exc:
+            log.warning("cached copy of %s fails its check, asking again: %s", url, exc)
     body = get(url, data=data, headers=headers)
     if validate is not None:
         validate(body)
