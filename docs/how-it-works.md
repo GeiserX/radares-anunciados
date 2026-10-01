@@ -154,7 +154,8 @@ Each source's last good result and the announced streets are kept between runs w
 so a source that is down falls back to its last good copy as described above, and an announced street
 turns dormant on the map after its week. The downloads are not kept. A download younger than its
 source's cache age is reused without asking the source, so a kept one would report a source as `ok`,
-with this run's time, while its site is down. Every published run asks every source. The runner is outside Spain:
+with this run's time, while its site is down. With no download kept, every
+published run asks every source. The runner is outside Spain:
 a source that refuses other countries never answers there, and shows as `missing` until a copy reaches
 the cache some other way. A run whose feed has no features at all fails instead of publishing it.
 

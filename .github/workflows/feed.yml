@@ -30,6 +30,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       # Build on the Python the image ships and the tests run on, read from the Dockerfile's FROM
       # line exactly as tests.yml does, so the published feed never runs on an untested interpreter.
       - name: Read the image's Python version
