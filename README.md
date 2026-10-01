@@ -34,6 +34,7 @@ Then import the [alert blueprint](blueprints/radar_zone_alert.yaml). Full steps 
 
 - [Getting started](docs/getting-started.md): token, container, blueprint, settings
 - [How it works](docs/how-it-works.md): sources, street matching, the 20-zone limit, passive zones
+- [Alerting](docs/alerting.md): Prometheus metrics, the health check, alert rules for a failing service
 
 ## Data sources
 

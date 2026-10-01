@@ -12,5 +12,9 @@ COPY src ./src
 RUN uv sync --locked --no-dev
 
 USER 65534:65534
+# /metrics and /healthz of `radares run`; `radares health` asks /healthz, no extra packages
+EXPOSE 9464
+HEALTHCHECK --interval=1m --timeout=10s --start-period=2m --retries=3 \
+    CMD ["/app/.venv/bin/radares", "health"]
 ENTRYPOINT ["/app/.venv/bin/radares"]
 CMD ["run"]
