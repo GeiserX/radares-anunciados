@@ -29,7 +29,7 @@ from datetime import date
 from . import feed, ha, metrics, net
 from .model import Radar
 from .sources import dgt, murcia, osm
-from .streets import WeeklyList
+from .streets import Announced, WeeklyList
 
 log = logging.getLogger("radares")
 
@@ -71,25 +71,40 @@ def message(todo: ha.Plan, lists: list[WeeklyList]) -> str:
     return text + " Toca para cargarlas en el móvil."
 
 
-async def _sync(radars: list[Radar], lists: list[WeeklyList], dry_run: bool) -> ha.Plan:
+async def _sync(
+    radars: list[Radar],
+    lists: list[WeeklyList],
+    dry_run: bool,
+    told: set[tuple[str, Announced]] | None = None,
+) -> ha.Plan:
+    """Make the zones equal to ``radars`` and notify the phones of a change.
+
+    ``told`` is the set of skipped streets of the previous run, kept by ``radares
+    run``. A skipped street creates no zone, so a new set of them notifies on its
+    own; the same set again does not. Without ``told`` only zone changes notify."""
     url, token = os.environ.get("HA_URL"), os.environ.get("HA_TOKEN")
     if not url or not token:
         raise SystemExit("HA_URL and HA_TOKEN must be set")
     async with ha.HomeAssistant(url, token) as client:
         todo = await client.sync(radars, dry_run=dry_run)
         targets = _env_list("RADARES_NOTIFY")
-        if not dry_run and targets and (todo.create or todo.delete):
+        skipped = {(w.source, s) for w in lists for s in w.skipped}
+        news = told is not None and skipped and skipped != told
+        if not dry_run and targets and (todo.create or todo.delete or news):
             await client.notify(targets, "Radares actualizados", message(todo, lists))
+        if told is not None and not dry_run:
+            told.clear()
+            told.update(skipped)
         return todo
 
 
-def run_once(state: metrics.State) -> bool:
+def run_once(state: metrics.State, told: set[tuple[str, Announced]] | None = None) -> bool:
     """One collect + sync of ``radares run``, recorded in ``state``. Never raises:
     a failed run leaves Home Assistant with the previous zones and the next retries."""
     try:
         radars, lists = collect(date.today())
         state.collected(radars, lists)
-        todo = asyncio.run(_sync(radars, lists, dry_run=False))
+        todo = asyncio.run(_sync(radars, lists, dry_run=False, told=told))
         state.synced(todo.keep, len(todo.create), len(todo.delete))
     except Exception:
         log.exception("run failed; Home Assistant keeps the previous zones")
@@ -132,14 +147,25 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "health":
-        return metrics.check(metrics.port_from_env())
+        try:
+            port = metrics.port_from_env()
+        except ValueError as exc:
+            print(f"health check failed: {exc}")
+            return 1
+        return metrics.check(port)
 
     interval = int(os.environ.get("RADARES_INTERVAL", "3600"))
     state = metrics.State(interval)
-    port = metrics.port_from_env()
-    if port is not None:
-        metrics.serve(state, port)
-        log.info("metrics on :%d/metrics, health on :%d/healthz", port, port)
+    # The sync is the product: a metrics server that can't start must not stop it.
+    # `radares health` then fails, so the container shows unhealthy.
+    try:
+        port = metrics.port_from_env()
+        if port is not None:
+            metrics.serve(state, port)
+            log.info("metrics on :%d/metrics, health on :%d/healthz", port, port)
+    except (ValueError, OSError) as exc:
+        log.error("metrics server not started, syncing without metrics: %s", exc)
+    told: set[tuple[str, Announced]] = set()
     while True:
-        run_once(state)
+        run_once(state, told)
         time.sleep(interval)

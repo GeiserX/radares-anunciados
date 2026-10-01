@@ -1,8 +1,12 @@
+import asyncio
 import re
 import socket
+import threading
+import time
 import urllib.error
 import urllib.request
 from datetime import date
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 import pytest
@@ -170,7 +174,7 @@ def test_port_from_env(monkeypatch, value, port):
 def test_run_once_records_success_and_failure(monkeypatch):
     plan = ha.Plan(create=[], delete=["z1"], keep=4)
 
-    async def sync(radars, lists, dry_run):
+    async def sync(radars, lists, dry_run, told=None):
         return plan
 
     monkeypatch.setattr(cli, "collect", lambda day: ([radar("dgt", 1)], [weekly()]))
@@ -181,7 +185,7 @@ def test_run_once_records_success_and_failure(monkeypatch):
     assert s['radares_sync_zones{action="deleted"}'] == 1
     assert s['radares_weekly_list_streets_skipped{source="murcia"}'] == 1
 
-    async def dead(radars, lists, dry_run):
+    async def dead(radars, lists, dry_run, told=None):
         raise OSError("connection refused")
 
     monkeypatch.setattr(cli, "_sync", dead)
@@ -201,6 +205,153 @@ def test_notification_names_the_streets_without_a_zone():
         "Carril Molino Batán (La Raya). Toca para cargarlas en el móvil."
     )
     assert "Sin aviso" not in cli.message(plan, [weekly(found=False)])
+
+
+def test_a_later_run_replaces_the_weekly_list_state():
+    a, b = Announced("Calle A", "Algezares"), Announced("Calle B", None)
+    state = metrics.State(3600, now=T0)
+    week = date(2026, 9, 28)
+    state.collected([], [WeeklyList("murcia", week, week, streets=[a, b], skipped=[a, b])])
+    assert samples(state.render())['radares_weekly_list_streets_skipped{source="murcia"}'] == 2
+
+    state.collected([], [WeeklyList("murcia", week, week, streets=[a, b], skipped=[b])])
+    s = samples(state.render())
+    assert s['radares_weekly_list_streets_skipped{source="murcia"}'] == 1
+    assert [k for k in s if k.startswith("radares_street_skipped{")] == [
+        'radares_street_skipped{source="murcia",street="Calle B",place=""}'
+    ]
+
+    state.collected([], [weekly(found=False)])
+    s = samples(state.render())
+    assert s['radares_weekly_list_found{source="murcia"}'] == 0
+    assert s['radares_weekly_list_streets{source="murcia"}'] == 0
+    assert 'radares_weekly_list_published_timestamp_seconds{source="murcia"}' not in s
+    assert not any(k.startswith("radares_street_skipped{") for k in s)
+
+
+def test_list_missing_seconds_count_from_the_local_monday(monkeypatch):
+    # The week rolls over on the container's local date, like date.today(), so
+    # Monday starts at 00:00 Madrid time (22:00 UTC on Sunday), not at 00:00 UTC.
+    monkeypatch.setenv("TZ", "Europe/Madrid")
+    time.tzset()
+    try:
+        state = metrics.State(3600, now=T0)
+        state.collected([], [weekly(found=False)])
+        tuesday = 1_790_632_810  # 2026-09-29 00:00:10 in Madrid
+        key = 'radares_weekly_list_missing_seconds{source="murcia"}'
+        assert samples(state.render(now=tuesday))[key] == 86_410
+        state.collected([], [weekly()])
+        assert samples(state.render(now=tuesday))[key] == 0
+    finally:
+        monkeypatch.undo()
+        time.tzset()
+
+
+class Stop(Exception):
+    pass
+
+
+@pytest.mark.parametrize("problem", ["port taken", "not a number"])
+def test_run_keeps_syncing_when_the_metrics_server_cannot_start(monkeypatch, caplog, problem):
+    runs = []
+
+    def run_once(state, told=None):
+        runs.append(state)
+        raise Stop  # one run is enough: the loop got there
+
+    monkeypatch.setattr(cli, "run_once", run_once)
+    with socket.socket() as busy:
+        busy.bind(("", 0))
+        busy.listen()
+        port = str(busy.getsockname()[1]) if problem == "port taken" else "nine"
+        monkeypatch.setenv("RADARES_METRICS_PORT", port)
+        with pytest.raises(Stop):
+            cli.main(["run"])
+    assert runs
+    assert any(r.levelname == "ERROR" and "without metrics" in r.message for r in caplog.records)
+
+
+def test_health_fails_when_the_metrics_port_is_not_a_number(monkeypatch, capsys):
+    monkeypatch.setenv("RADARES_METRICS_PORT", "nine")
+    assert cli.main(["health"]) == 1
+    assert "RADARES_METRICS_PORT" in capsys.readouterr().out
+
+
+def test_health_fails_when_another_server_holds_the_port():
+    class Other(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"hello\n")
+
+        def log_message(self, format, *args):
+            pass
+
+    srv = HTTPServer(("127.0.0.1", 0), Other)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    try:
+        assert metrics.check(srv.server_address[1]) == 1
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+def test_health_fails_when_something_not_http_holds_the_port(capsys):
+    with socket.socket() as other:
+        other.bind(("127.0.0.1", 0))
+        other.listen()
+
+        def banner():
+            conn, _ = other.accept()
+            with conn:
+                conn.sendall(b"SSH-2.0-OpenSSH\r\n")
+
+        threading.Thread(target=banner, daemon=True).start()
+        assert metrics.check(other.getsockname()[1], timeout=2) == 1
+    assert capsys.readouterr().out.startswith("health check failed:")
+
+
+def test_a_changed_set_of_skipped_streets_notifies_once(monkeypatch):
+    sent = []
+
+    class FakeHA:
+        def __init__(self, url, token):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *exc):
+            pass
+
+        async def sync(self, radars, dry_run=False):
+            return ha.Plan(create=[], delete=[], keep=3)  # no zone changes
+
+        async def notify(self, targets, title, message):
+            sent.append(message)
+
+    monkeypatch.setattr(ha, "HomeAssistant", FakeHA)
+    monkeypatch.setenv("HA_URL", "http://ha.test")
+    monkeypatch.setenv("HA_TOKEN", "t")
+    monkeypatch.setenv("RADARES_NOTIFY", "notify.mobile_app_phone1")
+    told: set = set()
+
+    def run(lists):
+        asyncio.run(cli._sync([], lists, False, told))
+        return len(sent)
+
+    assert run([weekly()]) == 1  # Carril Molino Batán is new: told even with no zone change
+    assert "Carril Molino Batán (La Raya)" in sent[0]
+    assert run([weekly()]) == 1  # same set the next hour: quiet
+    assert run([weekly(found=False)]) == 1  # nothing skipped: nothing to warn about
+    assert run([weekly()]) == 2  # skipped again: told again
+    two = weekly()
+    two.skipped.append(Announced("Calle B", None))
+    assert run([two]) == 3  # the set grew
+    assert run([weekly()]) == 4  # and shrank
+    # A one-shot `radares sync` keeps no memory, so only zone changes notify.
+    asyncio.run(cli._sync([], [weekly()], False))
+    assert len(sent) == 4
 
 
 def test_every_metric_in_the_alerting_doc_exists():

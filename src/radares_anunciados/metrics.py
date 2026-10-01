@@ -10,6 +10,7 @@ text format) and ``/healthz`` (503 once the last success is older than
 
 from __future__ import annotations
 
+import http.client
 import os
 import threading
 import time
@@ -27,11 +28,18 @@ STALE_RUNS = 3  # /healthz fails once the last success is this many intervals ol
 
 
 def port_from_env() -> int | None:
-    """RADARES_METRICS_PORT; unset means the default, empty or 0 turns the server off."""
+    """RADARES_METRICS_PORT; unset means the default, empty or 0 turns the server off.
+    Anything else that is not a port raises ValueError."""
     raw = os.environ.get("RADARES_METRICS_PORT")
     if raw is None:
         return DEFAULT_PORT
-    return int(raw) if raw.strip() and int(raw) else None
+    try:
+        port = int(raw) if raw.strip() else 0
+    except ValueError:
+        port = -1
+    if not 0 <= port <= 65535:
+        raise ValueError(f"RADARES_METRICS_PORT={raw!r} is not a port")
+    return port or None
 
 
 def _escape(value: str) -> str:
@@ -46,6 +54,11 @@ def _sample(name: str, labels: dict[str, str], value: float) -> str:
 
 def _midnight_utc(day) -> float:
     return datetime(day.year, day.month, day.day, tzinfo=UTC).timestamp()
+
+
+def _midnight_local(day) -> float:
+    # The week rolls over on the container's local date (date.today()), so its start does too.
+    return datetime(day.year, day.month, day.day).timestamp()
 
 
 class State:
@@ -98,7 +111,8 @@ class State:
         text = f"{what} {age:.0f} s ago, limit {limit} s, {failed} failed runs in a row"
         return age <= limit, ("ok: " if age <= limit else "stale: ") + text
 
-    def render(self) -> str:
+    def render(self, now: float | None = None) -> str:
+        now = time.time() if now is None else now
         out: list[str] = []
 
         def metric(name: str, kind: str, doc: str, samples: list) -> None:
@@ -156,6 +170,19 @@ class State:
                 "gauge",
                 "1 if this week's police list was found, 0 if not published or not found.",
                 [({"source": w.source}, int(w.published is not None)) for w in self.lists],
+            )
+            metric(
+                "radares_weekly_list_missing_seconds",
+                "gauge",
+                "Seconds since this week started (Monday 00:00, local time) with no police "
+                "list found; 0 once found.",
+                [
+                    (
+                        {"source": w.source},
+                        0 if w.published is not None else max(0, now - _midnight_local(w.week)),
+                    )
+                    for w in self.lists
+                ],
             )
             metric(
                 "radares_weekly_list_published_timestamp_seconds",
@@ -221,14 +248,20 @@ def serve(state: State, port: int, host: str = "") -> ThreadingHTTPServer:
 
 
 def check(port: int | None, timeout: float = 5) -> int:
-    """Exit code for the container health check: 0 if /healthz says ok."""
+    """Exit code for the container health check: 0 if /healthz says ok.
+
+    A metrics server that could not start fails the check: nothing answers, or
+    whatever holds the port does not answer "ok:". The sync keeps running, and
+    the unhealthy container is how someone notices."""
     if port is None:
         return 0  # metrics off: nothing to ask, so don't mark the container unhealthy
     try:
         with urllib.request.urlopen(f"http://127.0.0.1:{port}/healthz", timeout=timeout) as r:
-            print(r.read().decode("utf-8", "replace").strip())
-            return 0
-    except OSError as exc:  # HTTPError (503) is an OSError too
+            body = r.read().decode("utf-8", "replace").strip()
+            print(body)
+            return 0 if body.startswith("ok: ") else 1
+    # HTTPError (503) is an OSError too; HTTPException is a port held by something not HTTP.
+    except (OSError, http.client.HTTPException) as exc:
         body = exc.read().decode("utf-8", "replace").strip() if hasattr(exc, "read") else ""
         print(body or f"health check failed: {exc}")
         return 1

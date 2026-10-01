@@ -24,6 +24,11 @@ The image has a `HEALTHCHECK` that runs `radares health`, which asks `/healthz`.
 container as `unhealthy` once runs have failed for 3 intervals, which is 3 hours with the default
 `RADARES_INTERVAL`. With the metrics port off, the check always passes.
 
+If the server can't start, because the port is taken or `RADARES_METRICS_PORT` is not a port number,
+`radares run` logs an error and keeps syncing without metrics. `radares health` then fails, since
+nothing answers `ok` on that port, so the container shows as `unhealthy` until the setting is fixed. The
+warnings keep working meanwhile; only the alerting is blind.
+
 To let Prometheus scrape it from another host, publish the port:
 
 ```yaml
@@ -46,6 +51,7 @@ services:
 | `radares_radars` | `source` | radars per source in the last collected list |
 | `radares_sync_zones` | `action` (`kept`, `created`, `deleted`) | what the last sync did |
 | `radares_weekly_list_found` | `source` | 1 if this week's police list was found, else 0 |
+| `radares_weekly_list_missing_seconds` | `source` | seconds since this week started (Monday 00:00 in the container's time zone) with no list found; 0 once found |
 | `radares_weekly_list_published_timestamp_seconds` | `source` | the list's publication day, midnight UTC |
 | `radares_weekly_list_streets` | `source` | streets announced in this week's list |
 | `radares_weekly_list_streets_skipped` | `source` | announced streets that could not be placed on the map |
@@ -81,9 +87,8 @@ groups:
           summary: "radares-anunciados has not synced for {{ $value | humanizeDuration }}"
 
       - alert: RadaresWeeklyListMissing
-        # Monday is publication day; from Tuesday on (UTC) a missing list is a problem.
-        expr: radares_weekly_list_found == 0 and on() day_of_week() != 1
-        for: 1h
+        # Monday is publication day; a whole day into the week without a list is a problem.
+        expr: radares_weekly_list_missing_seconds > 86400
         labels:
           severity: warning
         annotations:
@@ -107,10 +112,13 @@ groups:
 also catches a run loop that hangs. Every rule above needs a scrape to fire, so add an `up == 0` rule
 for the scrape target too. Without it a container that died goes unnoticed.
 
-The day in `RadaresWeeklyListMissing` is UTC, as is the week the container uses unless you set `TZ`.
+`RadaresWeeklyListMissing` needs no calendar in Prometheus: the service counts from the start of its own
+week, which follows the container's `TZ` (UTC if unset).
 
-A skipped street is also named in the "Radares actualizados" notification that the phones get after
-each change, so the driver knows it has no warning without any of this set up. To fix one for good,
+A skipped street is also named in the "Radares actualizados" notification, so the driver knows it has
+no warning without any of this set up. The phones get it after each zone change, and also when the set
+of skipped streets changes on its own. The same set does not notify again every hour; a restart of the
+container may send it once more. To fix one for good,
 add the missing name to [OpenStreetMap](https://www.openstreetmap.org/) or
 [open an issue](https://github.com/GeiserX/radares-anunciados/issues) with the street and the district.
 [How it works](how-it-works.md#from-a-street-name-to-circles) explains how a street is matched.
