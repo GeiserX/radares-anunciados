@@ -38,6 +38,9 @@ interferes with a radar signal is out of scope, whoever asks for it.
 - `store.py`: each source's last good result and the announced streets, in the cache folder
 - `metrics.py`: `/metrics` and `/healthz` of `radares run`, standard library only ([`docs/alerting.md`](docs/alerting.md))
 - [`blueprints/radar_zone_alert.yaml`](blueprints/radar_zone_alert.yaml): the automation that sends the alert
+- [`.github/workflows/feed.yml`](.github/workflows/feed.yml): builds `feed.geojson`, `status.json` and the
+  map in [`site/`](site/) every 6 hours and publishes them to GitHub Pages. The data is ODbL
+  ([`LICENSE-DATA.md`](LICENSE-DATA.md)); a new source gets a row there in the same change (a test checks).
 - [`tests/fixtures/`](tests/fixtures/): real pages and responses, trimmed. Tests never touch the network.
 - [`docs/how-it-works.md`](docs/how-it-works.md) explains the design in full.
 
@@ -55,7 +58,8 @@ interferes with a radar signal is out of scope, whoever asks for it.
 - A failing source never fails the run and never costs its zones. Only Home Assistant fails a run. A
   failed source shows as down in `/metrics` (`net.cached_get` raises on a failed refresh rather than
   hand back an old copy).
-- Only a real sync writes the announced-streets history; `feed` and `sync --dry-run` never do.
+- Only a real sync writes the announced-streets history; `sync --dry-run` never does, and `feed` only
+  with `--save-history` (the published feed, whose cache no sync shares).
 - Overpass by bounding boxes (`provinces.py`), never an area lookup: it answers 504.
 - Never send Overpass a name regex over the whole municipality. It answers 504. Look up the districts
   first, then search `around` them.

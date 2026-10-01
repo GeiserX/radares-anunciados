@@ -30,6 +30,22 @@ docker run -d --name radares -e HA_URL -e HA_TOKEN -v ./data:/data -e RADARES_CA
 
 Then import the [alert blueprint](blueprints/radar_zone_alert.yaml). Full steps in [Getting started](docs/getting-started.md).
 
+## Open feed
+
+Every 6 hours a GitHub Actions run builds the feed for all of Spain from every source and publishes it
+on GitHub Pages, at [geiserx.github.io/radares-anunciados](https://geiserx.github.io/radares-anunciados/):
+
+- [`feed.geojson`](https://geiserx.github.io/radares-anunciados/feed.geojson): every radar as a point and every
+  watched stretch as a line, each with its source, attribution, limit and link
+- [`status.json`](https://geiserx.github.io/radares-anunciados/status.json): per source, `ok`, `stale` (this run
+  failed, its last good copy is used) or `missing`, with record counts and the time of its data
+- a map of the feed
+
+The feed includes OpenStreetMap data, so the database is offered under
+[ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) with each source's attribution: see
+[LICENSE-DATA.md](LICENSE-DATA.md). The run happens outside Spain, so a source that answers only Spanish
+addresses shows as `missing` there. [How it works](docs/how-it-works.md#the-published-feed) has the details.
+
 ## Documentation
 
 - [Getting started](docs/getting-started.md): token, container, blueprint, settings
@@ -50,4 +66,4 @@ In Spain, [RGC art. 18.3](https://www.boe.es/buscar/act.php?id=BOE-A-2003-23514#
 
 ## License
 
-[GPL-3.0-or-later](LICENSE)
+Code: [GPL-3.0-or-later](LICENSE). Data in the published feed: [ODbL 1.0](LICENSE-DATA.md).

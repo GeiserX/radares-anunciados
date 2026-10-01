@@ -77,7 +77,8 @@ aviso". That street gets no zone, so it gives no warning this week.
 | `RADARES_METRICS_PORT` | `9464` | port of `/metrics` and `/healthz`; empty or `0` turns them off |
 
 `radares feed` prints the merged list as GeoJSON, for anyone who wants the data without Home
-Assistant. [How it works](how-it-works.md) covers the sources and the zone logic.
+Assistant; `--status FILE` also writes each source's state. The same feed for all of Spain is
+[published every 6 hours](how-it-works.md#the-published-feed). [How it works](how-it-works.md) covers the sources and the zone logic.
 
 ## Know when it stops warning
 

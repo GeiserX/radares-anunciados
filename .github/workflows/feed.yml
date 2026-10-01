@@ -1,0 +1,104 @@
+name: Feed
+
+# Builds the feed for all of Spain from every registered source and publishes it, with its
+# status and a map, to GitHub Pages. A pull request builds the same files without publishing,
+# from an empty cache, so its log shows which sources a runner outside Spain can reach.
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/feed.yml"
+      - "site/**"
+      - "src/**"
+      - "LICENSE-DATA.md"
+      - "pyproject.toml"
+      - "uv.lock"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: feed-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: true
+      - name: Install
+        run: uv sync --locked --no-dev
+      # Each source's last good result and its downloads, from the previous published run. A source
+      # that is down, or that answers only Spanish IPs, falls back to it (sources.run).
+      - name: Restore the download cache
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/radares-cache
+          key: feed-cache-${{ github.run_id }}
+          restore-keys: feed-cache-
+      - name: Build the feed
+        env:
+          RADARES_PROVINCES: all
+          RADARES_CACHE: ${{ runner.temp }}/radares-cache
+        run: |
+          mkdir -p _site
+          cp site/index.html site/map.js site/style.css LICENSE-DATA.md _site/
+          uv run --no-sync radares feed --output _site/feed.geojson --status _site/status.json --save-history
+      - name: Report the sources
+        run: |
+          {
+            echo "| source | status | radars | stretches | in feed | data from | error |"
+            echo "|---|---|---|---|---|---|---|"
+            jq -r '.sources[] | "| \(.source) | \(.status) | \(.radars) | \(.stretches) | \(.in_feed) | \(.data_time // "never") | \(.error | gsub("[|\n]"; " ")) |"' _site/status.json
+            echo
+            echo "Features in the feed: $(jq '.features' _site/status.json)"
+          } >> "$GITHUB_STEP_SUMMARY"
+          jq . _site/status.json
+          features=$(jq '.features | length' _site/feed.geojson)
+          if [ "$features" -eq 0 ]; then
+            echo "::error::the feed has no features; not publishing an empty feed over a good one"
+            exit 1
+          fi
+      - name: Save the download cache
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/radares-cache
+          key: feed-cache-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Keep the built site for review
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: feed-site
+          path: _site
+          retention-days: 7
+      - name: Upload the site
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
