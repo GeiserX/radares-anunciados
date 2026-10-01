@@ -87,6 +87,11 @@ triggers:
   - trigger: homeassistant
     event: start
     id: start
+  # Nor after a scene reload: `scene.reload`, a save in the scene editor and
+  # "reload all YAML" delete every scene made by `scene.create`, the markers too.
+  - trigger: event
+    event_type: scene_reloaded
+    id: start
   # A marker is deleted once it is older than the cooldown and its phone has
   # left that radar.
   - trigger: template

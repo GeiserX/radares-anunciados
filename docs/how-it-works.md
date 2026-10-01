@@ -120,8 +120,10 @@ markers stay:
 
 Two costs come with it:
 
-- Home Assistant forgets these scenes on restart. On start the blueprint marks every radar a phone is
-  inside, so a restart mid-street doesn't alert again, and the next radar alerts as usual.
+- Home Assistant forgets these scenes on restart and on a scene reload. `scene.reload`, every save in
+  the scene editor and "reload all YAML" all delete every scene made by `scene.create`. On start, and
+  on the `scene_reloaded` event that a reload fires, the blueprint marks every radar a phone is inside.
+  A restart or a reload mid-street doesn't alert again, and the next radar alerts as usual.
 - The blueprint can't tell whether the push reached the phone. The mobile app integration logs a
   failed push (a timeout or an error from the push service) and carries on, so the blueprint counts it
   as sent. If the alert for the first circle of a street is lost, the rest of that street stays quiet
