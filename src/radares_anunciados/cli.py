@@ -34,7 +34,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from . import feed, ha, metrics, provinces, sources, speed, store
-from .model import Radar, Stretch
+from .model import Radar, Stretch, today_in_spain
 from .sources import Context, Outcome
 from .streets import Announced, WeeklyList
 
@@ -192,7 +192,7 @@ def run_once(state: metrics.State, told: set[tuple[str, Announced]] | None = Non
     """One collect + sync of ``radares run``, recorded in ``state``. Never raises:
     a failed run leaves Home Assistant with the previous zones and the next retries."""
     try:
-        found = collect(date.today())
+        found = collect(today_in_spain())
         state.collected(found.radars, found.lists, found.source_status())
         todo = asyncio.run(_sync(found.radars, found.lists, dry_run=False, told=told))
         state.synced(todo.keep, len(todo.create), len(todo.delete), len(todo.update), todo.left_out)
@@ -217,7 +217,7 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
     if args.command == "feed":
-        found = collect(date.today(), save_history=False)
+        found = collect(today_in_spain(), save_history=False)
         text = feed.to_geojson(found.radars, found.stretches)
         if args.output:
             with open(args.output, "w", encoding="utf-8") as fh:
@@ -227,7 +227,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "sync":
-        found = collect(date.today(), save_history=not args.dry_run)
+        found = collect(today_in_spain(), save_history=not args.dry_run)
         todo = asyncio.run(_sync(found.radars, found.lists, args.dry_run))
         for zone_id in todo.delete:
             print(f"- {zone_id}")

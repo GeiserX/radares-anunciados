@@ -229,10 +229,10 @@ def test_a_later_run_replaces_the_weekly_list_state():
     assert not any(k.startswith("radares_street_skipped{") for k in s)
 
 
-def test_list_missing_seconds_count_from_the_local_monday(monkeypatch):
-    # The week rolls over on the container's local date, like date.today(), so
-    # Monday starts at 00:00 Madrid time (22:00 UTC on Sunday), not at 00:00 UTC.
-    monkeypatch.setenv("TZ", "Europe/Madrid")
+def test_list_missing_seconds_count_from_the_spanish_monday(monkeypatch):
+    # The week rolls over on Spain's date (model.today_in_spain), so Monday starts at
+    # 00:00 Madrid time (22:00 UTC on Sunday), whatever the container's TZ says.
+    monkeypatch.setenv("TZ", "UTC")
     time.tzset()
     try:
         state = metrics.State(3600, now=T0)

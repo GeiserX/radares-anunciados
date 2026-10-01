@@ -1,8 +1,10 @@
 import asyncio
+import time
+from datetime import date
 
 import pytest
 
-from radares_anunciados import cli, ha
+from radares_anunciados import cli, ha, metrics
 
 
 class FakeHA:
@@ -105,3 +107,38 @@ def test_a_failed_touch_does_not_fail_a_sync_that_changed_zones(fake):
     fake.nudge_fails = True
     assert asyncio.run(cli._sync([], [], dry_run=False)) is fake.plan
     assert fake.calls[-3:] == ["notify", f"sleep {cli.NUDGE_AFTER_S}", "nudge"]
+
+
+class Collecting(Exception):
+    pass
+
+
+@pytest.mark.parametrize(
+    ("utc", "day"),
+    [
+        (1_785_537_000, date(2026, 8, 1)),  # 31 Jul 22:30 UTC, 00:30 in Madrid (summer)
+        (1_798_759_800, date(2027, 1, 1)),  # 31 Dec 23:30 UTC, 00:30 in Madrid (winter)
+    ],
+)
+def test_the_day_is_spains_whatever_the_time_zone_of_the_container(monkeypatch, tmp_path, utc, day):
+    # A daily list (León, Donostia) is valid on a Spanish date. The container runs
+    # on UTC, where the first hour or two of a Spanish day still read as yesterday.
+    monkeypatch.setenv("TZ", "UTC")
+    time.tzset()
+    try:
+        monkeypatch.setattr(time, "time", lambda: float(utc))
+        days = []
+
+        def collect(day, save_history=True):
+            days.append(day)
+            if len(days) > 1:
+                raise Collecting  # run_once logs it and carries on
+            return cli.Collected([], [])
+
+        monkeypatch.setattr(cli, "collect", collect)
+        assert cli.main(["feed", "-o", str(tmp_path / "feed.json")]) == 0
+        assert not cli.run_once(metrics.State(3600))
+        assert days == [day, day]
+    finally:
+        monkeypatch.undo()
+        time.tzset()

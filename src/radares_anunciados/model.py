@@ -2,8 +2,19 @@
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
+
+# The time zone the published lists mean. A daily or weekly list starts at
+# Spanish midnight, whatever time zone the container runs in (UTC by default).
+SPAIN = ZoneInfo("Europe/Madrid")
+
+
+def today_in_spain(now: float | None = None) -> date:
+    """Spain's date (peninsular time) at ``now`` (epoch seconds; None: the clock)."""
+    return datetime.fromtimestamp(time.time() if now is None else now, SPAIN).date()
 
 
 @dataclass(frozen=True)

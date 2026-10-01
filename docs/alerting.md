@@ -132,7 +132,7 @@ also catches a run loop that hangs. Every rule above needs a scrape to fire, so 
 for the scrape target too. Without it a container that died goes unnoticed.
 
 `RadaresWeeklyListMissing` needs no calendar in Prometheus: the service counts from the start of its own
-week, which follows the container's `TZ` (UTC if unset).
+week, which starts at Monday 00:00 Spanish time whatever the container's `TZ` says.
 
 A skipped street is also named in the "Radares actualizados" notification, so the driver knows it has
 no warning without any of this set up. The phones get it after each zone change, and also when the set
