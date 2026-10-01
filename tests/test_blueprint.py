@@ -42,7 +42,7 @@ def test_names_shared_by_different_cameras_are_not_grouped():
     cameras = osm.parse((FIX / "osm_es_mc.json").read_bytes()) + [
         r for r in dgt.parse((FIX / "dgt_radares.xml").read_bytes(), {"30"}) if r.kind == "fixed"
     ]
-    names = [r.name for r in cameras]
+    names = [ha.ZoneSpec.from_radar(r).name for r in cameras]  # the zone name is what groups
     # different OSM cameras share a name, so a cooldown on it would hide the second one
     assert Counter(names)["Radar (límite 50)"] == 2
     assert [n for n in names if n.startswith(grouped_prefixes())] == []
