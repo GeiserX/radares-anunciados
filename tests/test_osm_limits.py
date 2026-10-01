@@ -1,0 +1,205 @@
+import json
+from dataclasses import replace
+from pathlib import Path
+
+import pytest
+
+from radares_anunciados import osm_limits, speed
+from radares_anunciados.model import Radar
+
+FIX = Path(__file__).parent / "fixtures"
+PAYLOAD = (FIX / "overpass_limits.json").read_bytes()
+WAYS = osm_limits._ways(PAYLOAD)
+NOW = 1_790_000_000.0
+DAY = 86_400
+
+
+def dgt(id_, name, lat, lon, kind="fixed"):
+    return Radar(f"dgt-{id_}", "dgt", kind, name, lat, lon, 500)
+
+
+# Real DGT radars (feed of 2026-10-01) and what OpenStreetMap says of their road.
+CASES = [
+    # their road, two carriageways: the nearest one
+    (dgt("120620", "Radar fijo A-30 km 112.9", 38.176327, -1.3138161), 120),
+    # the nearest carriageway is 80, the other one 16 m off is 100
+    (dgt("165621", "Radar fijo M-40 km 20.3", 40.365585, -3.6622005), 80),
+    # a slip road under the radar (0.8 m) loses to the A-45 carriageway 6 m off
+    (dgt("161609-to", "Radar de tramo A-45 km 134.2", 36.77529, -4.425749, "section"), 80),
+    # 90 one way and 70 the other: no single limit
+    (
+        dgt(
+            "165410-from",
+            "Radar de tramo CL-615 km 24.8 (sentido PALENCIA)",
+            42.2377,
+            -4.6072,
+            "section",
+        ),
+        None,
+    ),
+    # no drivable way within 30 m
+    (dgt("120010", "Radar fijo N-330 km 668.7 (sentido FRANCIA)", 42.757904, -0.5259808), None),
+    # the only way near is the EX-109, 5.5 m off: another road's limit is not borrowed
+    (dgt("120249", "Radar fijo EX-108 km 90.8", 39.999466, -6.5491147), None),
+    # DGT writes N-1, OpenStreetMap N-I
+    (dgt("120411", "Radar fijo N-1 km 271.7 (sentido SAN SEBASTIÁN)", 42.4913, -3.3667), 90),
+    # the old road through the town, A-431a in OpenStreetMap
+    (dgt("120039", "Radar fijo A-431 km 29.7", 37.80637, -5.09753), 30),
+    # A-30 and A-7 share this carriageway and OpenStreetMap tags it A-7: on it, 1 m
+    (dgt("120622", "Radar fijo A-30 km 136.0", 38.023544, -1.1647367), 80),
+    # the way under it has no limit; the 60 of a way 14 m off is not borrowed
+    (dgt("120348", "Radar fijo N-357 km 5.5", 36.1264, -5.4423), None),
+    # where two pieces of the N-4 meet: the piece 1.3 m farther has the limit
+    (dgt("120035", "Radar fijo N-4 km 618.8", 36.83327, -6.066566), 80),
+    # the A-45 one above as a mapped camera with no road in its name: the slip
+    # road under it still loses to the main carriageway
+    (dgt("161609-noroad", "Radar", 36.77529, -4.425749), 80),
+]
+
+
+@pytest.mark.parametrize(("radar", "kmh"), CASES, ids=[r.name for r, _ in CASES])
+def test_the_limit_of_the_road_the_radar_is_on(radar, kmh):
+    assert osm_limits.choose((radar.lat, radar.lon), osm_limits.road_of(radar), WAYS) == kmh
+
+
+@pytest.mark.parametrize(
+    ("value", "kmh"),
+    [
+        ("90", 90),
+        ("90 km/h", 90),
+        ("50 mph", 80),
+        ("ES:motorway", 120),
+        ("ES:rural", 90),
+        ("ES:zone30", 30),
+        ("ES:urban", None),  # 20, 30 or 50 by the lanes since 2021
+        ("none", None),
+        ("walk", None),
+        ("signals", None),
+        ("80;90", None),
+        ("50|30", None),
+        ("0", None),
+        ("", None),
+        (None, None),
+    ],
+)
+def test_maxspeed_values(value, kmh):
+    assert osm_limits.kmh(value) == kmh
+
+
+@pytest.mark.parametrize(
+    ("tags", "kmh"),
+    [
+        ({"maxspeed": "80", "maxspeed:forward": "100"}, 80),
+        ({"maxspeed:forward": "90", "maxspeed:backward": "90"}, 90),
+        ({"maxspeed:forward": "90", "maxspeed:backward": "70"}, None),
+        ({"maxspeed:forward": "100"}, None),  # two-way road: which way is the radar's?
+        ({"maxspeed:forward": "100", "oneway": "yes"}, 100),
+        ({"maxspeed:forward": "100", "highway": "motorway"}, 100),
+    ],
+)
+def test_direction_limits(tags, kmh):
+    assert osm_limits.way_kmh(tags) == kmh
+
+
+@pytest.mark.parametrize(
+    ("name", "road"),
+    [
+        ("Radar fijo A-7 km 580.3 (sentido ALMERIA)", "A7"),
+        ("Radar fijo N-II km 341.1 (sentido BARCELONA)", "N2"),
+        ("Radar fijo N-121-A km 32.6 (sentido FRANCIA)", "N121"),
+        ("Radar de tramo CG-1.5 km 16.1", "CG1.5"),
+        ("Radar fijo Ma-13 km 4.0", "MA13"),
+        ("Radar", None),
+    ],
+)
+def test_the_road_in_a_radar_name(name, road):
+    assert osm_limits.road_of(dgt("x", name, 0, 0)) == road
+
+
+def test_one_query_asks_for_every_point():
+    q = osm_limits.query([(38.1, -1.3), (40.36559, -3.6622005)])
+    assert q.count("(around:30,") == 2
+    assert "38.100000,-1.300000" in q and "40.365590,-3.662200" in q
+    assert '"^(motorway|trunk|' in q and "service" in q and q.endswith("out tags geom;")
+
+
+@pytest.fixture
+def cache(monkeypatch, tmp_path):
+    monkeypatch.setenv("RADARES_CACHE", str(tmp_path))
+    return tmp_path
+
+
+def asked_by(monkeypatch, answer=PAYLOAD):
+    calls = []
+
+    def ask(points):
+        calls.append(points)
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
+
+    monkeypatch.setattr(osm_limits, "_ask", ask)
+    return calls
+
+
+def test_fill_batches_and_keeps_what_has_a_limit(monkeypatch, cache):
+    monkeypatch.setattr(osm_limits, "BATCH", 4)
+    calls = asked_by(monkeypatch)
+    radars = [r for r, _ in CASES]
+    street = Radar("m-1", "murcia", "mobile_announced", "Radar anunciado Calle Mayor", 38, -1, 478)
+    published = replace(radars[0], id="osm-1", source="osm", maxspeed=100)
+    filled = osm_limits.fill([*radars, street, published], now=NOW)
+    assert [len(c) for c in calls] == [4, 4, 4]  # 12 radars, 3 queries, never one each
+    assert [r.maxspeed for r in filled[: len(CASES)]] == [kmh for _, kmh in CASES]
+    assert filled[-2] == street  # a street's circles keep theirs
+    assert filled[-1].maxspeed == 100  # a published limit is never replaced
+
+
+def test_answers_are_kept_30_days(monkeypatch, cache):
+    radars = [r for r, _ in CASES]
+    calls = asked_by(monkeypatch)
+    osm_limits.fill(radars, now=NOW)
+    assert len(calls) == 1
+    # the next runs ask nothing, for a radar with a limit or without one
+    again = osm_limits.fill(radars, now=NOW + 29 * DAY)
+    assert len(calls) == 1 and [r.maxspeed for r in again] == [kmh for _, kmh in CASES]
+    # a new radar alone is asked for
+    moved = replace(radars[0], id="dgt-new", lat=radars[0].lat + 0.00001)
+    osm_limits.fill([*radars, moved], now=NOW + DAY)
+    assert calls[-1] == [(moved.lat, moved.lon)]
+    osm_limits.fill(radars, now=NOW + 31 * DAY)
+    assert len(calls) == 3 and len(calls[-1]) == len(radars)
+
+
+def test_a_failed_query_leaves_the_limit_unknown_and_asks_again(monkeypatch, cache):
+    radars = [r for r, _ in CASES]
+    calls = asked_by(monkeypatch, OSError("504"))
+    monkeypatch.setattr(osm_limits, "BATCH", 4)
+    filled = osm_limits.fill(radars, now=NOW)
+    assert [r.maxspeed for r in filled] == [None] * len(radars)
+    assert len(calls) == 1  # Overpass is down: the other batches wait for the next run
+    calls = asked_by(monkeypatch)
+    assert osm_limits.fill(radars, now=NOW + 60)[0].maxspeed == 120
+    assert len(calls) == 3
+
+
+def test_an_unreadable_cache_is_asked_again(monkeypatch, cache):
+    (cache / osm_limits.CACHE_FILE).write_text("{not json")
+    calls = asked_by(monkeypatch)
+    assert osm_limits.fill([CASES[0][0]], now=NOW)[0].maxspeed == 120
+    assert len(calls) == 1
+    saved = json.loads((cache / osm_limits.CACHE_FILE).read_text())
+    assert saved["version"] == osm_limits.VERSION and len(saved["limits"]) == 1
+
+
+def test_the_lookup_runs_before_zones_are_sized(monkeypatch, cache):
+    assert osm_limits.fill in speed.LOOKUPS
+    asked_by(monkeypatch)
+    radar = CASES[1][0]  # M-40, 80 in OpenStreetMap; the fallback would size it for 90
+    sized = speed.size(speed.fill_limits([radar]), speed.Radius())
+    assert sized[0].maxspeed == 80 and sized[0].radius_m == speed.auto_radius(80, 40)
+
+
+def test_no_test_reaches_overpass():
+    with pytest.raises(OSError, match="never touch the network"):
+        osm_limits._ask([(38.0, -1.0)])
