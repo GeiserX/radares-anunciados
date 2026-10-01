@@ -10,9 +10,10 @@ import hashlib
 import logging
 import time
 from dataclasses import dataclass, replace
+from datetime import date
 
 from .. import store
-from ..model import SourceResult
+from ..model import SourceResult, WeeklyList
 from . import dgt, murcia, osm
 from .base import Context, Source
 
@@ -60,7 +61,8 @@ def fingerprint(source: Source, ctx: Context) -> str:
 
 def run(source: Source, ctx: Context, now: float | None = None) -> Outcome:
     """Fetch one source. On any failure, its last good result for the same
-    settings; with none, an empty result. Never raises."""
+    settings (its weekly lists only if they are this week's); with none, an
+    empty result. Never raises."""
     now = time.time() if now is None else now
     ctx = replace(ctx, max_age_s=source.max_age_s)
     key = fingerprint(source, ctx)
@@ -72,6 +74,11 @@ def run(source: Source, ctx: Context, now: float | None = None) -> Outcome:
             log.exception("source %s failed and never succeeded; it adds nothing", source.key)
             return Outcome(source.key, SourceResult(), up=False, fetched_at=None, error=str(exc))
         result, saved = last
+        # A list of another week is not this week's list: report this week's as
+        # not found, so its metrics and alert say so.
+        monday = date.fromordinal(ctx.day.toordinal() - ctx.day.weekday())
+        lists = [w if w.week == monday else WeeklyList(w.source, monday) for w in result.lists]
+        result = replace(result, lists=lists)
         log.warning(
             "source %s failed (%s); using its last good result from %.1f h ago",
             source.key,

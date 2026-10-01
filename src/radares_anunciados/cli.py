@@ -88,9 +88,12 @@ class Collected:
         return {o.key: (o.up, o.fetched_at) for o in self.outcomes}
 
 
-def collect(day: date) -> Collected:
+def collect(day: date, save_history: bool = True) -> Collected:
     """Every selected source, merged, with the dormant streets. Never fails for a
-    source: a failed one gives its last good result (see ``sources.run``)."""
+    source: a failed one gives its last good result (see ``sources.run``).
+
+    Only a run that syncs Home Assistant for real saves the history of announced
+    streets; ``radares feed`` and ``sync --dry-run`` read it and leave it alone."""
     ctx = context(day)
     keys = _env_list("RADARES_SOURCES") or None
     outcomes = sources.run_all(sources.selected(keys, ctx.provinces), ctx)
@@ -102,9 +105,10 @@ def collect(day: date) -> Collected:
         stretches = [s for s in stretches if s.province is None or s.province in ctx.provinces]
     radars = speed.size(speed.fill_limits(radars), ctx.radius)
     weeks = _env_int("RADARES_DORMANT_WEEKS", 26)
-    dormant, history = feed.remember(store.load_announced(), radars, day, weeks)
-    store.save_announced(history)
-    return Collected(feed.merge(radars + dormant, day), lists, stretches, outcomes)
+    remembered, history = feed.remember(store.load_announced(), radars, day, weeks)
+    if save_history:
+        store.save_announced(history)
+    return Collected(feed.merge(radars + remembered, day), lists, stretches, outcomes)
 
 
 def message(todo: ha.Plan, lists: list[WeeklyList]) -> str:
@@ -132,6 +136,8 @@ async def _sync(
     if not url or not token:
         raise SystemExit("HA_URL and HA_TOKEN must be set")
     max_zones = _env_int("RADARES_MAX_ZONES", ha.MAX_ZONES)
+    if max_zones < 1:
+        raise ValueError(f"RADARES_MAX_ZONES={max_zones} must be 1 or more")
     async with ha.HomeAssistant(url, token) as client:
         todo = await client.sync(radars, dry_run=dry_run, max_zones=max_zones)
         targets = _env_list("RADARES_NOTIFY")
@@ -146,8 +152,11 @@ async def _sync(
             # An open iOS app stored only the first zone of that burst; one more
             # change after its 15 s window makes it store the whole set.
             await asyncio.sleep(NUDGE_AFTER_S)
-            zone_id = await client.nudge()
-            log.info("touched %s so an open iOS app stores every zone", zone_id)
+            try:
+                zone_id = await client.nudge()
+                log.info("touched %s so an open iOS app stores every zone", zone_id)
+            except Exception:  # the zones changed; the next change touches again
+                log.exception("could not touch a zone after the sync; the zones are synced")
         return todo
 
 
@@ -180,7 +189,7 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
     if args.command == "feed":
-        found = collect(date.today())
+        found = collect(date.today(), save_history=False)
         text = feed.to_geojson(found.radars, found.stretches)
         if args.output:
             with open(args.output, "w", encoding="utf-8") as fh:
@@ -190,7 +199,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "sync":
-        found = collect(date.today())
+        found = collect(date.today(), save_history=not args.dry_run)
         todo = asyncio.run(_sync(found.radars, found.lists, args.dry_run))
         for zone_id in todo.delete:
             print(f"- {zone_id}")

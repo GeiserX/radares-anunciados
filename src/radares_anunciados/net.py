@@ -49,19 +49,14 @@ def cached_get(
     max_age_s: int = 86_400,
 ) -> bytes:
     """``get`` through a file cache. A copy younger than ``max_age_s`` is used as is;
-    an older one is refreshed, and kept if the refresh fails (Overpass 504s for
-    hours at a time, and last week's street geometry is still right)."""
+    an older one is refreshed. A failed refresh raises, also with an old copy on
+    disk: the source then reuses its last good result and reports itself down
+    (``sources.run``), instead of looking like a source that answered."""
     key = hashlib.sha256(json.dumps([url, data], sort_keys=True).encode()).hexdigest()[:32]
     path = cache_dir() / key
     if path.exists() and time.time() - path.stat().st_mtime < max_age_s:
         return path.read_bytes()
-    try:
-        body = get(url, data=data, headers=headers)
-    except OSError:
-        if path.exists():
-            log.warning("using cached copy of %s after a failed refresh", url)
-            return path.read_bytes()
-        raise
+    body = get(url, data=data, headers=headers)
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".tmp")

@@ -1,12 +1,13 @@
 import json
 import os
+import time
 from dataclasses import replace
 from datetime import date
 from pathlib import Path
 
 import pytest
 
-from radares_anunciados import cli, feed, metrics, provinces, sources, store
+from radares_anunciados import cli, feed, metrics, net, provinces, sources, store
 from radares_anunciados.geo import distance_m
 from radares_anunciados.model import Radar, SourceResult, Stretch, WeeklyList
 from radares_anunciados.sources import Context, Source, dgt, murcia, osm
@@ -112,7 +113,7 @@ def test_osm_all_covers_spain_without_an_area_lookup(monkeypatch, place, point):
 
 def test_dgt_radars_and_sections_carry_province_direction_and_km():
     result = dgt.parse_all((FIX / "dgt_radares.xml").read_bytes(), None)
-    assert {r.province for r in result.radars} == {"30", "50"}
+    assert {r.province for r in result.radars} == {"03", "30", "50"}
     cabin = next(r for r in result.radars if r.id == "dgt-CABINACINEMOMETRO_120001")
     assert (cabin.direction, cabin.province) == ("ZARAGOZA", "50")
     murcia_sections = [s for s in result.stretches if s.province == "30"]
@@ -121,6 +122,14 @@ def test_dgt_radars_and_sections_carry_province_direction_and_km():
     assert (zaragoza.road, zaragoza.km_from, zaragoza.km_to) == ("Z-40", 26.6, 29.7)
     assert zaragoza.start == (41.6088, -0.915697) and zaragoza.end == (41.6192, -0.9496)
     assert zaragoza.direction == "MADRID"
+
+
+@pytest.mark.parametrize("raw", ["3", "03", "3,46"])
+def test_dgt_one_digit_provinces_are_selected_as_ine_codes(raw):
+    # The DGT file writes Alicante as "3", not "03"
+    xml = (FIX / "dgt_radares.xml").read_bytes()
+    radars = dgt.parse(xml, provinces.parse(raw))
+    assert [(r.id, r.province) for r in radars] == [("dgt-CABINACINEMOMETRO_120154", "03")]
 
 
 # ---- a failed source keeps its zones
@@ -198,6 +207,54 @@ def test_collect_keeps_a_failed_sources_radars_and_reports_it(monkeypatch):
     assert 'radares_source_data_age_seconds{source="a"} 90.0' in text
 
 
+def test_a_failed_refresh_of_an_old_download_reports_the_source_down(monkeypatch):
+    # The download cache must not hide a source that stopped answering.
+    xml = (FIX / "dgt_radares.xml").read_bytes()
+    monkeypatch.setattr(net, "get", lambda url, **kw: xml)
+    first = sources.run(dgt.SOURCE, ctx(), now=1000.0)
+    assert first.up and first.result.radars
+    month_ago = time.time() - 30 * 86_400
+    for f in net.cache_dir().iterdir():
+        if f.is_file():
+            os.utime(f, (month_ago, month_ago))
+
+    def down(url, **kw):
+        raise OSError("connection refused")
+
+    monkeypatch.setattr(net, "get", down)
+    later = sources.run(dgt.SOURCE, ctx(), now=1000.0 + 30 * 86_400)
+    assert (later.up, later.fetched_at) == (False, 1000.0)
+    assert later.result.radars == first.result.radars
+    state = metrics.State(3600)
+    state.collected(later.result.radars, [], {"dgt": (later.up, later.fetched_at)})
+    text = state.render(now=1000.0 + 30 * 86_400)
+    assert 'radares_source_up{source="dgt"} 0' in text
+    assert f'radares_source_data_age_seconds{{source="dgt"}} {30 * 86_400.0}' in text
+
+
+def test_a_reused_list_of_another_week_counts_as_missing_this_week():
+    last_week = date(2026, 9, 21)
+    skipped = cli.Announced("Calle Perdida", "El Raal")
+    listed = WeeklyList("m", last_week, last_week, [cli.Announced("Calle", None)], [skipped])
+    answers = iter([SourceResult(radars=announced(last_week), lists=[listed]), OSError("403")])
+    source = fake_source("m", lambda: next(answers))
+    sources.run(source, ctx(day=last_week), now=1000.0)
+    failed = sources.run(source, ctx(day=MONDAY), now=2000.0)
+    assert not failed.up
+    assert failed.result.lists == [WeeklyList("m", MONDAY)]  # not found, nothing skipped
+    state = metrics.State(3600)
+    state.collected(failed.result.radars, failed.result.lists, {"m": (False, 1000.0)})
+    text = state.render(now=time.mktime((2026, 9, 29, 0, 0, 0, 0, 0, -1)))
+    assert 'radares_weekly_list_found{source="m"} 0' in text
+    assert 'radares_weekly_list_missing_seconds{source="m"} 86400.0' in text
+    assert "radares_street_skipped{" not in text
+    # the same week reused stays found
+    answers = iter([SourceResult(lists=[WeeklyList("m", MONDAY, MONDAY)]), OSError("403")])
+    source = fake_source("m", lambda: next(answers))
+    sources.run(source, ctx(), now=1000.0)
+    assert sources.run(source, ctx(), now=2000.0).result.lists == [WeeklyList("m", MONDAY, MONDAY)]
+
+
 # ---- dormant streets
 
 
@@ -223,6 +280,16 @@ def test_a_street_stays_dormant_after_its_week_then_ages_out():
     assert feed.remember(history, [], date(2027, 4, 4), 26)[0]
     assert feed.remember(history, [], date(2027, 4, 5), 26) == ([], [])
     assert feed.remember(history, [], next_week, 0) == ([], [])
+
+
+def test_a_street_in_force_stays_active_when_its_source_gives_nothing():
+    # The source failed and its last good result did not apply (other settings):
+    # a street announced until Sunday must keep alerting until Sunday.
+    _, history = feed.remember([], announced(MONDAY), MONDAY, 26)
+    kept, _ = feed.remember(history, [], date(2026, 10, 1), 26)
+    assert len(kept) == 2 and all(r.active for r in kept)
+    kept, _ = feed.remember(history, [], date(2026, 10, 5), 26)
+    assert len(kept) == 2 and not any(r.active for r in kept)
 
 
 def test_a_street_announced_again_is_active_with_its_new_circles():
@@ -255,6 +322,23 @@ def test_collect_turns_last_weeks_street_dormant_and_back(monkeypatch):
     week["radars"] = announced(date(2026, 10, 5))
     found = cli.collect(date(2026, 10, 5)).radars
     assert len(found) == 2 and all(r.active for r in found)
+
+
+@pytest.mark.parametrize(("weeks", "day"), [("0", date(2026, 10, 5)), ("1", date(2026, 10, 12))])
+def test_only_a_real_sync_writes_the_history_of_announced_streets(monkeypatch, weeks, day):
+    # Trying another RADARES_DORMANT_WEEKS with `feed` or `sync --dry-run` must
+    # not cost the running service its dormant streets.
+    src = fake_source("m", lambda: SourceResult(radars=announced(MONDAY)))
+    monkeypatch.setattr(sources, "REGISTRY", {"m": src})
+    cli.collect(MONDAY)
+    before = store.load_announced()
+    assert len(before) == 2
+    monkeypatch.setenv("RADARES_DORMANT_WEEKS", weeks)
+    monkeypatch.setattr(sources, "REGISTRY", {"m": fake_source("m", lambda: SourceResult())})
+    assert cli.collect(day, save_history=False).radars == []
+    assert store.load_announced() == before
+    cli.collect(day)  # a real sync with that setting does forget them
+    assert store.load_announced() == []
 
 
 def test_the_feed_writes_stretches_as_lines_and_flags_every_feature():

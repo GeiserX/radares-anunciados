@@ -44,13 +44,15 @@ def merge(radars: list[Radar], day: date) -> list[Radar]:
 def remember(
     history: list[Radar], radars: list[Radar], day: date, weeks: int
 ) -> tuple[list[Radar], list[Radar]]:
-    """(dormant radars, the new history) for the streets of periodic lists.
+    """(remembered radars, the new history) for the streets of periodic lists.
 
     ``history`` holds the circles of every street a periodic list announced
-    (a radar with a ``valid_to``), keyed by source and name. A street in force
-    today replaces its entry. A street in the history but not in force today is
-    dormant: same name, same circles, ``active=False``. An entry whose period
-    ended more than ``weeks`` weeks ago is forgotten. ``weeks`` <= 0 keeps nothing.
+    (a radar with a ``valid_to``), keyed by source and name. A street in
+    ``radars`` today replaces its entry. A street only in the history comes back
+    as it was while its period lasts (its source gave nothing this run), and
+    dormant once the period has ended: same name, same circles, ``active=False``.
+    An entry whose period ended more than ``weeks`` weeks ago is forgotten.
+    ``weeks`` <= 0 keeps nothing.
     """
     if weeks <= 0:
         return [], []
@@ -62,8 +64,8 @@ def remember(
         for h in history
         if (h.source, h.name) not in announced and h.valid_to is not None and h.valid_to >= horizon
     ]
-    dormant = [replace(h, active=False) for h in old]
-    return dormant, sorted(old + now, key=lambda r: r.id)
+    remembered = [h if h.active_on(day) else replace(h, active=False) for h in old]
+    return remembered, sorted(old + now, key=lambda r: r.id)
 
 
 def _common(properties: dict, item: Radar | Stretch) -> dict:

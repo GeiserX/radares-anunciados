@@ -69,7 +69,7 @@ aviso". That street gets no zone, so it gives no warning this week.
 | `RADARES_OSM_BBOX` | the provinces' boxes | `south,west,north,east` for OpenStreetMap cameras, or `all` for the whole country |
 | `RADARES_FIXED_RADIUS` | `auto` | metres around a fixed radar; `auto` is 200 m plus 40 s at the speed limit |
 | `RADARES_STREET_RADIUS` | `auto` | metres of each circle along an announced street; `auto` is 200 m plus 20 s at the limit |
-| `RADARES_MAX_ZONES` | `1000` | most radar zones in Home Assistant; past it, the farthest fixed radars and the oldest silent streets get none |
+| `RADARES_MAX_ZONES` | `1000` | most radar zones in Home Assistant, 1 or more; past it, the farthest fixed radars and the oldest silent streets get none |
 | `RADARES_DORMANT_WEEKS` | `26` | weeks an announced street keeps its zones, silent, after its week; `0` deletes them when the week ends |
 | `RADARES_NOTIFY` | | notify services told to open the app after a change |
 | `RADARES_INTERVAL` | `3600` | seconds between runs |
@@ -81,6 +81,6 @@ Assistant. [How it works](how-it-works.md) covers the sources and the zone logic
 
 ## Know when it stops warning
 
-A failing run, a week without a list and a street it can't place on the map all leave you without a
-warning while the container keeps running. [Alerting](alerting.md) covers the `/metrics` and `/healthz`
-endpoints and has Prometheus alert rules for all three.
+A failing run, a source that stopped answering, a week without a list and a street it can't place on
+the map all leave you without a warning while the container keeps running. [Alerting](alerting.md)
+covers the `/metrics` and `/healthz` endpoints and has Prometheus alert rules for all four.

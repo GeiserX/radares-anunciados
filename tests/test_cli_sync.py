@@ -29,6 +29,8 @@ class FakeHA:
 
     async def nudge(self):
         FakeHA.calls.append("nudge")
+        if FakeHA.nudge_fails:
+            raise ConnectionError("Home Assistant restarted")
         return "radar_x"
 
 
@@ -44,6 +46,7 @@ def fake(monkeypatch):
     monkeypatch.setenv("RADARES_NOTIFY", "notify.mobile_app_phone1")
     monkeypatch.delenv("RADARES_MAX_ZONES", raising=False)
     FakeHA.calls = []
+    FakeHA.nudge_fails = False
     return FakeHA
 
 
@@ -84,3 +87,21 @@ def test_an_icon_only_change_does_not_ask_the_phones_to_open_the_app(fake):
     fake.plan = ha.Plan(create=[], delete=[], keep=1, update=[("z", ha.DORMANT_ICON)])
     asyncio.run(cli._sync([], [], dry_run=False))
     assert "notify" not in fake.calls
+
+
+@pytest.mark.parametrize("cap", ["0", "-1"])
+def test_a_cap_below_one_is_refused(fake, monkeypatch, cap):
+    # Slicing by 0 or -1 would delete every zone or keep all but the last
+    fake.plan = ha.Plan(create=[], delete=[], keep=0)
+    monkeypatch.setenv("RADARES_MAX_ZONES", cap)
+    with pytest.raises(ValueError, match="RADARES_MAX_ZONES"):
+        asyncio.run(cli._sync([], [], dry_run=True))
+    assert fake.calls == []
+
+
+def test_a_failed_touch_does_not_fail_a_sync_that_changed_zones(fake):
+    # The zones changed and the phones were told; only the extra touch was lost.
+    fake.plan = ha.Plan(create=[ha.ZoneSpec("Radar x", 37.0, -1.0, 500.0)], delete=[], keep=0)
+    fake.nudge_fails = True
+    assert asyncio.run(cli._sync([], [], dry_run=False)) is fake.plan
+    assert fake.calls[-3:] == ["notify", f"sleep {cli.NUDGE_AFTER_S}", "nudge"]

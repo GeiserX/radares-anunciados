@@ -97,6 +97,9 @@ The icon is changed in place, on the same zone. Deleting and creating it would g
 and the phone would keep reporting the old one until the app is next opened. Police lists repeat
 streets, so most weeks the zones stay and only icons change. The cache folder keeps the circles of every street announced in
 the last `RADARES_DORMANT_WEEKS` weeks. `0` turns this off: a street's zones go when its week ends.
+Only a real sync writes that history; `radares feed` and `radares sync --dry-run` read it and leave it
+as it was. A street whose week is still running keeps its alerting icon even in a run where its source
+gave nothing.
 
 ## How the phone gets new zones
 
@@ -114,9 +117,10 @@ An icon-only change needs nothing on the phone, so it does not notify.
 
 ## When a source is down
 
-Downloads are cached. If a refresh fails, the last copy is used. Each source's last good result is
-kept in the cache folder too: when a source fails, its last good result is used and logged, so its
-zones stay. A source that never answered adds nothing. `/metrics` exports, per source, whether it
+Downloads are cached for each source's cache age. A failed refresh counts as a failed source, even
+with an older copy on disk. Each source's last good result is kept in the cache folder: when a source
+fails, its last good result is used and logged, so its zones stay. A weekly list in it counts only in
+its own week; in a later week the list shows as not found. A source that never answered adds nothing. `/metrics` exports, per source, whether it
 answered (`radares_source_up`) and how old its data is (`radares_source_data_age_seconds`). A run
 fails only when Home Assistant does. Then Home Assistant keeps the previous zones and the next run
 tries again.

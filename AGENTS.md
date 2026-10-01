@@ -52,7 +52,10 @@ interferes with a radar signal is out of scope, whoever asks for it.
 - The iOS app loads new zones only in the foreground, and drops a change within 15 s of the last one it
   stored. Every create or delete notifies the phones, and every change is followed 20 s later by a
   1 cm move of one zone, below the 6 decimals a plan compares.
-- A failing source never fails the run and never costs its zones. Only Home Assistant fails a run.
+- A failing source never fails the run and never costs its zones. Only Home Assistant fails a run. A
+  failed source shows as down in `/metrics` (`net.cached_get` raises on a failed refresh rather than
+  hand back an old copy).
+- Only a real sync writes the announced-streets history; `feed` and `sync --dry-run` never do.
 - Overpass by bounding boxes (`provinces.py`), never an area lookup: it answers 504.
 - Never send Overpass a name regex over the whole municipality. It answers 504. Look up the districts
   first, then search `around` them.

@@ -15,7 +15,9 @@ def test_cache_hit_skips_the_network(tmp_path, monkeypatch):
     assert calls == ["https://x/a"]
 
 
-def test_stale_copy_survives_a_failed_refresh(tmp_path, monkeypatch):
+def test_a_failed_refresh_raises_even_with_an_old_copy(tmp_path, monkeypatch):
+    # The source layer keeps the last good result and reports the source down;
+    # an old copy returned here would look like a source that answered.
     monkeypatch.setenv("RADARES_CACHE", str(tmp_path))
     monkeypatch.setattr(net, "get", lambda url, **kw: b"old")
     net.cached_get("https://x/b", max_age_s=60)
@@ -26,7 +28,8 @@ def test_stale_copy_survives_a_failed_refresh(tmp_path, monkeypatch):
         raise OSError("504")
 
     monkeypatch.setattr(net, "get", down)
-    assert net.cached_get("https://x/b", max_age_s=60) == b"old"
+    with pytest.raises(OSError):
+        net.cached_get("https://x/b", max_age_s=60)
     with pytest.raises(OSError):
         net.cached_get("https://x/never-fetched", max_age_s=60)
 

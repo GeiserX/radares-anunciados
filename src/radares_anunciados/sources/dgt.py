@@ -68,7 +68,9 @@ def parse_all(
     stretches: list[Stretch] = []
     for loc_set in root.iter(f"{_D}predefinedLocationSet"):
         for loc in loc_set.findall(f"{_D}predefinedLocation"):
+            # The file writes Alicante as "3"; an INE code is "03".
             province = _text(loc, f".//{_D}provinceINEIdentifier")
+            province = province.zfill(2) if province else None
             if provinces is not None and province not in provinces:
                 continue
             inner = loc.find(f"{_D}predefinedLocation")
