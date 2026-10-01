@@ -3,9 +3,9 @@ blueprint:
   description: >-
     Sends a notification to the iPhone that just entered a radar zone created by
     radares-anunciados. The iOS companion app fires `ios.zone_entered` for passive
-    zones too, so presence (home / not_home) is untouched. A street is covered by
-    several zones with the same name, so each phone is alerted once per radar name
-    within the cooldown.
+    zones too, so presence (home / not_home) is untouched. A street from a police
+    list, or an average-speed section, is several zones with one name, so each
+    phone is alerted once per radar within the cooldown.
   domain: automation
   homeassistant:
     min_version: 2024.10.0
@@ -35,10 +35,12 @@ blueprint:
     cooldown:
       name: Cooldown
       description: >-
-        Minutes before the same phone is alerted again for a radar with the same
-        name. A street is several overlapping zones with one name, and an
-        average-speed section has a zone at each end. A different radar, or
-        another phone, is alerted at once. 0 alerts on every zone.
+        Minutes before the same phone is alerted again for the same radar. A
+        street from a police list ("Radar anunciado ...") is several overlapping
+        zones, and an average-speed section ("Radar de tramo ...") has a zone at
+        each end; each counts as one radar. Any other zone is its own radar. A
+        different radar, or another phone, is alerted at once. 0 alerts on every
+        zone.
       default: 10
       selector:
         number:
@@ -57,16 +59,22 @@ variables:
   critical: !input critical
   cooldown: !input cooldown
   radar: "{{ state_attr(trigger.event.data.zone, 'friendly_name') or '' }}"
-  # While a phone is in cooldown for a radar name, a scene named after both
-  # exists. It needs no helper, and Home Assistant forgets it on restart.
-  marker: "radares_anunciados_{{ (trigger.event.data.sourceDeviceID ~ ' ' ~ radar) | slugify }}"
+  # Only these names are one radar drawn as several zones. Other names repeat
+  # across unrelated cameras (OpenStreetMap's "Radar (límite 50)"), so each of
+  # those zones is its own radar.
+  key: >-
+    {{ radar if radar.startswith(('Radar anunciado ', 'Radar de tramo '))
+       else trigger.event.data.zone }}
+  # While a phone is in cooldown for a radar, a scene named after both exists.
+  # It needs no helper, and Home Assistant forgets it on restart.
+  marker: "radares_anunciados_{{ (trigger.event.data.sourceDeviceID ~ ' ' ~ key) | slugify }}"
 
 conditions:
   - condition: template
     value_template: >-
       {{ state_attr(trigger.event.data.zone, 'icon') == 'mdi:camera-timer'
          and radar.startswith('Radar') }}
-  # Skip if this phone was alerted for this radar name within the cooldown.
+  # Skip if this phone was alerted for this radar within the cooldown.
   # The age check also covers a marker whose run was cut short by a reload.
   - condition: template
     value_template: >-

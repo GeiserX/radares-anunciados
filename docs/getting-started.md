@@ -48,9 +48,11 @@ Or copy [`blueprints/radar_zone_alert.yaml`](../blueprints/radar_zone_alert.yaml
 by hand. Create one automation from it. When a phone enters a radar zone, that phone gets a
 notification titled with the radar. It's marked time-sensitive, so it shows through Focus modes.
 
-A street is several zones with the same name, so each phone gets one alert per radar name and then
-stays quiet about that name for the **Cooldown** (10 minutes by default). Another radar, or another
-phone, is alerted at once. No helper is needed.
+A street from a police list, or an average-speed section, is several zones with one name, so each
+phone gets one alert for it and then stays quiet about it for the **Cooldown** (10 minutes by
+default). Another radar, or another phone, is alerted at once. No helper is needed. If a push is lost
+on the way to the phone, the rest of that street stays quiet too;
+[how it works](how-it-works.md#one-alert-per-street) has the details.
 
 ## 4. Open the app once after each change
 

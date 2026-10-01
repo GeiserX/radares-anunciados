@@ -53,17 +53,30 @@ refuses to sync more than 400 zones, so a broken parser can't flood Home Assista
 
 ## One alert per street
 
-A street is a row of overlapping circles with one name, and an average-speed section is a circle at
-each end with one name. The app fires `ios.zone_entered` for each circle, so the blueprint alerts a
-phone once per radar name and then ignores that name for that phone until the cooldown ends (10
-minutes by default). A different name, or a different phone, is alerted at once.
+A street from a police list is a row of overlapping circles named `Radar anunciado …`, and an
+average-speed section is a circle at each end named `Radar de tramo …`. The app fires
+`ios.zone_entered` for each circle, so the blueprint treats each of these names as one radar: it alerts
+a phone once and then ignores that name for that phone until the cooldown ends (10 minutes by default).
+
+Every other zone is its own radar, even when its name is shared. OpenStreetMap cameras without a road
+and kilometre are all called `Radar (límite 50)` or plain `Radar`, and they are different cameras, so
+the blueprint tells them apart by zone, not by name. A source that draws one radar as several circles
+must use one of the two prefixes above, or each circle alerts on its own. A different radar, or a
+different phone, is alerted at once.
 
 The blueprint remembers without a helper. When it alerts, it creates a scene named after the phone and
-the radar, such as `scene.radares_anunciados_iphone_radar_calle_mayor`, waits for the cooldown and
-deletes it. If that scene exists and is younger than the cooldown, the blueprint skips the entry. Each
-alert keeps one automation run open for the cooldown, so the automation shows as running while you
-drive. Home Assistant forgets these scenes on restart, so a street can alert once more after a
-restart.
+the radar, such as `scene.radares_anunciados_iphone_radar_anunciado_calle_mayor`, waits for the
+cooldown and deletes it. If that scene exists and is younger than the cooldown, the blueprint skips the
+entry. Each alert keeps one automation run open for the cooldown, so the automation shows as running
+while you drive.
+
+Two costs come with it:
+
+- Home Assistant forgets these scenes on restart, so a street can alert once more after a restart.
+- The blueprint can't tell whether the push reached the phone. The mobile app integration logs a
+  failed push (a timeout or an error from the push service) and carries on, so the blueprint counts it
+  as sent. If the alert for the first circle of a street is lost, the rest of that street stays quiet
+  until the cooldown ends. Set the cooldown to 0 to have every circle send its own alert.
 
 ## When a source is down
 
