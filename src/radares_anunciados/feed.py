@@ -9,30 +9,50 @@ from datetime import date, timedelta
 
 from .geo import distance_m
 from .model import Radar, Stretch
+from .sources import REGISTRY
 
-# An OSM camera this close to a DGT radar is the same camera mapped twice.
+# A mapped camera (OSM) this close to a radar an authority publishes is the same
+# camera mapped twice.
 DUPLICATE_M = 150
+
+# Kinds that stand for one camera at one place. A street from a police list
+# (mobile_announced) and a circle of a DGT mobile-radar stretch (mobile_stretch)
+# are no camera, so a mapped camera near one is no copy of it.
+CAMERAS = ("fixed", "section", "trailer")
+
+
+def _official(r: Radar) -> bool:
+    """A camera whose position an authority publishes: its source is marked
+    ``official`` in the registry and its kind is in ``CAMERAS``."""
+    source = REGISTRY.get(r.source)
+    return source is not None and source.official and r.kind in CAMERAS
+
+
+def _mapped(r: Radar) -> bool:
+    """A camera from a source the registry marks as not official (OSM)."""
+    source = REGISTRY.get(r.source)
+    return source is not None and not source.official
 
 
 def merge(radars: list[Radar], day: date) -> list[Radar]:
     """Radars in force on ``day`` and dormant ones, active first, then by id,
     without duplicates.
 
-    Dropped: OSM cameras that copy a DGT radar, and any radar at exactly the
+    Dropped: mapped cameras that copy an official radar, and any radar at exactly the
     spot of one already kept (the DGT lists both directions of a section with
     the same two end points). The phone watches only 20 zones; two at one spot
     waste one. A dormant circle under an active one gives way to it.
     """
     wanted = (r for r in radars if not r.active or r.active_on(day))
     ordered = sorted(wanted, key=lambda r: (not r.active, r.id))
-    official = [r for r in ordered if r.source == "dgt"]
+    official = [r for r in ordered if _official(r)]
     kept: list[Radar] = []
     spots: set[tuple[float, float]] = set()
     for r in ordered:
         spot = (round(r.lat, 5), round(r.lon, 5))
         if spot in spots:
             continue
-        if r.source == "osm" and any(
+        if _mapped(r) and any(
             distance_m((r.lat, r.lon), (o.lat, o.lon)) <= DUPLICATE_M for o in official
         ):
             continue

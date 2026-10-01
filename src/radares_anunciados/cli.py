@@ -9,6 +9,8 @@ Configuration comes from the environment so the same image runs anywhere:
   RADARES_FIXED_RADIUS   metres around a fixed radar, or auto (default: by its limit)
   RADARES_STREET_RADIUS  metres of each circle along an announced street, or auto
   RADARES_MAX_ZONES      most radar zones in Home Assistant (default 1000)
+  RADARES_STRETCH_ZONES  on: zones along DGT's mobile-radar stretches, for a province
+                         list only (default off: they are lines in the feed)
   RADARES_DORMANT_WEEKS  weeks an announced street keeps its zones, silent, after
                          its period ends (default 26; 0 deletes them at once)
   HA_URL, HA_TOKEN       Home Assistant base URL and long-lived access token
@@ -32,7 +34,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from . import feed, ha, metrics, provinces, sources, speed, store
-from .model import Radar, Stretch
+from .model import Radar, Stretch, today_in_spain
 from .sources import Context, Outcome
 from .streets import Announced, WeeklyList
 
@@ -72,9 +74,26 @@ def osm_boxes(codes: frozenset[str] | None) -> tuple[provinces.Box, ...]:
     return tuple(provinces.boxes(codes))
 
 
+def stretch_zones() -> bool:
+    """RADARES_STRETCH_ZONES: on gives zones along the stretches a source publishes
+    (DGT INVIVE), for a province list only; off (the default) draws them in the feed."""
+    raw = os.environ.get("RADARES_STRETCH_ZONES", "off").strip().lower()
+    if raw in ("", "off"):
+        return False
+    if raw == "on":
+        return True
+    raise ValueError(f"RADARES_STRETCH_ZONES={raw!r} is neither on nor off")
+
+
 def context(day: date) -> Context:
     codes = selected_provinces()
-    return Context(day=day, provinces=codes, boxes=osm_boxes(codes), radius=speed.Radius.from_env())
+    return Context(
+        day=day,
+        provinces=codes,
+        boxes=osm_boxes(codes),
+        radius=speed.Radius.from_env(),
+        stretch_zones=stretch_zones(),
+    )
 
 
 @dataclass
@@ -173,7 +192,7 @@ def run_once(state: metrics.State, told: set[tuple[str, Announced]] | None = Non
     """One collect + sync of ``radares run``, recorded in ``state``. Never raises:
     a failed run leaves Home Assistant with the previous zones and the next retries."""
     try:
-        found = collect(date.today())
+        found = collect(today_in_spain())
         state.collected(found.radars, found.lists, found.source_status())
         todo = asyncio.run(_sync(found.radars, found.lists, dry_run=False, told=told))
         state.synced(todo.keep, len(todo.create), len(todo.delete), len(todo.update), todo.left_out)
@@ -198,7 +217,7 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
     if args.command == "feed":
-        found = collect(date.today(), save_history=False)
+        found = collect(today_in_spain(), save_history=False)
         text = feed.to_geojson(found.radars, found.stretches)
         if args.output:
             with open(args.output, "w", encoding="utf-8") as fh:
@@ -208,7 +227,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "sync":
-        found = collect(date.today(), save_history=not args.dry_run)
+        found = collect(today_in_spain(), save_history=not args.dry_run)
         todo = asyncio.run(_sync(found.radars, found.lists, args.dry_run))
         for zone_id in todo.delete:
             print(f"- {zone_id}")

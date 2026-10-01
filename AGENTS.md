@@ -9,11 +9,20 @@ Actions.
 
 Every radar in the feed keeps its source and that source's license, and the feed credits each source.
 
-| Source | What it gives | License |
+| Key | What it gives | License |
 |---|---|---|
-| Municipal police weekly lists (first: Murcia's Policía Local) | mobile radars announced for the week | the council's own reuse terms; check them before adding a city |
-| [DGT NAP](https://nap.dgt.es/dataset/radares-fijos-dgt), DATEX II | fixed DGT radars | CC BY 4.0 |
-| OpenStreetMap, [`highway=speed_camera`](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera) | community-mapped speed cameras | ODbL (attribution, share-alike on the derived database) |
+| `dgt` | DGT fixed and section radars, [NAP](https://nap.dgt.es/dataset/radares-fijos-dgt) DATEX II | Creative Commons Attribution (NAP, no version) |
+| `dgt_invive` | DGT mobile-radar stretches, [NAP](https://nap.dgt.es/es/dataset/tramos-invive); lines, zones opt-in (`RADARES_STRETCH_ZONES`) | same |
+| `osm` | [`highway=speed_camera`](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera) nodes; also the speed-limit lookup (`osm_limits.py`) | ODbL 1.0 |
+| `murcia` | Policía Local weekly list, through the press | no reuse terms published |
+| `sct`, `sct_remolc` | Servei Català de Trànsit fixed, section and trailer radars | Llicència oberta d'ús d'informació – Catalunya |
+| `euskadi`, `navarra` | Basque and Navarra government fixed radars (Spanish IP only) | no reuse terms published |
+| `donostia`, `donostia_movil` | Donostia fixed radars and its daily mobile-radar streets | no reuse terms published |
+| `madrid`, `salamanca` | city open data, fixed and section radars | CC BY 4.0; GNU FDL |
+| `leon` | León's monthly mobile-radar post, iLeón as a fallback (Spanish IP only) | no reuse terms published; iLeón CC BY-NC 4.0 |
+
+Cadence, publishers and the places that publish nothing usable: [`docs/sources.md`](docs/sources.md).
+Check a publisher's reuse terms before adding it, and record them in its `Source.licence`.
 
 ## The legal line
 
@@ -25,15 +34,19 @@ interferes with a radar signal is out of scope, whoever asks for it.
 
 ## Layout
 
-- `src/radares_anunciados/sources/`: one module per source (`dgt`, `osm`, `murcia`). Each exposes
-  `SOURCE = Source(key, fetch, attribution, licence, spanish_ip, max_age_s, provinces)` and is listed
-  once in `sources/__init__.py`. `fetch(Context)` returns a `SourceResult` (radars, stretches, weekly
-  lists) and raises on any failure; the registry then reuses its last good result. Contract in
-  `sources/base.py`.
-- `model.py`: `Radar`, `Stretch`, `SourceResult`; `provinces.py`: INE codes and bounding boxes
+- `src/radares_anunciados/sources/`: one module per source (key in the table above). Each exposes
+  `SOURCE = Source(key, fetch, attribution, licence, spanish_ip, max_age_s, provinces, official)` and
+  is listed once in `sources/__init__.py`. `official=False` marks a crowd map (OSM): `feed.merge` drops
+  its camera within 150 m of a radar from an official source. `fetch(Context)` returns a
+  `SourceResult` (radars, stretches, weekly lists) and raises on any failure; the registry then reuses
+  its last good result. Contract in `sources/base.py`.
+- `model.py`: `Radar`, `Stretch`, `SourceResult`, `today_in_spain`; `provinces.py`: INE codes and
+  bounding boxes
 - `speed.py`: radius by speed limit; `LOOKUPS` is the hook for a limit lookup; `geo.py`: distances,
   street cover, ETRS89 UTM to WGS84
-- `streets.py`: street + district from a police list to circle centres (two Overpass queries)
+- `streets.py`: street + district from a police list to circle centres (two Overpass queries);
+  `streetnames.py`: abbreviations in police lists ("Avda.", "Pº") expanded
+- `osm_limits.py`: the speed limit under a radar whose source gives none, from OpenStreetMap
 - `feed.py`: merge, dedupe, dormant streets, GeoJSON; `ha.py`: Home Assistant zone sync over the websocket API
 - `store.py`: each source's last good result and the announced streets, in the cache folder
 - `metrics.py`: `/metrics` and `/healthz` of `radares run`, standard library only ([`docs/alerting.md`](docs/alerting.md))
@@ -56,6 +69,10 @@ interferes with a radar signal is out of scope, whoever asks for it.
   failed source shows as down in `/metrics` (`net.cached_get` raises on a failed refresh rather than
   hand back an old copy).
 - Only a real sync writes the announced-streets history; `feed` and `sync --dry-run` never do.
+- The day is Spain's (`model.today_in_spain`), never the container's: it runs on UTC, and a per-day
+  list starts at Spanish midnight.
+- An Overpass answer is cached only once `net.overpass_answer` takes it (`cached_get(validate=...)`):
+  Overpass answers 200 with a `remark` when a query runs out of time.
 - Overpass by bounding boxes (`provinces.py`), never an area lookup: it answers 504.
 - Never send Overpass a name regex over the whole municipality. It answers 504. Look up the districts
   first, then search `around` them.

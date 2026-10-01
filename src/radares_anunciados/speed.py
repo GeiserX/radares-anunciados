@@ -22,6 +22,7 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 
+from . import osm_limits
 from .model import Radar
 
 MIN_RADIUS_M = 100  # under 100 m the iOS app splits a zone into 3 of its 20 regions
@@ -37,7 +38,7 @@ _ROAD = re.compile(r"\b[A-Z]{1,3}-\d")
 # every collected radar before the radii are set. Each takes the whole list and
 # returns it with the limits it could find; a radar it can't place keeps
 # ``maxspeed=None`` and the road fallback above.
-LOOKUPS: list[Callable[[list[Radar]], list[Radar]]] = []
+LOOKUPS: list[Callable[[list[Radar]], list[Radar]]] = [osm_limits.fill]
 
 
 def fill_limits(radars: list[Radar]) -> list[Radar]:
@@ -96,9 +97,11 @@ def _setting(name: str) -> int | None:
         raise ValueError(f"{name}={raw!r} is neither a number of metres nor 'auto'") from None
 
 
+LAID_OUT = ("mobile_announced", "mobile_stretch")  # circles placed along a line
+
+
 def size(radars: list[Radar], radius: Radius) -> list[Radar]:
-    """Set the radius of every point radar (fixed and section ends). Streets keep
-    theirs: their circles were laid out for it."""
-    return [
-        r if r.kind == "mobile_announced" else replace(r, radius_m=radius.point(r)) for r in radars
-    ]
+    """Set the radius of every point radar (fixed and section ends). Circles along
+    a street or a stretch keep theirs: their spacing was laid out for it, and a
+    smaller radius would leave road between them uncovered."""
+    return [r if r.kind in LAID_OUT else replace(r, radius_m=radius.point(r)) for r in radars]
