@@ -18,7 +18,7 @@ from datetime import date, timedelta
 
 from .. import net
 from ..model import Radar
-from ..streets import STREET_TYPES, Announced, locate, places_query, ways_query
+from ..streets import STREET_TYPES, Announced, WeeklyList, locate, places_query, ways_query
 
 log = logging.getLogger(__name__)
 
@@ -171,14 +171,18 @@ def to_radars(
     published: date,
     radius_m: int,
     url: str | None,
+    skipped: list[Announced] | None = None,
 ) -> list[Radar]:
+    """Circles for every street placed on the map; the others go to ``skipped``."""
     start, end = week_of(published)
     radars: list[Radar] = []
     for item, centres in locate(items, overpass_json, radius_m).items():
         if not centres:
             log.warning("could not place %s (%s) on the map; skipped", item.street, item.place)
+            if skipped is not None:
+                skipped.append(item)
             continue
-        label = f"Radar anunciado {item.street}" + (f" ({item.place})" if item.place else "")
+        label = f"Radar anunciado {item.label()}"
         slug = re.sub(r"[^a-z0-9]+", "-", f"{item.street} {item.place or ''}".lower()).strip("-")
         for n, (lat, lon) in enumerate(centres):
             radars.append(
@@ -199,14 +203,16 @@ def to_radars(
     return radars
 
 
-def fetch(day: date, radius_m: int = 300) -> list[Radar]:
-    """This week's list, or [] if it has not been published yet."""
+def fetch(day: date, radius_m: int = 300) -> tuple[list[Radar], WeeklyList]:
+    """This week's radars ([] if the list is not published yet) and what the list gave."""
+    status = WeeklyList("murcia", week_of(day)[0])
     found = find_article(day)
     if found is None:
-        log.info("no Murcia radar list found for the week of %s", week_of(day)[0])
-        return []
+        log.info("no Murcia radar list found for the week of %s", status.week)
+        return [], status
     url, published, page = found
     items = parse_article(page)
+    status.published, status.streets = published, items
     log.info("Murcia list %s: %d streets", url, len(items))
     # Same list, same queries: fetched once a week, not every hour.
     week = 7 * 86_400
@@ -215,4 +221,4 @@ def fetch(day: date, radius_m: int = 300) -> list[Radar]:
     overpass = json.dumps(
         {"elements": json.loads(places)["elements"] + json.loads(ways)["elements"]}
     ).encode()
-    return to_radars(items, overpass, published, radius_m, url)
+    return to_radars(items, overpass, published, radius_m, url, status.skipped), status

@@ -183,3 +183,40 @@ def murcia_rss():
     from radares_anunciados.sources.murcia import MURCIAACTUALIDAD_RSS
 
     return MURCIAACTUALIDAD_RSS
+
+
+def test_to_radars_reports_the_streets_it_could_not_place():
+    batan = Announced("Carril Molino Batán", "La Raya")
+    tinosa = Announced("Camino Tiñosa", "San José de la Vega")
+    skipped: list[Announced] = []
+    overpass = (FIX / "overpass_weeks.json").read_bytes()
+    radars = to_radars([tinosa, batan], overpass, date(2026, 7, 7), 300, "u", skipped)
+    assert radars and skipped == [batan]
+
+
+def test_fetch_reports_the_list_and_its_skipped_streets(monkeypatch):
+    from radares_anunciados.sources import murcia
+
+    url = "https://www.laopiniondemurcia.es/murcia/2026/07/07/radares-semana.html"
+    article = page("laopinion_2026-07-07.html")
+    monkeypatch.setattr(murcia, "find_article", lambda day: (url, date(2026, 7, 7), article))
+    answers = iter([(FIX / "overpass_weeks.json").read_bytes(), b'{"elements": []}'])
+    monkeypatch.setattr(murcia.net, "cached_get", lambda *a, **k: next(answers))
+    radars, status = murcia.fetch(date(2026, 7, 8))
+    assert radars
+    assert (status.source, status.week, status.published) == (
+        "murcia",
+        date(2026, 7, 6),
+        date(2026, 7, 7),
+    )
+    assert len(status.streets) == 6
+    assert status.skipped == [Announced("Carril Molino Batán", "La Raya")]
+
+
+def test_fetch_reports_a_week_without_a_list(monkeypatch):
+    from radares_anunciados.sources import murcia
+
+    monkeypatch.setattr(murcia, "find_article", lambda day: None)
+    radars, status = murcia.fetch(date(2026, 10, 1))
+    assert radars == []
+    assert status.week == date(2026, 9, 28) and status.published is None and not status.streets
