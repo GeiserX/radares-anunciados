@@ -87,4 +87,5 @@ SOURCE = Source(
     attribution=ATTRIBUTION,
     licence="ODbL 1.0",
     max_age_s=86_400,
+    official=False,
 )

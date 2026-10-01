@@ -41,3 +41,6 @@ class Source:
     # The provinces it covers (a city's list: its province). None: any. A source
     # is skipped when none of its provinces is selected.
     provinces: frozenset[str] | None = None
+    # True: an authority publishes these positions. False: a crowd-sourced map
+    # (OSM), whose camera within feed.DUPLICATE_M of an official radar is a copy.
+    official: bool = True
