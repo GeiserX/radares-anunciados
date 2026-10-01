@@ -2,14 +2,14 @@ import json
 import os
 import time
 from dataclasses import replace
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 import pytest
 
 from radares_anunciados import cli, feed, metrics, net, provinces, sources, store
 from radares_anunciados.geo import distance_m
-from radares_anunciados.model import Radar, SourceResult, Stretch, WeeklyList
+from radares_anunciados.model import SPAIN, Radar, SourceResult, Stretch, WeeklyList
 from radares_anunciados.sources import Context, Source, dgt, murcia, osm
 from radares_anunciados.speed import Radius
 
@@ -260,7 +260,7 @@ def test_a_reused_list_of_another_week_counts_as_missing_this_week():
     assert failed.result.lists == [WeeklyList("m", MONDAY)]  # not found, nothing skipped
     state = metrics.State(3600)
     state.collected(failed.result.radars, failed.result.lists, {"m": (False, 1000.0)})
-    text = state.render(now=time.mktime((2026, 9, 29, 0, 0, 0, 0, 0, -1)))
+    text = state.render(now=datetime(2026, 9, 29, tzinfo=SPAIN).timestamp())  # Tuesday 00:00
     assert 'radares_weekly_list_found{source="m"} 0' in text
     assert 'radares_weekly_list_missing_seconds{source="m"} 86400.0' in text
     assert "radares_street_skipped{" not in text
