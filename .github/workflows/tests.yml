@@ -13,12 +13,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      # Test on the Python the image ships. The version is read from the Dockerfile's FROM line,
+      # so a base image bump changes both at once; there is no second place to bump.
+      - name: Read the image's Python version
+        run: |
+          version=$(sed -nE 's/^FROM[[:space:]]+python:([0-9]+\.[0-9]+\.[0-9]+)([-@[:space:]].*)?$/\1/p' Dockerfile)
+          if [ -z "$version" ] || [ "$(printf '%s\n' "$version" | wc -l)" -ne 1 ]; then
+            echo "::error file=Dockerfile::expected exactly one 'FROM python:X.Y.Z...' line, found: '${version}'"
+            exit 1
+          fi
+          echo "Dockerfile ships Python $version"
+          echo "UV_PYTHON=$version" >> "$GITHUB_ENV"
       - name: Install uv
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: true
       - name: Install dependencies
         run: uv sync --locked
+      - name: Check the tests run on the image's Python
+        run: |
+          actual=$(uv run --no-sync python -c 'import platform; print(platform.python_version())')
+          echo "Tests run on Python $actual (Dockerfile: $UV_PYTHON)"
+          if [ "$actual" != "$UV_PYTHON" ]; then
+            echo "::error::tests would run on Python $actual, the image ships $UV_PYTHON"
+            exit 1
+          fi
       - name: Lint
         run: |
           uv run --no-sync ruff check .
