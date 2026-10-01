@@ -76,7 +76,10 @@ def parse(payload: bytes, radius_m: int = 500) -> list[Radar]:
 
 def fetch(ctx: Context) -> SourceResult:
     payload = net.cached_get(
-        OVERPASS_URL, {"data": query_boxes(ctx.boxes)}, max_age_s=ctx.max_age_s
+        OVERPASS_URL,
+        {"data": query_boxes(ctx.boxes)},
+        max_age_s=ctx.max_age_s,
+        validate=net.overpass_answer,
     )
     return SourceResult(radars=parse(payload))
 

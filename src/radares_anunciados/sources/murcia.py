@@ -216,8 +216,11 @@ def fetch(
     log.info("Murcia list %s: %d streets", url, len(items))
     # Same list, same queries: fetched once a week, not every hour.
     week = 7 * 86_400
-    places = net.cached_get(OVERPASS, {"data": places_query(items, BBOX)}, max_age_s=week)
-    ways = net.cached_get(OVERPASS, {"data": ways_query(items, places, BBOX)}, max_age_s=week)
+    check = net.overpass_answer  # an error answer is never kept for the week
+    query = places_query(items, BBOX)
+    places = net.cached_get(OVERPASS, {"data": query}, max_age_s=week, validate=check)
+    query = ways_query(items, places, BBOX)
+    ways = net.cached_get(OVERPASS, {"data": query}, max_age_s=week, validate=check)
     overpass = json.dumps(
         {"elements": json.loads(places)["elements"] + json.loads(ways)["elements"]}
     ).encode()
