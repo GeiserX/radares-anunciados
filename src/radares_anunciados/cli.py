@@ -26,12 +26,13 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import logging
 import os
 import sys
 import time
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import UTC, date, datetime
 
 from . import feed, ha, metrics, provinces, sources, speed, store
 from .model import Radar, Stretch, today_in_spain
@@ -112,7 +113,8 @@ def collect(day: date, save_history: bool = True) -> Collected:
     source: a failed one gives its last good result (see ``sources.run``).
 
     Only a run that syncs Home Assistant for real saves the history of announced
-    streets; ``radares feed`` and ``sync --dry-run`` read it and leave it alone."""
+    streets; ``radares feed`` and ``sync --dry-run`` read it and leave it alone,
+    unless ``feed --save-history`` asks (the published feed, whose cache is its own)."""
     ctx = context(day)
     keys = _env_list("RADARES_SOURCES") or None
     outcomes = sources.run_all(sources.selected(keys, ctx.provinces), ctx)
@@ -137,6 +139,44 @@ def collect(day: date, save_history: bool = True) -> Collected:
         and (ctx.provinces is None or r.province is None or r.province in ctx.provinces)
     ]
     return Collected(feed.merge(radars + remembered, day), lists, stretches, outcomes)
+
+
+def _iso(ts: float | None) -> str | None:
+    if ts is None:
+        return None
+    return datetime.fromtimestamp(ts, UTC).isoformat(timespec="seconds")
+
+
+def status(found: Collected, now: float) -> dict:
+    """What the published feed is made of, per source: "ok" (fetched this run),
+    "stale" (this run failed; its last good result is in the feed, from
+    ``data_time``) or "missing" (never fetched here; it adds nothing)."""
+    in_feed: dict[str, int] = {}
+    for item in [*found.radars, *found.stretches]:
+        in_feed[item.source] = in_feed.get(item.source, 0) + 1
+    rows = []
+    for o in found.outcomes:
+        source = sources.REGISTRY[o.key]
+        state = "ok" if o.up else "stale" if o.fetched_at is not None else "missing"
+        rows.append(
+            {
+                "source": o.key,
+                "status": state,
+                "radars": len(o.result.radars),
+                "stretches": len(o.result.stretches),
+                "in_feed": in_feed.get(o.key, 0),
+                "data_time": _iso(o.fetched_at),
+                "error": o.error[:300],
+                "attribution": source.attribution,
+                "licence": source.licence,
+                "spanish_ip": source.spanish_ip,
+            }
+        )
+    return {
+        "generated": _iso(now),
+        "features": len(found.radars) + len(found.stretches),
+        "sources": rows,
+    }
 
 
 def message(todo: ha.Plan, lists: list[WeeklyList]) -> str:
@@ -209,6 +249,15 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     p_feed = sub.add_parser("feed", help="print the merged radar list as GeoJSON")
     p_feed.add_argument("-o", "--output", help="write to this file instead of stdout")
+    p_feed.add_argument(
+        "--status", metavar="FILE", help="also write each source's state and counts as JSON"
+    )
+    p_feed.add_argument(
+        "--save-history",
+        action="store_true",
+        help="remember announced streets, so a later feed shows them dormant (for a cache "
+        "no `radares run` shares)",
+    )
     p_sync = sub.add_parser("sync", help="make Home Assistant zones equal to the radar list")
     p_sync.add_argument("--dry-run", action="store_true", help="show the plan, change nothing")
     sub.add_parser("run", help="sync every RADARES_INTERVAL seconds, forever")
@@ -217,13 +266,28 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
     if args.command == "feed":
-        found = collect(today_in_spain(), save_history=False)
+        found = collect(today_in_spain(), save_history=args.save_history)
         text = feed.to_geojson(found.radars, found.stretches)
         if args.output:
             with open(args.output, "w", encoding="utf-8") as fh:
                 fh.write(text)
         else:
             sys.stdout.write(text + "\n")
+        if args.status:
+            report = status(found, time.time())
+            for row in report["sources"]:
+                log.info(
+                    "source %s: %s, %d radars, %d stretches, %d in the feed, data from %s%s",
+                    row["source"],
+                    row["status"],
+                    row["radars"],
+                    row["stretches"],
+                    row["in_feed"],
+                    row["data_time"] or "never",
+                    f" ({row['error']})" if row["error"] else "",
+                )
+            with open(args.status, "w", encoding="utf-8") as fh:
+                json.dump(report, fh, ensure_ascii=False, indent=1)
         return 0
 
     if args.command == "sync":

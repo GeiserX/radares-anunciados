@@ -100,7 +100,7 @@ and the phone would keep reporting the old one until the app is next opened. Pol
 streets, so most weeks the zones stay and only icons change. The cache folder keeps the circles of every street announced in
 the last `RADARES_DORMANT_WEEKS` weeks. `0` turns this off: a street's zones go when its week ends.
 Only a real sync writes that history; `radares feed` and `radares sync --dry-run` read it and leave it
-as it was. A street whose week is still running keeps its alerting icon even in a run where its source
+as it was, unless `radares feed --save-history` asks (the published feed does, with a cache of its own). A street whose week is still running keeps its alerting icon even in a run where its source
 gave nothing.
 
 ## How the phone gets new zones
@@ -127,6 +127,48 @@ its own week; in a later week the list shows as not found. A source that never a
 answered (`radares_source_up`) and how old its data is (`radares_source_data_age_seconds`). A run
 fails only when Home Assistant does. Then Home Assistant keeps the previous zones and the next run
 tries again.
+
+## The published feed
+
+[`.github/workflows/feed.yml`](../.github/workflows/feed.yml) runs every 6 hours, and on demand, on a
+GitHub-hosted runner. It builds the feed for all of Spain (`RADARES_PROVINCES=all`) from every
+registered source:
+
+```sh
+radares feed --output feed.geojson --status status.json --save-history
+```
+
+and publishes `feed.geojson`, `status.json`, the map in [`site/`](../site/) and
+[`LICENSE-DATA.md`](../LICENSE-DATA.md) to GitHub Pages. `status.json` has one row per source:
+
+| Field | Meaning |
+|---|---|
+| `status` | `ok`: the source answered in this run. `stale`: this run failed; the feed holds its last good result. `missing`: never fetched here; it adds nothing |
+| `radars`, `stretches` | what the source gave (or its last good result) |
+| `in_feed` | its features left in the feed after duplicates are dropped |
+| `data_time` | when the data in use was fetched, UTC; `null` for a missing source |
+| `error` | why this run's fetch failed |
+| `attribution`, `licence`, `spanish_ip` | the source's terms, and whether it answers only Spanish addresses |
+
+Each source's last good result and the announced streets are kept between runs with `actions/cache`,
+so a source that is down falls back to its last good copy as described above, and an announced street
+turns dormant on the map after its week. The downloads are not kept. A download younger than its
+source's cache age is reused without asking the source, so a kept one would report a source as `ok`,
+with this run's time, while its site is down. Every published run asks every source. The runner is outside Spain:
+a source that refuses other countries never answers there, and shows as `missing` until a copy reaches
+the cache some other way. A run whose feed has no features at all fails instead of publishing it.
+
+A pull request that touches the code, the page or the workflow builds the same files from an empty
+cache without publishing them, and keeps them as the `feed-site` artifact. Its log lists every source
+with its state and counts.
+
+The map loads Leaflet from unpkg, pinned to one version with an integrity hash, and OpenStreetMap
+tiles. A Content-Security-Policy in the page allows nothing else: no analytics, no external fonts.
+
+Which radars are active, and each source's state, are worked out when the feed is built, not in the
+browser. When `status.json` is more than a day old the map shows a warning that the feed has stopped
+updating. GitHub turns off scheduled workflows in a public repository after 60 days without activity;
+re-enable the workflow under Actions when that happens.
 
 ## The legal line
 

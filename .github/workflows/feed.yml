@@ -1,0 +1,128 @@
+name: Feed
+
+# Builds the feed for all of Spain from every registered source and publishes it, with its
+# status and a map, to GitHub Pages. A pull request builds the same files without publishing,
+# from an empty cache, so its log shows which sources a runner outside Spain can reach.
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/feed.yml"
+      - "site/**"
+      - "src/**"
+      - "LICENSE-DATA.md"
+      - "pyproject.toml"
+      - "uv.lock"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: feed-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      # Build on the Python the image ships and the tests run on, read from the Dockerfile's FROM
+      # line exactly as tests.yml does, so the published feed never runs on an untested interpreter.
+      - name: Read the image's Python version
+        run: |
+          version=$(sed -nE 's/^FROM[[:space:]]+python:([0-9]+\.[0-9]+\.[0-9]+)([-@[:space:]].*)?$/\1/p' Dockerfile)
+          if [ -z "$version" ] || [ "$(printf '%s\n' "$version" | wc -l)" -ne 1 ]; then
+            echo "::error file=Dockerfile::expected exactly one 'FROM python:X.Y.Z...' line, found: '${version}'"
+            exit 1
+          fi
+          echo "Dockerfile ships Python $version"
+          echo "UV_PYTHON=$version" >> "$GITHUB_ENV"
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: true
+      - name: Install
+        run: |
+          uv sync --locked --no-dev
+          actual=$(uv run --no-sync python -c 'import platform; print(platform.python_version())')
+          echo "The feed builds on Python $actual (Dockerfile: $UV_PYTHON)"
+          if [ "$actual" != "$UV_PYTHON" ]; then
+            echo "::error::the feed would build on Python $actual, the image ships $UV_PYTHON"
+            exit 1
+          fi
+      # Each source's last good result and the announced streets, from the previous published run. A
+      # source that is down, or that answers only Spanish IPs, falls back to it (sources.run). The
+      # downloads are NOT kept: a download still fresh in the cache is reused without a request, and
+      # status.json would then call a source `ok` with this run's time while its site is down.
+      - name: Restore the last good results
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ${{ runner.temp }}/radares-cache/sources
+            ${{ runner.temp }}/radares-cache/announced.json
+          key: feed-state-${{ github.run_id }}
+          restore-keys: feed-state-
+      - name: Build the feed
+        env:
+          RADARES_PROVINCES: all
+          RADARES_CACHE: ${{ runner.temp }}/radares-cache
+        run: |
+          mkdir -p _site
+          cp site/index.html site/map.js site/style.css LICENSE-DATA.md _site/
+          uv run --no-sync radares feed --output _site/feed.geojson --status _site/status.json --save-history
+      - name: Report the sources
+        run: |
+          {
+            echo "| source | status | radars | stretches | in feed | data from | error |"
+            echo "|---|---|---|---|---|---|---|"
+            jq -r '.sources[] | "| \(.source) | \(.status) | \(.radars) | \(.stretches) | \(.in_feed) | \(.data_time // "never") | \(.error | gsub("[|\n]"; " ")) |"' _site/status.json
+            echo
+            echo "Features in the feed: $(jq '.features' _site/status.json)"
+          } >> "$GITHUB_STEP_SUMMARY"
+          jq . _site/status.json
+          features=$(jq '.features | length' _site/feed.geojson)
+          if [ "$features" -eq 0 ]; then
+            echo "::error::the feed has no features; not publishing an empty feed over a good one"
+            exit 1
+          fi
+      - name: Save the last good results
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ${{ runner.temp }}/radares-cache/sources
+            ${{ runner.temp }}/radares-cache/announced.json
+          key: feed-state-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Keep the built site for review
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: feed-site
+          path: _site
+          retention-days: 7
+      - name: Upload the site
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
