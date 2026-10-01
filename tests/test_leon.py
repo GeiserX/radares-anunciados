@@ -382,7 +382,8 @@ def test_registered_for_leon_only():
     source = sources.REGISTRY["leon"]
     assert source.provinces == {"24"} and source.spanish_ip
     assert "CC BY-NC 4.0" in source.licence and "no reuse licence" in source.licence
-    assert [s.key for s in sources.selected(None, frozenset({"24"}))] == ["dgt", "osm", "leon"]
+    selected = sources.selected(None, frozenset({"24"}))
+    assert [s.key for s in selected] == ["dgt", "osm", "dgt_invive", "leon"]
 
 
 def test_overpass_error_answer_is_a_failure():
