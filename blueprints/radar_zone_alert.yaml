@@ -18,7 +18,10 @@ blueprint:
       name: Phones
       description: >-
         The location tracker of each phone to alert, from the Home Assistant
-        companion app. Each phone gets the alert through its own notify action.
+        companion app. Each phone gets the alert through its own notify action,
+        `notify.mobile_app_<device name>`, so give each phone a different device
+        name in the companion app. Two phones with one name share one action,
+        and one of them gets both phones' alerts.
       selector:
         entity:
           multiple: true

@@ -77,7 +77,9 @@ Only zones with the icon `mdi:camera-timer` alert. A zone the service keeps but 
 alerted at its next location update.
 
 Each phone is alerted through its own notify action, `notify.mobile_app_<device name>`, taken from the
-device registry. The notification depends on the phone:
+device registry. The mobile app integration keys these actions by device name. Two phones with the
+same name, or with names that differ only in case or punctuation, share one action, and only one of
+them gets the alerts of both. The notification depends on the phone:
 
 | | iPhone | Android |
 |---|---|---|

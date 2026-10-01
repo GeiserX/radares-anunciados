@@ -45,17 +45,31 @@ docker compose run --rm radares-anunciados sync --dry-run
 [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2FGeiserX%2Fradares-anunciados%2Fblob%2Fmain%2Fblueprints%2Fradar_zone_alert.yaml)
 
 Or copy [`blueprints/radar_zone_alert.yaml`](../blueprints/radar_zone_alert.yaml) into Home Assistant
-by hand. Create one automation from it and pick the phones' location trackers under **Phones**. When a
-phone enters a radar zone, that phone gets a notification titled with the radar, such as "Radar
-(límite 50)". On an iPhone it's time-sensitive, so it shows through Focus modes; on Android it's a
-heads-up notification on the high-importance channel "Radares". Turn on **Critical alert** to have it
-ring in silent mode: an iOS critical alert, or Android's alarm stream.
+by hand. Create one automation from it and pick the phones' location trackers under **Phones**. Each
+phone needs its own device name in the companion app. Its notify action is
+`notify.mobile_app_<device name>`, so two phones with the same name share one action, and one of them
+gets both phones' alerts. When a phone enters a radar zone, that phone gets a notification titled with
+the radar, such as "Radar (límite 50)". On an iPhone it's time-sensitive, so it shows through Focus
+modes; on Android it's a heads-up notification on the high-importance channel "Radares". Turn on
+**Critical alert** to have it ring in silent mode: an iOS critical alert, or Android's alarm stream.
 
 A street from a police list, or an average-speed section, is several zones with one name, so each
 phone gets one alert for it and then stays quiet about it for the **Cooldown** (10 minutes by
 default). Another radar, or another phone, is alerted at once. No helper is needed. If a push is lost
 on the way to the phone, the rest of that street stays quiet too;
 [how it works](how-it-works.md#one-alert-per-street) has the details.
+
+### Updating from an earlier blueprint
+
+The earlier blueprint had no **Phones** input; this one requires it. After you re-import the
+blueprint, an automation made from the earlier one stops working: it shows as unavailable, and the log
+says `Failed to generate automation from blueprint: Missing input phones`. Pick its phones to fix it:
+
+1. Re-import the blueprint: **Settings → Automations & scenes → Blueprints**, open the menu of "Radar
+   ahead (radares-anunciados)" and choose **Re-import blueprint**.
+2. Open the automation made from it, pick each phone's location tracker under **Phones**, and save.
+
+Sound, Time sensitive and Critical alert keep their values.
 
 ## 4. Set up each phone
 
