@@ -9,6 +9,9 @@ const KINDS = {
 };
 const OTHER = { color: "#57606a", label: "Otro" };
 const SPAIN = { center: [40.2, -3.7], zoom: 6 };
+// The feed is rebuilt every 6 hours. Older than this, the schedule has stopped (GitHub turns
+// it off after 60 days without activity in the repository) or keeps failing.
+const STALE_AFTER_MS = 24 * 3600 * 1000;
 
 const map = L.map("map", { preferCanvas: true }).setView(SPAIN.center, SPAIN.zoom);
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -115,6 +118,19 @@ async function main() {
     sourcesTable(status);
   } catch (err) {
     console.warn("status.json not loaded", err);
+  }
+  const generated = Date.parse(status.generated || "");
+  if (Number.isFinite(generated) && Date.now() - generated > STALE_AFTER_MS) {
+    const days = Math.floor((Date.now() - generated) / (24 * 3600 * 1000));
+    const warn = el(
+      "p",
+      `Aviso: este feed no se actualiza desde hace ${days} día${days === 1 ? "" : "s"}. ` +
+        "Los estados de las fuentes y qué radares están activos son de esa fecha.",
+      "stale-warning",
+    );
+    warn.id = "stale-warning";
+    document.querySelector("header").append(warn);
+    document.body.dataset.stale = "true";
   }
   const licences = Object.fromEntries((status.sources || []).map((s) => [s.source, s.licence]));
   let data;
