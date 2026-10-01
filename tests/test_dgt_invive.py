@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from radares_anunciados import feed, ha, net, sources, speed
+from radares_anunciados import cli, feed, ha, net, sources, speed
 from radares_anunciados.geo import densify, distance_m
 from radares_anunciados.model import Radar
 from radares_anunciados.sources import Context, dgt_invive
@@ -39,8 +39,10 @@ def clean_env(monkeypatch, tmp_path):
     monkeypatch.setenv("RADARES_CACHE", str(tmp_path))
 
 
-def ctx(provinces=MURCIA) -> Context:
-    return Context(day=date(2026, 10, 1), provinces=provinces, boxes=(), radius=Radius())
+def ctx(provinces=MURCIA, zones=True) -> Context:
+    return Context(
+        day=date(2026, 10, 1), provinces=provinces, boxes=(), radius=Radius(), stretch_zones=zones
+    )
 
 
 def by_road(stretches, road, km_from):
@@ -248,7 +250,6 @@ def fake_network(monkeypatch, answer):
 
     monkeypatch.setattr(net, "cached_get", cached_get)
     monkeypatch.setattr(net, "get", get)
-    monkeypatch.setenv("RADARES_STRETCH_ZONES", "on")
     return calls
 
 
@@ -309,17 +310,27 @@ def test_an_incomplete_overpass_answer_fails_and_is_not_cached(monkeypatch, payl
 def test_a_wrong_zones_setting_is_refused(monkeypatch):
     monkeypatch.setenv("RADARES_STRETCH_ZONES", "yes please")
     with pytest.raises(ValueError, match="RADARES_STRETCH_ZONES"):
-        dgt_invive.zones_wanted()
+        cli.stretch_zones()
     monkeypatch.setenv("RADARES_STRETCH_ZONES", "ON")
-    assert dgt_invive.zones_wanted()
+    assert cli.stretch_zones()
+    monkeypatch.delenv("RADARES_STRETCH_ZONES")
+    assert not cli.stretch_zones()  # off by default
 
 
-# The two tests below need changes in the core, outside this source module (see
-# the lane's open issues). They are strict xfails: once the core takes the
-# change they pass, the run fails, and the marker must go.
+def test_the_zones_setting_comes_from_the_context_and_splits_the_last_good_result(monkeypatch):
+    # Zones off after a run with zones on: a failed download must not bring the
+    # zones back from the last good result, so the setting is in the fingerprint.
+    fake_network(monkeypatch, lambda: OVERPASS)
+    monkeypatch.setenv("RADARES_STRETCH_ZONES", "on")  # the source reads the context only
+    assert not dgt_invive.fetch(ctx(zones=False)).radars
+    assert dgt_invive.fetch(ctx(zones=True)).radars
+    assert sources.fingerprint(dgt_invive.SOURCE, ctx(zones=False)) != sources.fingerprint(
+        dgt_invive.SOURCE, ctx(zones=True)
+    )
+    monkeypatch.setenv("RADARES_PROVINCES", "30")
+    assert cli.context(date(2026, 10, 1)).stretch_zones
 
 
-@pytest.mark.xfail(strict=True, reason="core: ha.select must rank mobile_stretch after fixed")
 def test_stretch_zones_rank_below_fixed_radars_under_the_cap():
     d11 = by_road(dgt_invive.follow(dgt_invive.parse(XML, MURCIA), OVERPASS), "RM-D11", 0.0)
     stretch_zones = dgt_invive.zones(d11, ctx())
@@ -335,7 +346,6 @@ def test_stretch_zones_rank_below_fixed_radars_under_the_cap():
     assert {r.kind for r in kept} == {"fixed"} and left_out == len(stretch_zones)
 
 
-@pytest.mark.xfail(strict=True, reason="core: speed.size must keep a mobile_stretch radius")
 def test_a_limit_lookup_does_not_shrink_the_circles_along_a_stretch():
     d11 = by_road(dgt_invive.follow(dgt_invive.parse(XML, MURCIA), OVERPASS), "RM-D11", 0.0)
     radars = [replace(r, maxspeed=50) for r in dgt_invive.zones(d11, ctx())]

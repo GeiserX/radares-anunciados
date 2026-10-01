@@ -7,7 +7,8 @@ of conventional road in the 43 provinces where DGT polices interurban roads,
 each with two end points, the road and a km range; no speed limit.
 
 Every stretch goes to the feed as a line. Zones are opt-in
-(``RADARES_STRETCH_ZONES=on``) and only for an explicit province list: circles
+(``RADARES_STRETCH_ZONES=on``, read by the CLI into ``Context.stretch_zones``) and
+only for an explicit province list: circles
 along the road, one at each end and the rest at most 1.8 radii apart, so every
 metre of the road is within 0.9 radii of a centre. The radius is the speed rule
 of a fixed radar. The road between the two
@@ -34,7 +35,6 @@ import heapq
 import json
 import logging
 import math
-import os
 import re
 import time
 import unicodedata
@@ -448,15 +448,6 @@ def zones(stretch: Stretch, ctx: Context) -> list[Radar]:
     ]
 
 
-def zones_wanted() -> bool:
-    raw = os.environ.get(ZONES_ENV, "off").strip().lower()
-    if raw in ("", "off"):
-        return False
-    if raw == "on":
-        return True
-    raise ValueError(f"{ZONES_ENV}={raw!r} is neither on nor off")
-
-
 def build(xml: bytes, ctx: Context, with_zones: bool, max_age_s: int) -> SourceResult:
     stretches = parse(xml, ctx.provinces)
     if not with_zones:
@@ -477,7 +468,7 @@ def build(xml: bytes, ctx: Context, with_zones: bool, max_age_s: int) -> SourceR
 
 def fetch(ctx: Context) -> SourceResult:
     xml = net.cached_get(URL, max_age_s=ctx.max_age_s)
-    return build(xml, ctx, zones_wanted(), GEOMETRY_MAX_AGE_S)
+    return build(xml, ctx, ctx.stretch_zones, GEOMETRY_MAX_AGE_S)
 
 
 SOURCE = Source(

@@ -97,9 +97,11 @@ def _setting(name: str) -> int | None:
         raise ValueError(f"{name}={raw!r} is neither a number of metres nor 'auto'") from None
 
 
+LAID_OUT = ("mobile_announced", "mobile_stretch")  # circles placed along a line
+
+
 def size(radars: list[Radar], radius: Radius) -> list[Radar]:
-    """Set the radius of every point radar (fixed and section ends). Streets keep
-    theirs: their circles were laid out for it."""
-    return [
-        r if r.kind == "mobile_announced" else replace(r, radius_m=radius.point(r)) for r in radars
-    ]
+    """Set the radius of every point radar (fixed and section ends). Circles along
+    a street or a stretch keep theirs: their spacing was laid out for it, and a
+    smaller radius would leave road between them uncovered."""
+    return [r if r.kind in LAID_OUT else replace(r, radius_m=radius.point(r)) for r in radars]

@@ -28,6 +28,7 @@ class Context:
     boxes: tuple[Box, ...]  # (south, west, north, east) areas to search by bounding box
     radius: Radius  # use radius.street_m(limit) for the circles along an announced street
     max_age_s: int = 86_400  # the source's own cache age, from its Source entry
+    stretch_zones: bool = False  # RADARES_STRETCH_ZONES=on: stretch sources give zones too
 
 
 @dataclass(frozen=True)

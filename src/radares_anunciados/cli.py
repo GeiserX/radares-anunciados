@@ -9,6 +9,8 @@ Configuration comes from the environment so the same image runs anywhere:
   RADARES_FIXED_RADIUS   metres around a fixed radar, or auto (default: by its limit)
   RADARES_STREET_RADIUS  metres of each circle along an announced street, or auto
   RADARES_MAX_ZONES      most radar zones in Home Assistant (default 1000)
+  RADARES_STRETCH_ZONES  on: zones along DGT's mobile-radar stretches, for a province
+                         list only (default off: they are lines in the feed)
   RADARES_DORMANT_WEEKS  weeks an announced street keeps its zones, silent, after
                          its period ends (default 26; 0 deletes them at once)
   HA_URL, HA_TOKEN       Home Assistant base URL and long-lived access token
@@ -72,9 +74,26 @@ def osm_boxes(codes: frozenset[str] | None) -> tuple[provinces.Box, ...]:
     return tuple(provinces.boxes(codes))
 
 
+def stretch_zones() -> bool:
+    """RADARES_STRETCH_ZONES: on gives zones along the stretches a source publishes
+    (DGT INVIVE), for a province list only; off (the default) draws them in the feed."""
+    raw = os.environ.get("RADARES_STRETCH_ZONES", "off").strip().lower()
+    if raw in ("", "off"):
+        return False
+    if raw == "on":
+        return True
+    raise ValueError(f"RADARES_STRETCH_ZONES={raw!r} is neither on nor off")
+
+
 def context(day: date) -> Context:
     codes = selected_provinces()
-    return Context(day=day, provinces=codes, boxes=osm_boxes(codes), radius=speed.Radius.from_env())
+    return Context(
+        day=day,
+        provinces=codes,
+        boxes=osm_boxes(codes),
+        radius=speed.Radius.from_env(),
+        stretch_zones=stretch_zones(),
+    )
 
 
 @dataclass

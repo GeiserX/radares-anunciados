@@ -105,21 +105,27 @@ def select(
     """At most ``cap`` radars, and how many were left out.
 
     In order: streets of a list in force (they change weekly and matter most),
-    then fixed and section radars nearest to home, then dormant streets, the most
-    recently announced first. Never fails for being over the cap."""
+    then fixed and section radars nearest to home, then the circles along
+    stretches where mobile radars may stand (a radar is there only some days),
+    nearest first, then dormant streets, the most recently announced first.
+    Never fails for being over the cap."""
     if len(radars) <= cap:
         return radars, 0
+
+    def nearest_first(rs: list[Radar]) -> list[Radar]:
+        if home is None:
+            return sorted(rs, key=lambda r: r.id)
+        return sorted(rs, key=lambda r: (distance_m(home, (r.lat, r.lon)), r.id))
+
     listed = sorted((r for r in radars if r.active and r.valid_to), key=lambda r: r.id)
-    fixed = [r for r in radars if r.active and not r.valid_to]
-    if home is not None:
-        fixed.sort(key=lambda r: (distance_m(home, (r.lat, r.lon)), r.id))
-    else:
-        fixed.sort(key=lambda r: r.id)
+    standing = [r for r in radars if r.active and not r.valid_to]
+    fixed = nearest_first([r for r in standing if r.kind != "mobile_stretch"])
+    stretch = nearest_first([r for r in standing if r.kind == "mobile_stretch"])
     dormant = sorted(
         (r for r in radars if not r.active),
         key=lambda r: (-(r.valid_to.toordinal() if r.valid_to else 0), r.id),
     )
-    kept = (listed + fixed + dormant)[:cap]
+    kept = (listed + fixed + stretch + dormant)[:cap]
     return kept, len(radars) - len(kept)
 
 

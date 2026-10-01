@@ -86,7 +86,7 @@ def fingerprint(source: Source, ctx: Context) -> str:
     """The settings a result depends on. A last good result fetched with other
     settings (another province, another radius) is not reused."""
     provinces = ",".join(sorted(ctx.provinces)) if ctx.provinces is not None else "all"
-    text = repr((source.key, provinces, ctx.boxes, ctx.radius))
+    text = repr((source.key, provinces, ctx.boxes, ctx.radius, ctx.stretch_zones))
     return hashlib.sha256(text.encode()).hexdigest()[:16]
 
 
