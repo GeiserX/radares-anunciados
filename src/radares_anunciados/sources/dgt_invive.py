@@ -1,0 +1,409 @@
+"""DGT stretches where mobile radars run (INVIVE), from the DGT NAP (DATEX II).
+
+Dataset: https://nap.dgt.es/es/dataset/tramos-invive. The NAP page states the
+licence as "Creative Commons Attribution", source and author "DGT", and links its
+terms of use to https://www.dgt.es/contenido/aviso-legal/. About 1,330 stretches
+of conventional road in the 43 provinces where DGT polices interurban roads,
+each with two end points, the road and a km range; no speed limit.
+
+Every stretch goes to the feed as a line. Zones are opt-in
+(``RADARES_STRETCH_ZONES=on``) and only for an explicit province list: circles
+along the road, one at each end and the rest at most 1.8 radii apart, so every
+metre of the road is within 0.9 radii of a centre. The radius is the speed rule
+of a fixed radar. The road between the two
+ends comes from OpenStreetMap ways carrying the stretch's road ref, one Overpass
+query per province, cached for months. A stretch whose road can't be followed
+is drawn as a straight line and its feature says so.
+
+The file declares ``xmlns:xsd="http:www.w3.org/2001/XMLSchema"`` (no ``//``).
+No element uses that prefix and ElementTree does not check URIs, so it parses;
+the fixture keeps the declaration as served.
+"""
+
+from __future__ import annotations
+
+import heapq
+import json
+import logging
+import math
+import os
+import re
+import unicodedata
+import xml.etree.ElementTree as ET
+from collections.abc import Iterable
+from dataclasses import replace
+
+from .. import net
+from ..geo import distance_m
+from ..model import Radar, SourceResult, Stretch
+from ..provinces import PROVINCES, Box
+from .base import Context, Source
+from .osm import OVERPASS_URL
+
+log = logging.getLogger(__name__)
+
+KEY = "dgt_invive"
+URL = "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml"
+ATTRIBUTION = "Dirección General de Tráfico (Creative Commons Attribution)"
+OSM_ATTRIBUTION = "© OpenStreetMap contributors (ODbL 1.0)"
+LICENCE = (
+    "Creative Commons Attribution (as stated on the NAP dataset page, no version given); "
+    "terms of use https://www.dgt.es/contenido/aviso-legal/"
+)
+ZONES_ENV = "RADARES_STRETCH_ZONES"
+GEOMETRY_MAX_AGE_S = 90 * 86_400  # roads barely move; the query changes when the roads do
+SNAP_M = 3000  # an end point further than this from every way of its road is not on it
+BRIDGE_M = 500  # joins two ways of the road across an untagged roundabout or a gap
+STRAIGHT_NOTE = " (línea recta: trazado de la carretera no encontrado)"
+
+# DGT does not police interurban roads in Catalonia and the Basque Country.
+COVERED = frozenset(PROVINCES) - {"01", "08", "17", "20", "25", "43", "48"}
+
+_D = "{http://datex2.eu/schema/1_0/1_0}"
+_REF = re.compile(r"^[A-Za-z]{1,3}-[A-Za-z]?\d{1,5}[A-Za-z]?$")
+Point = tuple[float, float]
+
+
+def _fold(text: str) -> str:
+    """'VALÈNCIA/VALENCIA' and 'València / Valencia' to the same key."""
+    plain = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
+    return re.sub(r"\s*/\s*", "/", plain.strip().upper())
+
+
+def _province_codes() -> dict[str, str]:
+    """Every name and part of a bilingual name in ``PROVINCES``, folded, to its code."""
+    out: dict[str, str] = {}
+    for code, (name, _) in PROVINCES.items():
+        folded = _fold(name)
+        out[folded] = code
+        for part in folded.split("/"):
+            out[part] = code
+    # The file writes the community's province without the community's prefix.
+    out |= {"MADRID": "28", "MURCIA": "30"}
+    return out
+
+
+_CODES = _province_codes()
+
+
+def province_code(name: str | None) -> str | None:
+    """INE code of a province as the file names it ('ALACANT/ALICANTE'), or None."""
+    return _CODES.get(_fold(name)) if name else None
+
+
+def _text(el: ET.Element | None, path: str) -> str | None:
+    found = el.find(path) if el is not None else None
+    return found.text.strip() if found is not None and found.text else None
+
+
+def _point(el: ET.Element | None) -> Point | None:
+    lat = _text(el, f"{_D}pointCoordinates/{_D}latitude")
+    lon = _text(el, f"{_D}pointCoordinates/{_D}longitude")
+    return (float(lat), float(lon)) if lat and lon else None
+
+
+def _km(ref: ET.Element | None) -> float | None:
+    dist = _text(ref, f"{_D}referencePointDistance")
+    return round(float(dist) / 1000, 3) if dist else None
+
+
+def _span(road: str, km_from: float | None, km_to: float | None) -> str:
+    if km_from is None or km_to is None:
+        return road
+    low, high = sorted((km_from, km_to))
+    return f"{road} km {low:g}-{high:g}"
+
+
+def parse(xml: bytes, provinces: Iterable[str] | None = None) -> list[Stretch]:
+    """Every stretch in ``provinces`` (INE codes; None: all), as a straight line.
+    A stretch whose province name is unknown is skipped and logged, never guessed."""
+    wanted = frozenset(provinces) if provinces is not None else None
+    root = ET.fromstring(xml)
+    stretches: list[Stretch] = []
+    for loc in root.iter(f"{_D}predefinedLocation"):
+        if not loc.get("id"):  # the inner predefinedLocation has no id
+            continue
+        inner = loc.find(f"{_D}predefinedLocation")
+        linear = inner.find(f"{_D}tpeglinearLocation") if inner is not None else None
+        start, end = _point(linear.find(f"{_D}from")), _point(linear.find(f"{_D}to"))
+        primary = inner.find(f".//{_D}referencePointPrimaryLocation/{_D}referencePoint")
+        second = inner.find(f".//{_D}referencePointSecondaryLocation/{_D}referencePoint")
+        road = _text(primary, f"{_D}roadNumber")
+        area = _text(primary, f"{_D}administrativeArea/{_D}value")
+        source_id = loc.get("id", "").removeprefix("GUID_")
+        if start is None or end is None or not road:
+            log.warning("%s %s: no end points or no road; skipped", KEY, source_id)
+            continue
+        province = province_code(area)
+        if province is None:
+            log.warning("%s %s: unknown province %r; skipped", KEY, source_id, area)
+            continue
+        if wanted is not None and province not in wanted:
+            continue
+        km_from, km_to = _km(primary), _km(second)
+        stretches.append(
+            Stretch(
+                id=f"{KEY}-{source_id}",
+                source=KEY,
+                name=f"Tramo de radar móvil {_span(road, km_from, km_to)}",
+                road=road,
+                start=start,
+                end=end,
+                km_from=km_from,
+                km_to=km_to,
+                direction=_text(primary, f"{_D}directionRelative"),  # "both"
+                province=province,
+                url=URL,
+                attribution=ATTRIBUTION,
+            )
+        )
+    return stretches
+
+
+# --- road geometry from OpenStreetMap --------------------------------------
+
+
+def geometry_query(box: Box, roads: Iterable[str]) -> str:
+    """Overpass QL for the ways of ``roads`` in one province's box. Exact refs
+    in one alternation, also inside a ';' list ('N-332;E-15'); no name regex."""
+    refs = sorted({r for r in roads if _REF.match(r)}, key=str.upper)
+    alt = "|".join(refs)
+    south, west, north, east = box
+    return (
+        f"[out:json][timeout:180][bbox:{south},{west},{north},{east}];"
+        f'way["highway"]["ref"~"^({alt})(;|$)|;({alt})(;|$)",i];'
+        "out geom qt;"
+    )
+
+
+def _refs(tags: dict) -> set[str]:
+    return {r.strip().upper() for r in tags.get("ref", "").split(";") if r.strip()}
+
+
+def road_ways(payload: bytes, road: str) -> list[list[tuple[int, Point]]]:
+    """The ways of ``road`` in an Overpass answer, each as (node id, (lat, lon))."""
+    out = []
+    for el in json.loads(payload).get("elements", []):
+        if el.get("type") != "way" or road.upper() not in _refs(el.get("tags", {})):
+            continue
+        nodes, geom = el.get("nodes", []), el.get("geometry", [])
+        if len(nodes) == len(geom) >= 2:
+            out.append([(n, (g["lat"], g["lon"])) for n, g in zip(nodes, geom, strict=True)])
+    return out
+
+
+def _length(line: list[Point]) -> float:
+    return sum(distance_m(a, b) for a, b in zip(line, line[1:], strict=False))
+
+
+def route(ways: list[list[tuple[int, Point]]], start: Point, end: Point) -> list[Point] | None:
+    """The road from ``start`` to ``end`` along ``ways``, or None.
+
+    The ways form a graph on their shared nodes. A road's ref usually stops at a
+    roundabout or a village, so each way's end node is also joined to the nearest
+    node of every other way within ``BRIDGE_M``, at twice the cost of a real way.
+    Both end points are snapped to the nearest node (None if further than
+    ``SNAP_M``: the published point and the mapped road part there), then the
+    shortest path is taken. The line runs from the published start to the
+    published end."""
+    where: dict[int, Point] = {}
+    edges: dict[int, list[tuple[float, int]]] = {}
+
+    def link(a: int, b: int, penalty: float = 1.0) -> None:
+        d = distance_m(where[a], where[b]) * penalty
+        edges.setdefault(a, []).append((d, b))
+        edges.setdefault(b, []).append((d, a))
+
+    # Nodes by grid cell, with the ways they belong to, to find bridges fast.
+    # Degrees; at Spain's latitudes a cell is wider than BRIDGE_M both ways, so a
+    # bridge never spans more than one cell.
+    cell = max(BRIDGE_M, 1) / 111_000 * 2
+    grid: dict[tuple[int, int], list[tuple[int, int]]] = {}
+    for i, way in enumerate(ways):
+        for node, point in way:
+            where[node] = point
+            grid.setdefault((int(point[0] // cell), int(point[1] // cell)), []).append((node, i))
+        for (a, _), (b, _) in zip(way, way[1:], strict=False):
+            link(a, b)
+    if not where:
+        return None
+    for i, way in enumerate(ways):
+        for end_node, (lat, lon) in (way[0], way[-1]):
+            nearest: dict[int, tuple[float, int]] = {}  # other way -> (metres, node)
+            gy, gx = int(lat // cell), int(lon // cell)
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    for node, j in grid.get((gy + dy, gx + dx), ()):
+                        if j == i or node == end_node:
+                            continue
+                        d = distance_m((lat, lon), where[node])
+                        if d <= BRIDGE_M and (j not in nearest or d < nearest[j][0]):
+                            nearest[j] = (d, node)
+            for _, node in nearest.values():
+                link(end_node, node, penalty=2.0)  # a real way is preferred to a jump
+
+    def snap(p: Point) -> int | None:
+        node = min(where, key=lambda n: distance_m(p, where[n]))
+        return node if distance_m(p, where[node]) <= SNAP_M else None
+
+    a, b = snap(start), snap(end)
+    if a is None or b is None:
+        return None
+    dist, back = {a: 0.0}, {}
+    queue = [(0.0, a)]
+    while queue:
+        d, node = heapq.heappop(queue)
+        if node == b:
+            break
+        if d > dist[node]:
+            continue
+        for step, nxt in edges.get(node, ()):
+            if d + step < dist.get(nxt, math.inf):
+                dist[nxt], back[nxt] = d + step, node
+                heapq.heappush(queue, (d + step, nxt))
+    if b not in dist:
+        return None
+    path = [b]
+    while path[-1] != a:
+        path.append(back[path[-1]])
+    return [start] + [where[n] for n in reversed(path)] + [end]
+
+
+def plausible(line: list[Point], stretch: Stretch) -> bool:
+    """A path far longer than the published km range took a wrong turn."""
+    if stretch.km_from is None or stretch.km_to is None:
+        return True
+    published = abs(stretch.km_to - stretch.km_from) * 1000
+    return _length(line) <= 1.5 * published + 2000
+
+
+def follow(stretches: list[Stretch], payload: bytes | None) -> list[Stretch]:
+    """Each stretch with its road as ``line``; one not found (or no ``payload``)
+    keeps the straight line and a name that says so."""
+    ways: dict[str, list] = {}
+    out = []
+    for s in stretches:
+        line = None
+        if payload is not None and s.road:
+            if s.road not in ways:
+                ways[s.road] = road_ways(payload, s.road)
+            line = route(ways[s.road], s.start, s.end)
+            if line is not None and not plausible(line, s):
+                line = None
+        if line is None:
+            log.warning("%s %s: road %s not followed; straight line", KEY, s.id, s.road)
+            out.append(replace(s, name=s.name + STRAIGHT_NOTE))
+        else:
+            attribution = f"{s.attribution}; road: {OSM_ATTRIBUTION}"
+            out.append(replace(s, line=tuple(line), attribution=attribution))
+    return out
+
+
+def roads_by_province(stretches: list[Stretch], wanted: frozenset[str]) -> dict[str, list]:
+    out: dict[str, list[Stretch]] = {}
+    for s in stretches:
+        if s.province in wanted:
+            out.setdefault(s.province, []).append(s)
+    return out
+
+
+def geometry(code: str, stretches: list[Stretch], max_age_s: int) -> bytes | None:
+    """The Overpass answer for one province's roads, or None if it failed."""
+    query = geometry_query(PROVINCES[code][1], (s.road for s in stretches if s.road))
+    try:
+        return net.cached_get(OVERPASS_URL, {"data": query}, max_age_s=max_age_s)
+    except Exception as exc:  # a road not followed costs a straight line, not the source
+        log.warning("%s: Overpass failed for province %s (%s); straight lines", KEY, code, exc)
+        return None
+
+
+# --- zones ------------------------------------------------------------------
+
+
+def along(line: list[Point], every_m: float) -> list[Point]:
+    """Points on ``line`` at both ends and evenly between, at most ``every_m`` apart."""
+    total = _length(line)
+    if total == 0:
+        return [line[0]]
+    steps = max(1, math.ceil(total / every_m))
+    marks = [total * i / steps for i in range(steps + 1)]
+    out, walked, k = [], 0.0, 0
+    for a, b in zip(line, line[1:], strict=False):
+        seg = distance_m(a, b)
+        while k < len(marks) and marks[k] <= walked + seg + 1e-6:
+            t = (marks[k] - walked) / seg if seg else 0.0
+            out.append((a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t))
+            k += 1
+        walked += seg
+    while k < len(marks):  # rounding at the very end
+        out.append(line[-1])
+        k += 1
+    return out
+
+
+def zones(stretch: Stretch, ctx: Context) -> list[Radar]:
+    """Circles along one stretch. Each circle reaches 0.9 of its radius along the
+    road both ways, so circles 1.8 radii apart leave no road uncovered, and a
+    radar at either end of the stretch sits at a circle's centre."""
+    name = f"Radar móvil {_span(stretch.road or '?', stretch.km_from, stretch.km_to)}"
+    template = Radar(
+        id="",
+        source=KEY,
+        kind="mobile_stretch",
+        name=name,
+        lat=stretch.start[0],
+        lon=stretch.start[1],
+        radius_m=0,
+        url=stretch.url,
+        attribution=stretch.attribution,
+        direction=stretch.direction,
+        province=stretch.province,
+    )
+    radius = ctx.radius.point(template)
+    line = list(stretch.line or (stretch.start, stretch.end))
+    return [
+        replace(template, id=f"{stretch.id}-{i}", lat=lat, lon=lon, radius_m=radius)
+        for i, (lat, lon) in enumerate(along(line, 1.8 * radius))
+    ]
+
+
+def zones_wanted() -> bool:
+    raw = os.environ.get(ZONES_ENV, "off").strip().lower()
+    if raw in ("", "off"):
+        return False
+    if raw == "on":
+        return True
+    raise ValueError(f"{ZONES_ENV}={raw!r} is neither on nor off")
+
+
+def build(xml: bytes, ctx: Context, with_zones: bool, max_age_s: int) -> SourceResult:
+    stretches = parse(xml, ctx.provinces)
+    if not with_zones:
+        return SourceResult(stretches=stretches)
+    if ctx.provinces is None:
+        log.warning("%s=on needs a province list, not all of Spain; no stretch zones", ZONES_ENV)
+        return SourceResult(stretches=stretches)
+    groups = roads_by_province(stretches, ctx.provinces)
+    followed = {
+        s.id: s
+        for code, group in sorted(groups.items())
+        for s in follow(group, geometry(code, group, max_age_s))
+    }
+    stretches = [followed.get(s.id, s) for s in stretches]
+    radars = [r for s in stretches if s.province in ctx.provinces for r in zones(s, ctx)]
+    return SourceResult(radars=radars, stretches=stretches)
+
+
+def fetch(ctx: Context) -> SourceResult:
+    xml = net.cached_get(URL, max_age_s=ctx.max_age_s)
+    return build(xml, ctx, zones_wanted(), GEOMETRY_MAX_AGE_S)
+
+
+SOURCE = Source(
+    key=KEY,
+    fetch=fetch,
+    attribution=ATTRIBUTION,
+    licence=LICENCE,
+    max_age_s=86_400,
+    provinces=COVERED,
+)
