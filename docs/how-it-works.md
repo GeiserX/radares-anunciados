@@ -140,16 +140,18 @@ and publishes `feed.geojson`, `status.json`, the map in [`site/`](../site/) and
 
 | Field | Meaning |
 |---|---|
-| `status` | `ok`: fetched in this run. `stale`: this run failed; the feed holds its last good result. `missing`: never fetched here; it adds nothing |
+| `status` | `ok`: the source answered in this run. `stale`: this run failed; the feed holds its last good result. `missing`: never fetched here; it adds nothing |
 | `radars`, `stretches` | what the source gave (or its last good result) |
 | `in_feed` | its features left in the feed after duplicates are dropped |
 | `data_time` | when the data in use was fetched, UTC; `null` for a missing source |
 | `error` | why this run's fetch failed |
 | `attribution`, `licence`, `spanish_ip` | the source's terms, and whether it answers only Spanish addresses |
 
-The cache folder (downloads, each source's last good result, the announced streets) is kept between
-runs with `actions/cache`, so a source that is down falls back to its last good copy as described
-above, and an announced street turns dormant on the map after its week. The runner is outside Spain:
+Each source's last good result and the announced streets are kept between runs with `actions/cache`,
+so a source that is down falls back to its last good copy as described above, and an announced street
+turns dormant on the map after its week. The downloads are not kept. A download younger than its
+source's cache age is reused without asking the source, so a kept one would report a source as `ok`,
+with this run's time, while its site is down. Every published run asks every source. The runner is outside Spain:
 a source that refuses other countries never answers there, and shows as `missing` until a copy reaches
 the cache some other way. A run whose feed has no features at all fails instead of publishing it.
 
@@ -159,6 +161,11 @@ with its state and counts.
 
 The map loads Leaflet from unpkg, pinned to one version with an integrity hash, and OpenStreetMap
 tiles. A Content-Security-Policy in the page allows nothing else: no analytics, no external fonts.
+
+Which radars are active, and each source's state, are worked out when the feed is built, not in the
+browser. When `status.json` is more than a day old the map shows a warning that the feed has stopped
+updating. GitHub turns off scheduled workflows in a public repository after 60 days without activity;
+re-enable the workflow under Actions when that happens.
 
 ## The legal line
 

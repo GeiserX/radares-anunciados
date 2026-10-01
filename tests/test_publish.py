@@ -3,13 +3,14 @@
 import json
 import os
 import re
+import shutil
 from datetime import date, timedelta
 from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
 
-from radares_anunciados import cli, sources, store
+from radares_anunciados import cli, net, sources, store
 from radares_anunciados.model import Radar, SourceResult, Stretch
 from radares_anunciados.sources import Source
 
@@ -115,6 +116,70 @@ def test_an_empty_feed_still_writes_a_valid_status(monkeypatch, tmp_path):
     assert report["features"] == 0 and report["sources"][0]["status"] == "missing"
 
 
+def kept_between_runs() -> list[list[str]]:
+    """The paths of each actions/cache step in feed.yml, relative to the cache folder."""
+    lines = (ROOT / ".github" / "workflows" / "feed.yml").read_text("utf-8").splitlines()
+    blocks = []
+    for i, line in enumerate(lines):
+        if line.strip() == "path: |":
+            indent = len(line) - len(line.lstrip()) + 2
+            block = []
+            for nxt in lines[i + 1 :]:
+                if len(nxt) - len(nxt.lstrip()) < indent or not nxt.strip():
+                    break
+                block.append(nxt.strip())
+            blocks.append(block)
+        elif re.match(r"\s*path: .*radares-cache", line):
+            blocks.append([line.split("path:", 1)[1].strip()])
+    prefix = "${{ runner.temp }}/radares-cache"
+    return [[p.removeprefix(prefix).lstrip("/") for p in block] for block in blocks]
+
+
+def test_a_scheduled_run_never_calls_a_source_ok_from_a_download_it_did_not_make(
+    monkeypatch, tmp_path
+):
+    """The published run keeps only what the fallback needs. A download younger than its
+    max age is reused without a request; kept between runs, it would make a source whose
+    site is down look `ok`, with this run's time, in status.json."""
+    blocks = kept_between_runs()
+    assert len(blocks) == 2 and blocks[0] == blocks[1], "restore and save must keep the same paths"
+    kept = blocks[0]
+    assert "" not in kept, "the whole cache folder, downloads included, is kept between runs"
+
+    calls = []
+
+    def get(url, data=None, headers=None):
+        calls.append(url)
+        if len(calls) > 1:
+            raise OSError("HTTP 503")
+        return b'{"n": 2}'
+
+    def fetch(ctx):
+        n = json.loads(net.cached_get("https://example.org/radars"))["n"]
+        return SourceResult([radar("up", i) for i in range(n)])
+
+    monkeypatch.setattr(net, "get", get)
+    up = Source("up", fetch, "up people", "up licence")
+    monkeypatch.setattr(sources, "REGISTRY", {"up": up})
+    first = cli.status(cli.collect(date(2026, 9, 28), save_history=True), now=1_790_000_000.0)
+    assert first["sources"][0]["status"] == "ok"
+
+    # the next scheduled run starts on a fresh runner with only the kept paths restored
+    old, new = tmp_path / "cache", tmp_path / "next-run"
+    for rel in kept:
+        src = old / rel
+        assert src.exists(), f"{rel} is kept between runs but the feed never writes it"
+        dst = new / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        (shutil.copytree if src.is_dir() else shutil.copy2)(src, dst)
+    monkeypatch.setenv("RADARES_CACHE", str(new))
+    second = cli.status(cli.collect(date(2026, 9, 28), save_history=True), now=1_790_021_600.0)
+    row = second["sources"][0]
+    assert len(calls) == 2, "the next run must ask the source again"
+    assert (row["status"], row["radars"], "503" in row["error"]) == ("stale", 2, True)
+    assert row["data_time"] == first["sources"][0]["data_time"]
+
+
 class Tags(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -140,8 +205,21 @@ def test_the_page_loads_only_pinned_files_with_an_integrity_hash():
         assert a.get("crossorigin") == "anonymous", url
     metas = [a for tag, a in parser.tags if tag == "meta"]
     csp = next(a["content"] for a in metas if a.get("http-equiv") == "Content-Security-Policy")
-    assert "default-src 'none'" in csp and "connect-src 'self'" in csp
-    assert "font-src" not in csp  # no external fonts
+    directives = {}
+    for part in filter(None, (p.strip() for p in csp.split(";"))):
+        name, *values = part.split()
+        directives[name] = set(values)
+    # No tracking and no external fonts: the page, the pinned Leaflet files and OSM tiles only.
+    # Anything not listed (font-src, frame-src...) falls back to default-src 'none'.
+    assert directives == {
+        "default-src": {"'none'"},
+        "script-src": {"'self'", "https://unpkg.com"},
+        "style-src": {"'self'", "https://unpkg.com"},
+        "img-src": {"'self'", "data:", "https://tile.openstreetmap.org"},
+        "connect-src": {"'self'"},
+        "base-uri": {"'none'"},
+        "form-action": {"'none'"},
+    }
 
 
 def test_the_data_license_credits_every_registered_source():
