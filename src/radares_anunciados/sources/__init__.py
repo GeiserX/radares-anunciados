@@ -21,6 +21,7 @@ from . import (
     donostia,
     donostia_movil,
     euskadi,
+    leon,
     madrid,
     murcia,
     navarra,
@@ -47,6 +48,7 @@ REGISTRY: dict[str, Source] = {
         donostia_movil.SOURCE,
         madrid.SOURCE,
         salamanca.SOURCE,
+        leon.SOURCE,
     )
 }
 

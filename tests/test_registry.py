@@ -46,6 +46,7 @@ def test_every_source_is_registered_with_its_terms():
         "donostia_movil",
         "madrid",
         "salamanca",
+        "leon",
     ]
     for key, source in sources.REGISTRY.items():
         assert source.key == key
