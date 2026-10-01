@@ -10,6 +10,11 @@ WGS84 ("RADF004-401+561C", "A1- 401,5 - C"), one radar short of the API on
 hashed and changes on each deploy, so we follow the viewer page to it. No speed
 limit is published. The site answers only from a Spanish IP.
 
+Most of these radars are DGT booths that the DGT file lists too (7 of 8 on
+2026-10-01, 4 to 508 m apart, the km cut differently). Two zones for one radar
+waste the phone's regions, so a radar on the same road within half a km of one
+in the DGT file is left to the DGT source.
+
 No reuse licence is published: the navarra.es legal notice reserves the
 content's intellectual property to the Government of Navarra.
 """
@@ -26,6 +31,7 @@ import urllib.request
 from .. import net
 from ..geo import utm_to_wgs84
 from ..model import Radar, SourceResult
+from . import dgt
 from .base import Context, Source
 
 log = logging.getLogger(__name__)
@@ -49,6 +55,8 @@ API_HEADERS = {
 }
 API_BODY = {"admin": False, "order": "-fecha", "filters": {}}
 DIRECTIONS = {"C": "creciente", "D": "decreciente"}
+# A radar on the same road this close (in km) to one in the DGT file is that radar.
+SAME_RADAR_KM = 0.5
 
 # "ALSASUA - A1PK401+561C": the part after "+" is the decimal part of the km,
 # without trailing zeros ("N121APK25+9D" is km 25.9).
@@ -61,6 +69,8 @@ _ENTITY = re.compile(
 _BUNDLE_NAME = re.compile(
     r"(?P<road>[A-Z]+\d+[A-Z]?)\s*-\s*(?P<km>\d+(?:,\d+)?)\s*-\s*(?P<dir>[CD])"
 )
+# "Radar fijo A-1 km 401.6 (sentido GUIPÚZCOA)": the road and km of a radar name.
+_ROAD_KM = re.compile(r"^Radar (?:fijo|de tramo) (?P<road>\S+) km (?P<km>\d+(?:\.\d+)?)")
 _SCRIPT = re.compile(r'<script[^>]+src="(?P<src>[^"]*assets/main-[^"]+\.js)"')
 
 
@@ -147,12 +157,31 @@ def post_api(timeout: int = 60) -> bytes:
         return response.read()
 
 
-def fetch(ctx: Context) -> SourceResult:
+def _road_km(name: str) -> tuple[str, float] | None:
+    m = _ROAD_KM.match(name)
+    return (m.group("road"), float(m.group("km"))) if m else None
+
+
+def without_dgt(radars: list[Radar], dgt_radars: list[Radar]) -> list[Radar]:
+    """The radars the DGT file does not list: same road, km within SAME_RADAR_KM."""
+    known = [found for r in dgt_radars if (found := _road_km(r.name))]
+    kept = []
+    for radar in radars:
+        here = _road_km(radar.name)
+        if here and any(
+            road == here[0] and abs(km - here[1]) <= SAME_RADAR_KM for road, km in known
+        ):
+            continue
+        kept.append(radar)
+    return kept
+
+
+def _read(ctx: Context) -> list[Radar]:
     try:
         radars = parse_api(post_api())
         if not radars:
             raise ValueError("the API listed no radar")
-        return SourceResult(radars=radars)
+        return radars
     except (OSError, ValueError) as exc:
         log.warning("navarra: radar API failed (%s); reading the viewer's bundle", exc)
     viewer = net.cached_get(VIEWER, max_age_s=ctx.max_age_s).decode("utf-8", "replace")
@@ -161,7 +190,21 @@ def fetch(ctx: Context) -> SourceResult:
     radars = parse_bundle(js, url)
     if not radars:
         raise ValueError(f"navarra: neither the API nor {url} lists a radar")
-    return SourceResult(radars=radars)
+    return radars
+
+
+def fetch(ctx: Context) -> SourceResult:
+    radars = _read(ctx)
+    try:
+        # The same download as the DGT source's, from the shared cache.
+        xml = net.cached_get(dgt.URL, max_age_s=dgt.SOURCE.max_age_s)
+        dgt_radars = dgt.parse(xml, {PROVINCE})
+    except Exception as exc:  # a radar listed twice beats a radar missing
+        log.warning("navarra: DGT file unreadable (%s); keeping every radar, some twice", exc)
+        return SourceResult(radars=radars)
+    kept = without_dgt(radars, dgt_radars)
+    log.info("navarra: %d radars, %d of them in the DGT file", len(radars), len(radars) - len(kept))
+    return SourceResult(radars=kept)
 
 
 SOURCE = Source(

@@ -73,7 +73,7 @@ def parse_page(page: str) -> tuple[date | None, list[str]]:
 
 def js_object(script: str, name: str) -> dict:
     """The object literal assigned to ``var <name>``, read as JSON: single-quoted
-    strings become double-quoted, trailing commas go."""
+    strings become double-quoted, trailing commas and comments go."""
     m = re.search(rf"\bvar\s+{re.escape(name)}\s*=\s*\{{", script)
     if not m:
         raise ValueError(f"no 'var {name} = {{' in the script")
@@ -82,15 +82,28 @@ def js_object(script: str, name: str) -> dict:
     i = m.end() - 1
     while i < len(script):
         c = script[i]
+        if script.startswith("//", i):
+            end = script.find("\n", i)
+            i = len(script) if end < 0 else end
+            continue
+        if script.startswith("/*", i):
+            end = script.find("*/", i + 2)
+            if end < 0:
+                raise ValueError(f"'var {name}' has a comment that never closes")
+            i = end + 2
+            continue
         if c in "\"'":
             j, chars = i + 1, []
-            while script[j] != c:
-                if script[j] == "\\":
+            try:
+                while script[j] != c:
+                    if script[j] == "\\":
+                        j += 1
+                        chars.append(script[j] if c == "'" else "\\" + script[j])
+                    else:
+                        chars.append(script[j])
                     j += 1
-                    chars.append(script[j] if c == "'" else "\\" + script[j])
-                else:
-                    chars.append(script[j])
-                j += 1
+            except IndexError:
+                raise ValueError(f"'var {name}' has a string that never closes") from None
             text = "".join(chars)
             out.append(json.dumps(text) if c == "'" else f'"{text}"')
             i = j + 1

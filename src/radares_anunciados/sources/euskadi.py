@@ -113,10 +113,13 @@ def parse(page: str, provinces: frozenset[str] | set[str] | None = None) -> list
 
 def fetch(ctx: Context) -> SourceResult:
     page = net.cached_get(URL, max_age_s=ctx.max_age_s).decode("utf-8", "replace")
-    radars = parse(page, ctx.provinces)
-    if not radars and not _BLOCK.search(page):
-        # An empty answer would delete every zone; a changed page must fail instead.
-        raise ValueError("euskadi: no radar block found on the page; did its layout change?")
+    # Read every territory first: an empty answer would delete every zone, so a
+    # page with no block, or with blocks none of which reads, must fail instead.
+    radars = parse(page)
+    if not radars:
+        raise ValueError("euskadi: no readable radar block on the page; did its layout change?")
+    if ctx.provinces is not None:
+        radars = [r for r in radars if r.province in ctx.provinces]
     return SourceResult(radars=radars)
 
 

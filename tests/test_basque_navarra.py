@@ -1,5 +1,7 @@
 """Basque Government, Navarra and Donostia sources, on saved real answers."""
 
+import re
+from dataclasses import replace
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -8,7 +10,7 @@ import pytest
 from radares_anunciados import feed, net, sources
 from radares_anunciados.geo import densify, distance_m
 from radares_anunciados.model import Announced
-from radares_anunciados.sources import Context, donostia, donostia_movil, euskadi, navarra
+from radares_anunciados.sources import Context, dgt, donostia, donostia_movil, euskadi, navarra
 from radares_anunciados.speed import Radius
 
 FIX = Path(__file__).parent / "fixtures"
@@ -16,6 +18,7 @@ TRAFIKOA = FIX / "trafikoa_cabinas_2026-10-01.html"
 NAVARRA_API = FIX / "navarra_radars_api_2026-10-01.json"
 NAVARRA_VIEWER = FIX / "navarra_viewer_2026-10-01.html"
 NAVARRA_JS = FIX / "navarra_main_trimmed_2026-10-01.js"
+DGT_NAVARRA = FIX / "dgt_navarra_2026-10-01.xml"
 DONOSTIA = FIX / "donostia_radarra_2026-10-01.json"
 # Two Wayback captures of the mobile page with a plan, the live page on a day
 # without one, and the only capture of the map script with lines (another day:
@@ -85,6 +88,33 @@ def test_euskadi_fails_on_a_page_without_radars(monkeypatch):
         euskadi.fetch(ctx())
 
 
+@pytest.mark.parametrize(
+    "change",
+    [
+        # the territories renamed: every block in an unknown territory
+        lambda page: (
+            page.replace('"Araba"', '"Álava"')
+            .replace('"Gipuzkoa"', '"Guipúzcoa"')
+            .replace('"Bizkaia"', '"Vizcaya"')
+        ),
+        # the popup cut short: every block unreadable
+        lambda page: re.sub(r"popupValores = \[.*?\]", "popupValores = []", page, flags=re.S),
+    ],
+)
+def test_euskadi_fails_when_no_block_reads(monkeypatch, change):
+    page = change(TRAFIKOA.read_text(encoding="utf-8"))
+    assert euskadi._BLOCK.search(page)  # the blocks are there, none reads
+    monkeypatch.setattr(net, "cached_get", lambda url, **kw: page.encode())
+    with pytest.raises(ValueError, match="layout"):
+        euskadi.fetch(ctx())
+
+
+def test_euskadi_fetch_keeps_the_selected_provinces(monkeypatch):
+    monkeypatch.setattr(net, "cached_get", lambda url, **kw: TRAFIKOA.read_bytes())
+    radars = euskadi.fetch(ctx(provinces=frozenset({"01", "31"}))).radars
+    assert sorted(r.id for r in radars) == ["euskadi-arminon", "euskadi-laguardia-vi"]
+
+
 # --- Navarra -----------------------------------------------------------------
 
 
@@ -127,13 +157,44 @@ def _bundle_get(url, **kw):
         return NAVARRA_VIEWER.read_bytes()
     if url.endswith("main-D0gC8mEA.js"):
         return NAVARRA_JS.read_bytes()
+    if url == dgt.URL:
+        raise OSError("DGT down")
     raise AssertionError(url)
+
+
+def _with_dgt(url, **kw):
+    return DGT_NAVARRA.read_bytes() if url == dgt.URL else _bundle_get(url, **kw)
 
 
 def test_navarra_reads_the_api_first(monkeypatch):
     monkeypatch.setattr(navarra, "post_api", lambda: NAVARRA_API.read_bytes())
     monkeypatch.setattr(net, "cached_get", _bundle_get)
-    assert len(navarra.fetch(ctx()).radars) == 8
+    assert len(navarra.fetch(ctx()).radars) == 8  # DGT down: every radar is kept
+
+
+def test_navarra_leaves_the_dgt_radars_to_the_dgt_source(monkeypatch):
+    # The live DGT file lists 7 radars in Navarra, 4 to 508 m from the viewer's
+    # and with the km cut differently: only A-12 km 5.9 is Navarra's alone.
+    monkeypatch.setattr(navarra, "post_api", lambda: NAVARRA_API.read_bytes())
+    monkeypatch.setattr(net, "cached_get", _with_dgt)
+    radars = navarra.fetch(ctx()).radars
+    assert [r.id for r in radars] == ["navarra-A-12-5.9-D"]
+    official = dgt.parse(DGT_NAVARRA.read_bytes(), {"31"})
+    assert len(official) == 7
+    assert len(feed.merge(official + radars, ctx().day)) == 8
+
+
+def test_navarra_same_radar_means_same_road_and_km():
+    api = navarra.parse_api(NAVARRA_API.read_bytes())
+    official = dgt.parse(DGT_NAVARRA.read_bytes(), {"31"})
+    # N-121-A km 60.2 is 508 m from DGT's, the same booth by road and km
+    n121 = [r for r in api if r.id == "navarra-N-121-A-60.2-C"]
+    assert navarra.without_dgt(n121, official) == []
+    # a km off by more than half a km, or another road, is another radar
+    moved = [replace(n121[0], name="Radar fijo N-121-A km 61.2 (sentido creciente)")]
+    assert navarra.without_dgt(moved, official) == moved
+    other = [replace(n121[0], name="Radar fijo N-121-B km 60.2 (sentido creciente)")]
+    assert navarra.without_dgt(other, official) == other
 
 
 @pytest.mark.parametrize(
@@ -150,6 +211,9 @@ def test_navarra_falls_back_on_the_bundle(monkeypatch, answer):
     radars = navarra.fetch(ctx()).radars
     assert len(radars) == 7
     assert all(r.url.endswith("main-D0gC8mEA.js") for r in radars)
+    # the bundle lacks A-12, so with the DGT file nothing is Navarra's alone
+    monkeypatch.setattr(net, "cached_get", _with_dgt)
+    assert navarra.fetch(ctx()).radars == []
 
 
 def test_navarra_fails_when_both_fail(monkeypatch):
@@ -225,6 +289,23 @@ def test_mobile_script_is_read_as_javascript():
 def test_js_object_quotes_and_trailing_commas():
     script = 'var a = 1; var puntos = {"k": \'it\\\'s "x"\', "l": [1, 2,],};\nvar b = {};'
     assert donostia_movil.js_object(script, "puntos") == {"k": 'it\'s "x"', "l": [1, 2]}
+
+
+def test_js_object_skips_comments():
+    script = """var puntos = {"features": [ // don't
+        {"a": 'b' /* it's "here" */, "url": "http://x/y"}, // last
+    ]};"""
+    assert donostia_movil.js_object(script, "puntos") == {
+        "features": [{"a": "b", "url": "http://x/y"}]
+    }
+
+
+@pytest.mark.parametrize(
+    "script", ['var puntos = {"a": "x', "var puntos = {'a': 1 /* open", "var puntos = {'a\\"]
+)
+def test_js_object_unterminated_raises_value_error(script):
+    with pytest.raises(ValueError):
+        donostia_movil.js_object(script, "puntos")
 
 
 def test_mobile_streets_are_covered_and_missing_ones_skipped():
