@@ -220,3 +220,43 @@ def test_fetch_reports_a_week_without_a_list(monkeypatch):
     radars, status = murcia.fetch(date(2026, 10, 1))
     assert radars == []
     assert status.week == date(2026, 9, 28) and status.published is None and not status.streets
+
+
+def test_a_street_takes_its_limit_and_radius_from_the_osm_ways():
+    import json
+
+    from radares_anunciados.speed import Radius
+    from radares_anunciados.streets import place
+
+    def way(n, lat, maxspeed):
+        tags = {"highway": "residential", "name": "Calle Mayor"}
+        if maxspeed:
+            tags["maxspeed"] = maxspeed
+        geometry = [{"lat": lat, "lon": -1.1 + i / 1000} for i in range(4)]
+        return {"type": "way", "id": n, "tags": tags, "geometry": geometry}
+
+    overpass = {
+        "elements": [
+            {"type": "node", "id": 1, "lat": 37.98, "lon": -1.1, "tags": {"name": "El Raal"}},
+            way(10, 37.98, "40"),
+            way(11, 37.981, "40 km/h"),
+            way(12, 37.982, "ES:urban"),
+        ]
+    }
+    item = Announced("Calle Mayor", "El Raal")
+    placed = place([item], json.dumps(overpass).encode(), Radius().street_m)[item]
+    assert placed.maxspeed == 40 and placed.radius_m == Radius().street_m(40) == 422
+    untagged = {"elements": overpass["elements"][:1] + [way(13, 37.98, None)]}
+    placed = place([item], json.dumps(untagged).encode(), Radius().street_m)[item]
+    assert placed.maxspeed is None and placed.radius_m == 478  # urban fallback, 50 km/h
+    radars = to_radars(
+        [item], json.dumps(overpass).encode(), date(2026, 9, 28), Radius().street_m, "u"
+    )
+    assert {(r.maxspeed, r.radius_m, r.province) for r in radars} == {(40, 422, "30")}
+
+
+def test_maxspeed_values():
+    from radares_anunciados.streets import maxspeed_kmh
+
+    values = ("50", "50 km/h", " 30 ", "30 mph", "ES:urban", "30;50", "none", "0", None)
+    assert [maxspeed_kmh(v) for v in values] == [50, 50, 30, None, None, None, None, None, None]

@@ -1,11 +1,12 @@
 # Alerting
 
-Three failures leave you driving past a radar with no warning, and none of them stops the container:
+Four failures leave you driving past a radar with no warning, and none of them stops the container:
 
 - A street from the weekly list can't be placed on the map, so it gets no zone.
 - No list is found for this week, because the newspaper changed its page or published late.
-- Every run fails, say Home Assistant is unreachable or a source is down, and the phones keep last
-  week's zones.
+- A source stops answering. The run still succeeds: the source's last good result keeps its zones, but
+  new radars from it never arrive.
+- Every run fails, because Home Assistant is unreachable, and the phones keep the zones they have.
 
 `radares run` exposes its state over HTTP so any alerting stack can catch these. This page shows the
 [Prometheus](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) and
@@ -49,9 +50,12 @@ services:
 | `radares_last_success_timestamp_seconds` | | when the last run that synced Home Assistant ended |
 | `radares_consecutive_failed_runs` | | runs failed in a row; 0 after a success |
 | `radares_radars` | `source` | radars per source in the last collected list |
-| `radares_sync_zones` | `action` (`kept`, `created`, `deleted`) | what the last sync did |
+| `radares_sync_zones` | `action` (`kept`, `created`, `deleted`, `updated`) | what the last sync did; `updated` counts kept zones whose icon changed |
+| `radares_zones_left_out` | | radars with no zone because there were more than `RADARES_MAX_ZONES` |
+| `radares_source_up` | `source` | 1 if the source answered in the last run, 0 if it failed and its last good result (if any) was used |
+| `radares_source_data_age_seconds` | `source` | seconds since the source last answered; a download still inside the source's cache age counts as an answer. Keeps growing while it fails; absent for a source that never answered |
 | `radares_weekly_list_found` | `source` | 1 if this week's police list was found, else 0 |
-| `radares_weekly_list_missing_seconds` | `source` | seconds since this week started (Monday 00:00 in the container's time zone) with no list found; 0 once found |
+| `radares_weekly_list_missing_seconds` | `source` | seconds since this week started (Monday 00:00 Spanish time) with no list found; 0 once found |
 | `radares_weekly_list_published_timestamp_seconds` | `source` | the list's publication day, midnight UTC |
 | `radares_weekly_list_streets` | `source` | streets announced in this week's list |
 | `radares_weekly_list_streets_skipped` | `source` | announced streets that could not be placed on the map |
@@ -59,8 +63,9 @@ services:
 
 Timestamps are Unix seconds. A metric with no value yet is left out, such as the last success before
 the first run ends.
-The weekly-list metrics come from the last run whose sources answered, even if Home Assistant was down
-in that run. `radares_street_skipped` has one series per skipped street this week, usually none or
+The weekly-list metrics come from the last collect, even if Home Assistant was down in that run. When
+a weekly source fails, its last good list counts only if it is this week's; a list of an earlier week
+reports this week's as not found. `radares_street_skipped` has one series per skipped street this week, usually none or
 one.
 
 ## Alert rules
@@ -86,6 +91,18 @@ groups:
         annotations:
           summary: "radares-anunciados has not synced for {{ $value | humanizeDuration }}"
 
+      - alert: RadaresSourceDown
+        # Overpass answers 504 for an hour now and then; three hours is a real outage.
+        expr: radares_source_up == 0
+        for: 3h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Source {{ $labels.source }} has not answered for 3 hours"
+          description: >-
+            Its last good result keeps its zones, so new radars from it are not loaded.
+            The container log says why.
+
       - alert: RadaresWeeklyListMissing
         # Monday is publication day; a whole day into the week without a list is a problem.
         expr: radares_weekly_list_missing_seconds > 86400
@@ -108,12 +125,14 @@ groups:
             placed on the map, so it has no zone.
 ```
 
-`RadaresRunsFailing` fires after 3 failed runs. `RadaresNoRecentSuccess` matches `/healthz` and
+`RadaresRunsFailing` fires after 3 failed runs, which means Home Assistant failed: a source alone never
+fails a run. `RadaresSourceDown` covers the sources, also one that never answered (it has no data
+age and no weekly-list series yet). `RadaresNoRecentSuccess` matches `/healthz` and
 also catches a run loop that hangs. Every rule above needs a scrape to fire, so add an `up == 0` rule
 for the scrape target too. Without it a container that died goes unnoticed.
 
 `RadaresWeeklyListMissing` needs no calendar in Prometheus: the service counts from the start of its own
-week, which follows the container's `TZ` (UTC if unset).
+week, which starts at Monday 00:00 Spanish time whatever the container's `TZ` says.
 
 A skipped street is also named in the "Radares actualizados" notification, so the driver knows it has
 no warning without any of this set up. The phones get it after each zone change, and also when the set

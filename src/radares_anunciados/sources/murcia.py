@@ -14,16 +14,20 @@ import html
 import json
 import logging
 import re
+from collections.abc import Callable
 from datetime import date, timedelta
 
 from .. import net
-from ..model import Radar
-from ..streets import STREET_TYPES, Announced, WeeklyList, locate, places_query, ways_query
+from ..model import Radar, SourceResult
+from ..streetnames import expand
+from ..streets import STREET_TYPES, Announced, WeeklyList, place, places_query, ways_query
+from .base import Context, Source
 
 log = logging.getLogger(__name__)
 
 # Municipality of Murcia with a margin, (south, west, north, east)
 BBOX = (37.78, -1.40, 38.10, -0.93)
+PROVINCE = "30"
 ATTRIBUTION = "Policía Local de Murcia (lista semanal); geometría © OpenStreetMap"
 
 OVERPASS = "https://overpass-api.de/api/interpreter"
@@ -37,13 +41,6 @@ BROWSER = {
     "Accept-Language": "es-ES,es;q=0.9",
 }
 
-_ABBREVIATIONS = [
-    (r"^Avda?\.?\s+", "Avenida "),
-    (r"^C/\s*", "Calle "),
-    (r"^Cno\.?\s+", "Camino "),
-    (r"^Ctra\.?\s+", "Carretera "),
-    (r"^Pza\.?\s+", "Plaza "),
-]
 _CONNECTOR = re.compile(
     r"^(a su paso por|en el entorno de|en la zona de|junto a|en)\s+"
     r"(la pedanía de\s+|el barrio de\s+)?",
@@ -65,10 +62,7 @@ def _clean(fragment: str) -> str:
 
 
 def _street(text: str) -> str:
-    text = text.strip(" .")
-    for pattern, full in _ABBREVIATIONS:
-        text = re.sub(pattern, full, text, flags=re.IGNORECASE)
-    return text[:1].upper() + text[1:]
+    return expand(text)
 
 
 def _place(text: str) -> str:
@@ -169,14 +163,16 @@ def to_radars(
     items: list[Announced],
     overpass_json: bytes,
     published: date,
-    radius_m: int,
+    radius_m: float | Callable[[int | None], float],
     url: str | None,
     skipped: list[Announced] | None = None,
 ) -> list[Radar]:
-    """Circles for every street placed on the map; the others go to ``skipped``."""
+    """Circles for every street placed on the map; the others go to ``skipped``.
+    ``radius_m`` is a number or a function of the street's limit in OSM."""
     start, end = week_of(published)
     radars: list[Radar] = []
-    for item, centres in locate(items, overpass_json, radius_m).items():
+    for item, placed in place(items, overpass_json, radius_m).items():
+        centres = placed.centres
         if not centres:
             log.warning("could not place %s (%s) on the map; skipped", item.street, item.place)
             if skipped is not None:
@@ -193,17 +189,21 @@ def to_radars(
                     name=label,
                     lat=lat,
                     lon=lon,
-                    radius_m=radius_m,
+                    radius_m=round(placed.radius_m),
                     valid_from=start,
                     valid_to=end,
                     url=url,
                     attribution=ATTRIBUTION,
+                    maxspeed=placed.maxspeed,
+                    province=PROVINCE,
                 )
             )
     return radars
 
 
-def fetch(day: date, radius_m: int = 300) -> tuple[list[Radar], WeeklyList]:
+def fetch(
+    day: date, radius_m: float | Callable[[int | None], float] = 300
+) -> tuple[list[Radar], WeeklyList]:
     """This week's radars ([] if the list is not published yet) and what the list gave."""
     status = WeeklyList("murcia", week_of(day)[0])
     found = find_article(day)
@@ -216,9 +216,27 @@ def fetch(day: date, radius_m: int = 300) -> tuple[list[Radar], WeeklyList]:
     log.info("Murcia list %s: %d streets", url, len(items))
     # Same list, same queries: fetched once a week, not every hour.
     week = 7 * 86_400
-    places = net.cached_get(OVERPASS, {"data": places_query(items, BBOX)}, max_age_s=week)
-    ways = net.cached_get(OVERPASS, {"data": ways_query(items, places, BBOX)}, max_age_s=week)
+    check = net.overpass_answer  # an error answer is never kept for the week
+    query = places_query(items, BBOX)
+    places = net.cached_get(OVERPASS, {"data": query}, max_age_s=week, validate=check)
+    query = ways_query(items, places, BBOX)
+    ways = net.cached_get(OVERPASS, {"data": query}, max_age_s=week, validate=check)
     overpass = json.dumps(
         {"elements": json.loads(places)["elements"] + json.loads(ways)["elements"]}
     ).encode()
     return to_radars(items, overpass, published, radius_m, url, status.skipped), status
+
+
+def fetch_source(ctx: Context) -> SourceResult:
+    radars, status = fetch(ctx.day, ctx.radius.street_m)
+    return SourceResult(radars=radars, lists=[status])
+
+
+SOURCE = Source(
+    key="murcia",
+    fetch=fetch_source,
+    attribution=ATTRIBUTION,
+    licence="the council's list as reprinted by the press; geometry ODbL 1.0",
+    max_age_s=7 * 86_400,
+    provinces=frozenset({PROVINCE}),
+)

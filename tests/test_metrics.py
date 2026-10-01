@@ -177,7 +177,7 @@ def test_run_once_records_success_and_failure(monkeypatch):
     async def sync(radars, lists, dry_run, told=None):
         return plan
 
-    monkeypatch.setattr(cli, "collect", lambda day: ([radar("dgt", 1)], [weekly()]))
+    monkeypatch.setattr(cli, "collect", lambda day: cli.Collected([radar("dgt", 1)], [weekly()]))
     monkeypatch.setattr(cli, "_sync", sync)
     state = metrics.State(3600)
     assert cli.run_once(state)
@@ -229,10 +229,10 @@ def test_a_later_run_replaces_the_weekly_list_state():
     assert not any(k.startswith("radares_street_skipped{") for k in s)
 
 
-def test_list_missing_seconds_count_from_the_local_monday(monkeypatch):
-    # The week rolls over on the container's local date, like date.today(), so
-    # Monday starts at 00:00 Madrid time (22:00 UTC on Sunday), not at 00:00 UTC.
-    monkeypatch.setenv("TZ", "Europe/Madrid")
+def test_list_missing_seconds_count_from_the_spanish_monday(monkeypatch):
+    # The week rolls over on Spain's date (model.today_in_spain), so Monday starts at
+    # 00:00 Madrid time (22:00 UTC on Sunday), whatever the container's TZ says.
+    monkeypatch.setenv("TZ", "UTC")
     time.tzset()
     try:
         state = metrics.State(3600, now=T0)
@@ -324,7 +324,7 @@ def test_a_changed_set_of_skipped_streets_notifies_once(monkeypatch):
         async def __aexit__(self, *exc):
             pass
 
-        async def sync(self, radars, dry_run=False):
+        async def sync(self, radars, dry_run=False, max_zones=ha.MAX_ZONES):
             return ha.Plan(create=[], delete=[], keep=3)  # no zone changes
 
         async def notify(self, targets, title, message):
@@ -356,7 +356,7 @@ def test_a_changed_set_of_skipped_streets_notifies_once(monkeypatch):
 
 def test_every_metric_in_the_alerting_doc_exists():
     state = metrics.State(3600, now=T0)
-    state.collected([radar("dgt", 1)], [weekly()])
+    state.collected([radar("dgt", 1)], [weekly()], {"dgt": (True, T0)})
     state.synced(1, 0, 0)
     state.finished(ok=True, now=T0)
     exported = set(re.findall(r"^# TYPE (\w+) ", state.render(), re.M))

@@ -1,0 +1,7 @@
+HTTP/2 200 
+content-type: application/xml
+etag: W/"2051128-1766055380000"
+last-modified: Thu, 18 Dec 2025 10:56:20 GMT
+cache-control: max-age=60
+expires: Thu, 01 Oct 2026 17:43:50 GMT
+date: Thu, 01 Oct 2026 17:42:50 GMT

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- No tracking and no external fonts: the page may load only itself, the pinned Leaflet files and OpenStreetMap tiles. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://unpkg.com; style-src 'self' https://unpkg.com; img-src 'self' data: https://tile.openstreetmap.org; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Radares anunciados en España</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Radares anunciados en España</h1>
+  <p id="summary">Cargando el feed…</p>
+</header>
+<main>
+  <div id="map" role="region" aria-label="Mapa de radares"></div>
+  <aside>
+    <section>
+      <h2>Leyenda</h2>
+      <ul id="legend" class="legend"></ul>
+    </section>
+    <section>
+      <h2>Fuentes</h2>
+      <table id="sources">
+        <thead><tr><th>Fuente</th><th>Estado</th><th>En el feed</th><th>Datos de</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="note"><b>ok</b>: leída en esta ejecución. <b>stale</b>: falló; se usa su última copia buena. <b>missing</b>: nunca leída desde aquí (algunas fuentes solo responden desde una IP española).</p>
+    </section>
+    <section>
+      <h2>Datos y licencia</h2>
+      <p>Descarga: <a href="feed.geojson">feed.geojson</a> · <a href="status.json">status.json</a></p>
+      <p>La base de datos se publica bajo la <a href="https://opendatacommons.org/licenses/odbl/1-0/">Open Database License (ODbL) 1.0</a>, porque incluye datos de OpenStreetMap. Cada punto lleva su fuente y su atribución; los detalles, en <a href="LICENSE-DATA.md">LICENSE-DATA.md</a>.</p>
+      <ul id="attributions" class="attributions"></ul>
+      <p class="note">Solo posiciones publicadas por sus fuentes. Mapa base © <a href="https://www.openstreetmap.org/copyright">colaboradores de OpenStreetMap</a>. Código: <a href="https://github.com/GeiserX/radares-anunciados">GeiserX/radares-anunciados</a>.</p>
+    </section>
+  </aside>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<script src="map.js"></script>
+</body>
+</html>
