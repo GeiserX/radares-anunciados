@@ -18,6 +18,16 @@ def distance_m(a: tuple[float, float], b: tuple[float, float]) -> float:
     return 2 * EARTH_M * math.asin(math.sqrt(h))
 
 
+def bearing_deg(a: tuple[float, float], b: tuple[float, float]) -> int:
+    """The compass bearing from ``a`` to ``b``, (lat, lon) points, in whole degrees
+    from north (0 to 359)."""
+    lat1, lon1 = map(math.radians, a)
+    lat2, lon2 = map(math.radians, b)
+    y = math.sin(lon2 - lon1) * math.cos(lat2)
+    x = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(lon2 - lon1)
+    return round(math.degrees(math.atan2(y, x))) % 360
+
+
 def densify(line: list[tuple[float, float]], every_m: float) -> list[tuple[float, float]]:
     points = [line[0]]
     for a, b in zip(line, line[1:], strict=False):

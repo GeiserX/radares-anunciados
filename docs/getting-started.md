@@ -102,7 +102,7 @@ aviso". That street gets no zone, so it gives no warning this week.
 | Variable | Default | What it does |
 |---|---|---|
 | `HA_URL`, `HA_TOKEN` | | Home Assistant address and long-lived token |
-| `RADARES_SOURCES` | all of them | which sources to use, such as `dgt,osm,murcia`; keys in [Sources](sources.md) |
+| `RADARES_SOURCES` | all of them but `osm_notes` | which sources to use, such as `dgt,osm,murcia`; `default` stands for the default ones, so `default,osm_notes` adds the notes; keys in [Sources](sources.md) |
 | `RADARES_PROVINCES` | `30` | INE province codes, such as `30` (Murcia) or `3,46`, or `all` for the whole country. `RADARES_DGT_PROVINCES` is the old name and still works |
 | `RADARES_OSM_BBOX` | the provinces' boxes | `south,west,north,east` for OpenStreetMap cameras, or `all` for the whole country |
 | `RADARES_FIXED_RADIUS` | `auto` | metres around a fixed radar; `auto` is 200 m plus 40 s at the speed limit |

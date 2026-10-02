@@ -13,7 +13,8 @@ Every radar in the feed keeps its source and that source's license, and the feed
 |---|---|---|
 | `dgt` | DGT fixed and section radars, [NAP](https://nap.dgt.es/dataset/radares-fijos-dgt) DATEX II | Creative Commons Attribution (NAP, no version) |
 | `dgt_invive` | DGT mobile-radar stretches, [NAP](https://nap.dgt.es/es/dataset/tramos-invive); lines, zones opt-in (`RADARES_STRETCH_ZONES`) | same |
-| `osm` | [`highway=speed_camera`](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera) nodes; also the speed-limit lookup (`osm_limits.py`) | ODbL 1.0 |
+| `osm` | [`highway=speed_camera`](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera) nodes and enforcement relations; also the speed-limit lookup (`osm_limits.py`) | ODbL 1.0 |
+| `osm_notes` | open OSM notes reporting a camera: kind `reported`, unconfirmed, never a zone; off by default, the published feed turns it on | ODbL 1.0 |
 | `murcia` | Policía Local weekly list, through the press | no reuse terms published |
 | `sct`, `sct_remolc` | Servei Català de Trànsit fixed, section and trailer radars | Llicència oberta d'ús d'informació – Catalunya |
 | `euskadi`, `navarra` | Basque and Navarra government fixed radars (Spanish IP only) | no reuse terms published |
@@ -59,6 +60,8 @@ interferes with a radar signal is out of scope, whoever asks for it.
 
 ## Rules that keep it working
 
+- A `reported` point (an OSM note) never becomes a zone (`ha.zoned`) and never drops or replaces
+  another radar (`feed.merge`).
 - Zones are passive, name starting with "Radar", icon `mdi:camera-timer` (alerts) or `mdi:camera-off`
   (a dormant street, silent). `ha.py` touches no other zone.
 - A dormant street changes only its icon, with `zone/update` on the same zone id. Never delete and

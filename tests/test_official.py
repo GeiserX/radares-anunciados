@@ -27,7 +27,7 @@ def _register(monkeypatch, key: str, official: bool) -> None:
 
 
 def test_only_the_crowd_map_is_not_official():
-    assert [k for k, s in sources.REGISTRY.items() if not s.official] == ["osm"]
+    assert [k for k, s in sources.REGISTRY.items() if not s.official] == ["osm", "osm_notes"]
 
 
 def test_any_official_source_wins_over_a_mapped_copy(monkeypatch):

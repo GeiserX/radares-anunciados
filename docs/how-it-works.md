@@ -6,9 +6,9 @@ the phone enters a zone, and the [blueprint](../blueprints/radar_zone_alert.yaml
 
 ## Sources
 
-Thirteen sources: the DGT, the Servei Català de Trànsit, the Basque and Navarra governments, the cities
-of Madrid, Salamanca, Donostia, Murcia and León, and OpenStreetMap. [Sources](sources.md) lists what
-each gives, its licence, how often it changes and which need a Spanish IP.
+Fourteen sources: the DGT, the Servei Català de Trànsit, the Basque and Navarra governments, the cities
+of Madrid, Salamanca, Donostia, Murcia and León, and OpenStreetMap's cameras and notes.
+[Sources](sources.md) lists what each gives, its licence, how often it changes and which need a Spanish IP.
 
 `RADARES_PROVINCES` picks the area by INE province code (`30` is Murcia, the default), or `all`. A
 radar whose source knows its province is kept only in a selected one, and a city's list is fetched
@@ -22,7 +22,12 @@ one exception is opt-in: with `RADARES_STRETCH_ZONES=on` and a province list, DG
 stretches get circles along the road.
 
 An OpenStreetMap camera within 150 m of a radar an authority publishes (the DGT, the Servei Català de
-Trànsit, a city) is the same camera mapped twice, so it's dropped.
+Trànsit, a city) is the same camera mapped twice, so it's dropped. An OpenStreetMap average-speed
+section goes whole, line and both ends, when one end is within 1 km of an end of a published section
+(the two rarely put an end at the same spot) or within 150 m of a published camera.
+
+An open OpenStreetMap note that reports a camera is a `reported` point: unconfirmed, on the map in its
+own colour, never a zone. It is left out of the merge altogether: it drops nothing and nothing drops it.
 Two radars at the same spot become one zone. The DGT lists both directions of a section with the same
 two ends, and the phone has no slots to waste.
 
@@ -224,7 +229,7 @@ and publishes `feed.geojson`, `status.json`, the map in [`site/`](../site/) and
 | Field | Meaning |
 |---|---|
 | `status` | `ok`: the source answered in this run. `stale`: this run failed; the feed holds its last good result. `missing`: never fetched here; it adds nothing |
-| `radars`, `stretches` | what the source gave (or its last good result) |
+| `radars`, `stretches`, `reported` | what the source gave (or its last good result); `reported` counts the unconfirmed notes, which are not counted as radars |
 | `in_feed` | its features left in the feed after duplicates are dropped |
 | `data_time` | when the data in use was fetched, UTC; `null` for a missing source |
 | `error` | why this run's fetch failed |

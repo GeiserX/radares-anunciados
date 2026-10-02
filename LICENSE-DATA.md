@@ -24,7 +24,8 @@ build.
 | Source | What it gives | Attribution | Terms |
 |---|---|---|---|
 | `dgt` | fixed radars and average-speed sections from the [DGT National Access Point](https://nap.dgt.es/dataset/radares-fijos-dgt) | Dirección General de Tráfico | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
-| `osm` | `highway=speed_camera` nodes from [OpenStreetMap](https://www.openstreetmap.org/copyright) | © OpenStreetMap contributors | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) |
+| `osm` | `highway=speed_camera` nodes and `type=enforcement` relations from [OpenStreetMap](https://www.openstreetmap.org/copyright) | © OpenStreetMap contributors | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) |
+| `osm_notes` | open OpenStreetMap [notes](https://wiki.openstreetmap.org/wiki/Notes) that report a speed camera, unconfirmed | © OpenStreetMap contributors | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/), see below |
 | `murcia` | the weekly mobile-radar list of the Policía Local de Murcia, as reprinted by the local press, placed on OpenStreetMap streets | Policía Local de Murcia; geometry © OpenStreetMap contributors | the council's list; geometry ODbL 1.0 |
 | `dgt_invive` | stretches of road where DGT runs mobile radars, from the [DGT National Access Point](https://nap.dgt.es/es/dataset/tramos-invive); road geometry from OpenStreetMap | Dirección General de Tráfico; geometry © OpenStreetMap contributors | Creative Commons Attribution, as the dataset page states it with no version; geometry ODbL 1.0 |
 | `sct` | fixed and section radars in Catalonia, from the [Servei Català de Trànsit](https://transit.gencat.cat/ca/seguretat_viaria/cinemometres-fixos-trams-mobils/) | Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit, with the file's last update date | Llicència oberta d'ús d'informació – Catalunya |
@@ -37,6 +38,11 @@ build.
 | `salamanca` | Salamanca city fixed and section radars, from its [open data portal](https://opendata.aytosalamanca.es/datosabiertos/catalogo/dataset/radares-fijos) | Ayuntamiento de Salamanca, Radares Municipales | GNU Free Documentation License, as the dataset states it; the portal adds: data unaltered, source cited, date of last update given |
 | `leon` | León's mobile-radar streets for each day, placed on OpenStreetMap streets | Ayuntamiento de León; Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es); geometry © OpenStreetMap contributors | council: no reuse terms published, its portal reserves reproduction except for personal use; iLeón: CC BY-NC 4.0; geometry ODbL 1.0 |
 
+OpenStreetMap publishes its notes, anonymous ones included, with the rest of its database at
+https://planet.openstreetmap.org/, where every file published after 12 September 2012 is under ODbL 1.0.
+A note written from an account is a contribution under the OpenStreetMap
+[Contributor Terms](https://osmfoundation.org/wiki/Licence/Contributor_Terms), like a mapped camera.
+
 A source added later carries its own attribution and terms in its module (`sources/<key>.py`), in every
 feature it adds and in `status.json`; it is added to this table in the same change.
 
@@ -44,5 +50,7 @@ The map tiles on the published page are © OpenStreetMap contributors and are no
 
 ## What the feed is
 
-Positions published by the sources above, merged and deduplicated. It warns from published positions
-only and is offered as is, with no warranty: a radar can be missing, moved or out of date.
+Positions published by the sources above, merged and deduplicated, plus the unconfirmed reports of
+`osm_notes` (kind `reported`), which no source has confirmed and which never become a zone. It warns
+from published positions only and is offered as is, with no warranty: a radar can be missing, moved or
+out of date.

@@ -26,6 +26,7 @@ from . import (
     murcia,
     navarra,
     osm,
+    osm_notes,
     salamanca,
     sct,
 )
@@ -38,6 +39,7 @@ REGISTRY: dict[str, Source] = {
     for s in (
         dgt_freshness.watch(dgt.SOURCE),
         osm.SOURCE,
+        osm_notes.SOURCE,
         murcia.SOURCE,
         sct.SOURCE,
         sct.TRAILER,
@@ -65,14 +67,19 @@ class Outcome:
 
 
 def selected(keys: list[str] | None, provinces: frozenset[str] | None) -> list[Source]:
-    """The sources to run: ``keys`` (None: every registered one), minus those that
-    cover none of the selected provinces. An unknown key raises."""
-    unknown = sorted(set(keys or ()) - REGISTRY.keys())
+    """The sources to run: ``keys`` (None: every registered one marked ``default``;
+    the key "default" stands for those too), minus those that cover none of the
+    selected provinces. An unknown key raises."""
+    if keys is None or "default" in keys:
+        keys = [k for k in keys or () if k != "default"] + [
+            k for k, s in REGISTRY.items() if s.default
+        ]
+    unknown = sorted(set(keys) - REGISTRY.keys())
     if unknown:
         raise ValueError(f"unknown source(s) {', '.join(unknown)}; known: {', '.join(REGISTRY)}")
     out = []
     for key, source in REGISTRY.items():
-        if keys is not None and key not in keys:
+        if key not in keys:
             continue
         if provinces is not None and source.provinces is not None:
             if not source.provinces & provinces:

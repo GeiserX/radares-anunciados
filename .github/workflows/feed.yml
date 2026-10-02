@@ -72,6 +72,7 @@ jobs:
       - name: Build the feed
         env:
           RADARES_PROVINCES: all
+          RADARES_SOURCES: default,osm_notes
           RADARES_CACHE: ${{ runner.temp }}/radares-cache
         run: |
           mkdir -p _site
