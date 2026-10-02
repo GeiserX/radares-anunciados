@@ -21,6 +21,8 @@ from Spain to use it. Anywhere else that source shows as down and keeps its last
 | `madrid` | Madrid city fixed and section radars, one per camera site, with limit and direction; no mobile radars | Ayuntamiento de Madrid, [datos.madrid.es dataset 300049](https://datos.madrid.es/dataset/300049-0-radares-fijos-moviles) | CC BY 4.0, cited as "Origen de los datos: Ayuntamiento de Madrid" with the date of the last update | updated occasionally; downloaded daily | no |
 | `salamanca` | Salamanca city fixed radars with limits, and section radars as lines | Ayuntamiento de Salamanca, [Radares Municipales](https://opendata.aytosalamanca.es/datosabiertos/catalogo/dataset/radares-fijos) | GNU Free Documentation License, as the dataset states it; the portal's terms add data unaltered, source cited, date of last update given | updated occasionally; downloaded daily | no |
 | `leon` | León's mobile radars for every day of the month: 5 streets a shift, two shifts a day, each with its limit, valid on its own day and placed inside León's municipal border | Ayuntamiento de León, monthly post; for days no post covers, the weekly article of [iLeón](https://ileon.eldiario.es) | Ayuntamiento de León: no reuse terms published (its portal reserves reproduction except for personal use). iLeón: CC BY-NC 4.0. Geometry: ODbL 1.0 | monthly (council), weekly (iLeón) | yes |
+| `barcelona_multas` | Where Barcelona's speed cameras fined in the newest quarter of the city's traffic fines, one zone per place. A place that fined on more than half the quarter's days is a fixed camera; one that fined on fewer, but on 2 days or more, is where a mobile or temporary radar stood (kind `mobile_recurring`), named with its count, such as "(12 días en 92)". A place that fined on a single day gets no zone (5 of 53 in the last quarter of 2025) | Ajuntament de Barcelona, Institut Municipal d'Hisenda, [Open Data BCN dataset denuncies_sancions_transit_bcn_detall](https://opendata-ajuntament.barcelona.cat/data/es/dataset/denuncies_sancions_transit_bcn_detall), read through its datastore SQL API | CC BY 4.0, cited as "Fuente de los datos: Ayuntamiento de Barcelona" with the date of the last update; each radar's attribution names its quarter | quarterly, about nine months behind. On 2 Oct 2026 the newest quarter was October to December 2025. Checked weekly | no |
+| `madrid_multas` | Places where Madrid's mobile radars fined in 2 or more of the last 6 months (kind `mobile_recurring`), at the street number the fines name, placed on OpenStreetMap's house numbers inside Madrid's municipal border. A number not mapped takes the nearest mapped one on the same side, at most 10 numbers away; a place with neither is skipped and logged. From September 2025 to February 2026 it found 124 places; 33 recurred, 18 went to their own number, 8 to a neighbouring one and 7 were skipped | Ayuntamiento de Madrid, [datos.madrid.es dataset 210104](https://datos.madrid.es/dataset/210104-0-multas-circulacion-detalle) | CC BY 4.0, cited as "Origen de los datos: Ayuntamiento de Madrid" with the date of the last update; each radar's attribution names its months. Geometry: ODbL 1.0 | monthly, about seven months behind. On 2 Oct 2026 the newest month was February 2026. Checked weekly, and each month's 60 MB file is read once | no |
 
 ## Gaps we know about
 
@@ -35,6 +37,13 @@ from Spain to use it. Anywhere else that source shows as down and keeps its last
   town, no position.
 - With `RADARES_SOURCES=navarra` and no `dgt`, the Navarra radars DGT lists get no zone.
 - Speed limits from the limit lookup make the feed carry ODbL data even for a DGT-only setup.
+- The fines sources run months behind, about nine for `barcelona_multas` and seven for `madrid_multas`.
+  They show where radars stood then, not where one stands today. Each radar's attribution, which the
+  map shows, names the period.
+- A Barcelona camera that starts or stops within a quarter counts as a mobile site for that quarter: the
+  Ronda del Mig cameras fined every day from 20 Nov 2025, 41 to 43 days of 92.
+- A Madrid place that `madrid_multas` cannot place is logged only. Unlike a police list's street, it is
+  not exported in `/metrics` nor named in the notification.
 
 ## Checked, nothing usable
 

@@ -6,8 +6,9 @@ the phone enters a zone, and the [blueprint](../blueprints/radar_zone_alert.yaml
 
 ## Sources
 
-Thirteen sources: the DGT, the Servei Català de Trànsit, the Basque and Navarra governments, the cities
-of Madrid, Salamanca, Donostia, Murcia and León, and OpenStreetMap. [Sources](sources.md) lists what
+Fifteen sources: the DGT, the Servei Català de Trànsit, the Basque and Navarra governments, the cities
+of Madrid, Salamanca, Donostia, Murcia and León, the traffic fines of Barcelona and Madrid, and
+OpenStreetMap. [Sources](sources.md) lists what
 each gives, its licence, how often it changes and which need a Spanish IP.
 
 `RADARES_PROVINCES` picks the area by INE province code (`30` is Murcia, the default), or `all`. A
@@ -25,6 +26,12 @@ An OpenStreetMap camera within 150 m of a radar an authority publishes (the DGT,
 Trànsit, a city) is the same camera mapped twice, so it's dropped.
 Two radars at the same spot become one zone. The DGT lists both directions of a section with the same
 two ends, and the phone has no slots to waste.
+
+Barcelona and Madrid publish every traffic fine as open data, months late. A speed fine names its
+place, so the places that keep fining are where radars stand. A Barcelona place that fined on most days
+of a quarter is a fixed camera; one that fined on fewer is where a mobile radar stood. Madrid writes a
+mobile radar's place as a street and a number, and the source finds that number on OpenStreetMap. A
+mobile radar's place is no camera standing there, so an OpenStreetMap camera beside one keeps its zone.
 
 Murcia's police post their weekly list on X as an image. The press prints it as text: one street and district per
 line, such as `Cno. Tiñosa, RM-F6, Los Dolores`. The first part is the street and the last the district.
@@ -76,8 +83,9 @@ That choice gets slower with more zones: one pass of the app's filter took 21 ms
 316 ms at 5,000 on an Apple-silicon core, and it runs on every location event. So the service loads at most
 `RADARES_MAX_ZONES` zones, 1,000 by default. With more radars than that it keeps, in this order: the
 streets of a list in force this week, the fixed and section radars nearest to Home Assistant's home,
-then the circles along mobile-radar stretches nearest to home, then dormant streets, the most recently
-announced first. The rest get no zone. It logs how many and
+then the places where traffic fines show a mobile radar stood, then the circles along mobile-radar
+stretches, each nearest to home first, then dormant streets, the most recently announced first. A fines
+place is one zone where a radar did stand; a stretch takes many circles for kilometres where one may. The rest get no zone. It logs how many and
 exports `radares_zones_left_out`.
 
 Android lets one app watch at most 100 geofences, and the companion app does not pick the nearest: it

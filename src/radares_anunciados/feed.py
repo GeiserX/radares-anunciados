@@ -16,8 +16,9 @@ from .sources import REGISTRY
 DUPLICATE_M = 150
 
 # Kinds that stand for one camera at one place. A street from a police list
-# (mobile_announced) and a circle of a DGT mobile-radar stretch (mobile_stretch)
-# are no camera, so a mapped camera near one is no copy of it.
+# (mobile_announced), a circle of a DGT mobile-radar stretch (mobile_stretch) and a
+# place where fines show a radar on some days only (mobile_recurring) are no
+# camera standing there, so a mapped camera near one is no copy of it.
 CAMERAS = ("fixed", "section", "trailer")
 
 

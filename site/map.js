@@ -5,6 +5,7 @@ const KINDS = {
   fixed: { color: "#cf222e", label: "Radar fijo" },
   section: { color: "#8250df", label: "Radar de tramo (extremo)" },
   mobile_announced: { color: "#e36209", label: "Radar móvil anunciado" },
+  mobile_recurring: { color: "#bf8700", label: "Radar móvil frecuente (según multas)" },
   stretch: { color: "#0969da", label: "Tramo vigilado" },
 };
 const OTHER = { color: "#57606a", label: "Otro" };
