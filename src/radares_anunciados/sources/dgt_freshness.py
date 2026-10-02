@@ -50,14 +50,14 @@ def parse_last_modified(value: str | None) -> float | None:
         return None
 
 
-def check(
+def refresh(
     url: str = dgt.URL,
     now: float | None = None,
     get_headers: Callable[[str], dict[str, str]] | None = None,
 ) -> float | None:
     """Ask for the file's Last-Modified, remember it and log its age. Returns the
-    age in seconds. Never raises: a failed check, or an answer without the
-    header, keeps the last known date (None before any)."""
+    date this request got, or None when it failed or the answer had no header (the
+    last known date is kept for ``age_s``). Never raises."""
     global _last_modified
     now = time.time() if now is None else now
     try:
@@ -65,10 +65,10 @@ def check(
         modified = parse_last_modified(headers.get("last-modified"))
     except Exception as exc:
         log.warning("could not read Last-Modified of %s: %s", url, exc)
-        return age_s(now)
+        return None
     if modified is None:
         log.warning("%s sent no Last-Modified; its age is unknown", url)
-        return age_s(now)
+        return None
     with _lock:
         _last_modified = modified
     age = max(0.0, now - modified)
@@ -78,7 +78,19 @@ def check(
         log.warning("DGT fixed-radar file last changed %s, %.0f days ago: stale", day, days)
     else:
         log.info("DGT fixed-radar file last changed %s, %.0f days ago", day, days)
-    return age
+    return modified
+
+
+def check(
+    url: str = dgt.URL,
+    now: float | None = None,
+    get_headers: Callable[[str], dict[str, str]] | None = None,
+) -> float | None:
+    """``refresh``, then the file's age in seconds by the latest date known. Never
+    raises: a failed check keeps the last known date (None before any)."""
+    now = time.time() if now is None else now
+    refresh(url, now, get_headers)
+    return age_s(now)
 
 
 def last_modified() -> float | None:
@@ -115,10 +127,11 @@ def dated(result: SourceResult, modified: float | None) -> SourceResult:
 
 def watch(source: Source) -> Source:
     """``source`` with a freshness check before each fetch, its result dated with
-    the file's Last-Modified. The check never fails the fetch."""
+    the Last-Modified that check got. A check that failed dates nothing: an older
+    answer may not describe the file this fetch reads. It never fails the fetch."""
 
     def fetch(ctx: Context) -> SourceResult:
-        check()
-        return dated(source.fetch(ctx), last_modified())
+        modified = refresh()
+        return dated(source.fetch(ctx), modified)
 
     return replace(source, fetch=fetch)

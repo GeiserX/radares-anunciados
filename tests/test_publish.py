@@ -4,6 +4,8 @@ import json
 import os
 import re
 import shutil
+import subprocess
+import sys
 from datetime import date, timedelta
 from html.parser import HTMLParser
 from pathlib import Path
@@ -26,14 +28,14 @@ def clean_env(monkeypatch, tmp_path):
     monkeypatch.setenv("RADARES_CACHE", str(tmp_path / "cache"))
 
 
-def fake(key, answers, spanish_ip=False):
+def fake(key, answers, spanish_ip_hosts=frozenset()):
     def fetch(ctx):
         answer = next(answers)
         if isinstance(answer, Exception):
             raise answer
         return answer
 
-    return Source(key, fetch, f"{key} people", f"{key} licence", spanish_ip=spanish_ip)
+    return Source(key, fetch, f"{key} people", f"{key} licence", spanish_ip_hosts=spanish_ip_hosts)
 
 
 def radar(source, n=0, **kw):
@@ -50,7 +52,9 @@ def test_status_says_which_sources_are_fresh_stale_or_missing(monkeypatch):
             ),
         ),
         "stale": fake("stale", iter([SourceResult([radar("stale", 5)]), OSError("HTTP 403")])),
-        "missing": fake("missing", iter([OSError("TLS handshake")] * 2), spanish_ip=True),
+        "missing": fake(
+            "missing", iter([OSError("TLS handshake")] * 2), spanish_ip_hosts=frozenset({"x.es"})
+        ),
     }
     monkeypatch.setattr(sources, "REGISTRY", registry)
     cli.collect(date(2026, 9, 28), save_history=False)  # "stale" succeeds once
@@ -250,23 +254,95 @@ def test_every_source_row_in_the_data_license_names_its_attribution_and_terms():
         assert cells[3], f"the {key} row names no terms"
 
 
+WORKFLOWS = ROOT / ".github" / "workflows"
+
+
 def feed_jobs() -> dict:
-    return yaml.safe_load((ROOT / ".github" / "workflows" / "feed.yml").read_text("utf-8"))["jobs"]
+    return yaml.safe_load((WORKFLOWS / "feed.yml").read_text("utf-8"))["jobs"]
 
 
-def test_no_pull_request_code_runs_on_the_self_hosted_runner():
+def test_only_the_publish_job_targets_the_self_hosted_runner():
     """The publishing job runs on a self-hosted runner in Spain, so it may run only on
-    events a fork cannot trigger. The pull request build stays on a GitHub-hosted runner."""
+    events a fork cannot trigger. Every other job, in every workflow, stays on a
+    GitHub-hosted runner, and none runs a pull request's code with pull_request_target.
+    (A pull request can still edit these files; the approval of outside contributors'
+    runs is what stops that, see AGENTS.md.)"""
+    files = sorted(WORKFLOWS.glob("*.y*ml"))
+    assert len(files) >= 4
+    hosted = []
+    for path in files:
+        text = path.read_text("utf-8")
+        spec = yaml.safe_load(text)
+        triggers = spec.get("on", spec.get(True))  # PyYAML reads a bare `on` as True
+        assert "pull_request_target" not in str(triggers), f"{path.name} uses pull_request_target"
+        for name, job in spec["jobs"].items():
+            if "self-hosted" in str(job.get("runs-on")):
+                hosted.append((path.name, name))
+    assert hosted == [("feed.yml", "publish")]
     jobs = feed_jobs()
     trusted = "github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'"
-    hosted = [k for k, job in jobs.items() if "self-hosted" in str(job["runs-on"])]
-    assert hosted == ["publish"]
     assert jobs["publish"]["if"] == trusted
     assert jobs["check"]["if"] == "github.event_name == 'pull_request'"
     assert jobs["check"]["runs-on"] == "ubuntu-latest"
-    # the runner is not wiped between runs: the downloads of the last run must go first
-    steps = [step.get("name") for step in jobs["publish"]["steps"]]
-    assert steps.index("Clear the cache folder") < steps.index("Restore the last good results")
+    # deploy publishes only what publish built, so it runs only when publish did
+    assert jobs["deploy"]["needs"] == "publish"
+    assert jobs["deploy"]["runs-on"] == "ubuntu-latest"
+
+
+def test_the_publish_job_clears_the_cache_folder_before_restoring_it():
+    """The self-hosted runner is not wiped between runs: the downloads of the last run
+    must go before the restore, or a source would look `ok` while its site is down."""
+    steps = feed_jobs()["publish"]["steps"]
+    names = [step.get("name") for step in steps]
+    clear = steps[names.index("Clear the cache folder")]
+    restore = steps[names.index("Restore the last good results")]
+    assert names.index("Clear the cache folder") < names.index("Restore the last good results")
+    folder = "${{ runner.temp }}/radares-cache"
+    assert clear["run"].strip() == f'rm -rf "{folder}"'
+    assert all(p.startswith(folder + "/") for p in restore["with"]["path"].splitlines())
+    build = steps[names.index("Build the feed")]
+    assert build["with"]["cache"] == folder
+
+
+def report_step() -> str:
+    """The Python of the composite action's "Report the sources" step."""
+    action = yaml.safe_load(
+        (ROOT / ".github" / "actions" / "build-feed" / "action.yml").read_text()
+    )
+    step = next(s for s in action["runs"]["steps"] if s.get("name") == "Report the sources")
+    return step["run"].split("<<'PY'\n", 1)[1].rsplit("PY\n", 1)[0]
+
+
+@pytest.mark.parametrize("features, code", [(0, 1), (1, 0)])
+def test_the_build_refuses_to_publish_an_empty_feed(tmp_path, features, code):
+    site = tmp_path / "_site"
+    site.mkdir()
+    status = {
+        "features": features,
+        "sources": [
+            {
+                "source": "dgt",
+                "status": "ok",
+                "radars": features,
+                "stretches": 0,
+                "in_feed": features,
+                "data_time": "2026-10-02T00:00:00+00:00",
+                "updated": "2025-12-18",
+                "error": "a | b\nc",
+            }
+        ],
+    }
+    feed = {"type": "FeatureCollection", "features": [{"type": "Feature"}] * features}
+    (site / "status.json").write_text(json.dumps(status), "utf-8")
+    (site / "feed.geojson").write_text(json.dumps(feed), "utf-8")
+    summary = tmp_path / "summary.md"
+    env = {**os.environ, "GITHUB_STEP_SUMMARY": str(summary)}
+    run = subprocess.run(
+        [sys.executable, "-c", report_step()], cwd=tmp_path, env=env, capture_output=True, text=True
+    )
+    assert run.returncode == code, run.stdout + run.stderr
+    assert ("::error::the feed has no features" in run.stdout) == (code == 1)
+    assert "| dgt | ok |" in summary.read_text("utf-8") and "a   b c" in summary.read_text("utf-8")
 
 
 def test_the_pull_request_build_gives_up_fast_on_spanish_only_sources(monkeypatch):
@@ -278,26 +354,34 @@ def test_the_pull_request_build_gives_up_fast_on_spanish_only_sources(monkeypatc
 
     def fetch(key):
         def run(ctx):
-            seen[key] = net.timeout_s(90)
+            # a Spain-only council site, and Overpass, which answers anywhere
+            for url in ("https://www.ayto.es/radares", "https://overpass-api.de/api"):
+                seen[key, url.split("/")[2]] = net.timeout_s(90, url)
             raise OSError("timed out")
 
         return run
 
+    spain = frozenset({"ayto.es"})
     monkeypatch.setattr(
         sources,
         "REGISTRY",
         {
-            "spain": Source("spain", fetch("spain"), "a", "l", spanish_ip=True),
+            "spain": Source("spain", fetch("spain"), "a", "l", spanish_ip_hosts=spain),
             "abroad": Source("abroad", fetch("abroad"), "a", "l"),
         },
     )
     monkeypatch.setenv("RADARES_SPANISH_IP_TIMEOUT", "20")
     rows = cli.status(cli.collect(date(2026, 9, 28), save_history=False), now=1_790_000_000.0)
-    assert seen == {"spain": 20, "abroad": 90}
+    assert seen == {
+        ("spain", "www.ayto.es"): 20,
+        ("spain", "overpass-api.de"): 90,
+        ("abroad", "www.ayto.es"): 90,
+        ("abroad", "overpass-api.de"): 90,
+    }
     assert {r["source"]: r["status"] for r in rows["sources"]} == {
         "spain": "missing",
         "abroad": "missing",
     }
     monkeypatch.delenv("RADARES_SPANISH_IP_TIMEOUT")
     cli.collect(date(2026, 9, 28), save_history=False)
-    assert seen == {"spain": 90, "abroad": 90}
+    assert set(seen.values()) == {90}

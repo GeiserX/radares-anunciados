@@ -110,7 +110,7 @@ aviso". That street gets no zone, so it gives no warning this week.
 | `RADARES_MAX_ZONES` | `1000` | most radar zones in Home Assistant, 1 or more; past it, the farthest fixed radars, the farthest stretch circles and the oldest silent streets get none |
 | `RADARES_STRETCH_ZONES` | `off` | `on` gives zones along DGT's mobile-radar stretches; needs a province list in `RADARES_PROVINCES` |
 | `RADARES_DORMANT_WEEKS` | `26` | weeks an announced street keeps its zones, silent, after its week; `0` deletes them when the week ends |
-| `RADARES_SPANISH_IP_TIMEOUT` | | seconds; set it outside Spain so that a source that answers only Spanish addresses gets one short try per request, not three of 90 s |
+| `RADARES_SPANISH_IP_TIMEOUT` | | seconds; set it outside Spain so that a request to a host that answers only Spanish addresses gets one short try, not three of 90 s |
 | `RADARES_NOTIFY` | | notify services told to open the app after a change |
 | `RADARES_INTERVAL` | `3600` | seconds between runs |
 | `RADARES_CACHE` | `~/.cache/radares-anunciados` | where downloads, each source's last good result and the announced streets are kept |

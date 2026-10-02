@@ -87,7 +87,9 @@ def test_watch_checks_before_each_fetch_and_never_fails_it(monkeypatch):
         raise OSError("timed out")
 
     monkeypatch.setattr(dgt_freshness, "head", down)
-    assert source.fetch(ctx) == dated  # the date of the latest check that got one
+    # this check failed: no date, though an older one is known for the age metric
+    assert source.fetch(ctx) is result
+    assert dgt_freshness.last_modified() == CHANGED
 
 
 def test_a_file_never_dated_is_credited_without_a_date(monkeypatch):

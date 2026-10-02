@@ -98,7 +98,7 @@ def run(source: Source, ctx: Context, now: float | None = None) -> Outcome:
     ctx = replace(ctx, max_age_s=source.max_age_s)
     key = fingerprint(source, ctx)
     try:
-        with net.fail_fast(ctx.spanish_ip_timeout_s if source.spanish_ip else None):
+        with net.fail_fast(ctx.spanish_ip_timeout_s, source.spanish_ip_hosts):
             result = source.fetch(ctx)
     except Exception as exc:  # a source is never worth a failed run
         last = store.load_result(source.key, key)

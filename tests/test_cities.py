@@ -176,6 +176,7 @@ def test_salamanca_fixed_points():
     assert first.name == "Radar fijo Avenida Saavedra y Fajardo"
     assert first.maxspeed == 50 and first.kind == "fixed" and first.province == "37"
     assert first.attribution.endswith("actualizado 2024-08-08")
+    assert result.updated == "2024-08-08"
     assert {r.maxspeed for r in result.radars} == {30, 50}
     assert all(r.name.startswith("Radar fijo ") for r in result.radars)
 

@@ -3,8 +3,9 @@
 GeoDonostia publishes them as ArcGIS layer 41 "Radarra" of its transport
 service: one point per radar with the street (in Basque) and the speed limit.
 The service's copyright line is "© Donostiako Udala - Ayuntamiento de
-Donostia / San Sebastián"; its open-data catalogue entry states no licence, so
-it is reused under Ley 37/2007 on the reuse of public-sector information.
+Donostia / San Sebastián". The council's legal notice (section 3) allows reuse
+of its documents and information keeping the content whole, citing the source
+and not for unlawful ends, under Ley 37/2007; third-party content is excluded.
 """
 
 from __future__ import annotations
@@ -13,14 +14,21 @@ import json
 
 from .. import net
 from ..model import Radar, SourceResult
-from .base import PUBLIC_SECTOR_REUSE, Context, Source
+from .base import Context, Source
 
 URL = (
     "https://www.donostia.eus/geozerbitzuak/rest/services/ext/GARRAIOA/MapServer/41/query"
     "?where=1%3D1&outFields=*&outSR=4326&f=geojson"
 )
 ATTRIBUTION = "© Donostiako Udala - Ayuntamiento de Donostia / San Sebastián"
-LICENCE = PUBLIC_SECTOR_REUSE
+LEGAL_URL = "https://www.donostia.eus/es/aviso-legal"
+# Section 3 of the legal notice: "Se permite la reutilización de documentos e
+# información del Ayuntamiento, siempre que se mantenga íntegro el contenido, se
+# cite la fuente y no se utilice para fines ilícitos (Ley 37/2007 ...)".
+LICENCE = (
+    "the council's reuse terms: content kept whole, source cited, no unlawful use "
+    f"(Ley 37/2007); third-party content excluded. Legal notice: {LEGAL_URL}"
+)
 PROVINCE = "20"
 
 

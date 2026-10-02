@@ -18,25 +18,37 @@ log = logging.getLogger(__name__)
 
 USER_AGENT = "radares-anunciados (+https://github.com/GeiserX/radares-anunciados)"
 
-# Set by ``fail_fast``: every request gets one try and at most this many seconds.
-_cap: ContextVar[int | None] = ContextVar("timeout_cap", default=None)
+# Set by ``fail_fast``: (seconds, hosts). A request to one of the hosts gets one
+# try and at most that many seconds.
+_cap: ContextVar[tuple[int, frozenset[str]] | None] = ContextVar("timeout_cap", default=None)
 
 
 @contextmanager
-def fail_fast(seconds: int | None) -> Iterator[None]:
-    """Within the block, one try per request and a timeout of at most ``seconds``
-    (None: no change). A source that answers only Spanish addresses runs in it on a
-    runner outside Spain, where it would time out three times per request."""
-    token = _cap.set(seconds)
+def fail_fast(seconds: int | None, hosts: frozenset[str]) -> Iterator[None]:
+    """Within the block, a request to ``hosts`` (a domain and its subdomains) gets
+    one try and a timeout of at most ``seconds`` (None: no change). A source runs in
+    it with the hosts that answer only Spanish addresses, on a runner outside Spain,
+    where each request to them would time out three times."""
+    token = _cap.set(None if seconds is None else (seconds, hosts))
     try:
         yield
     finally:
         _cap.reset(token)
 
 
-def timeout_s(default: int) -> int:
-    """``default``, or the ``fail_fast`` cap when that is lower."""
+def _cap_for(url: str) -> int | None:
     cap = _cap.get()
+    if cap is None:
+        return None
+    host = urllib.parse.urlsplit(url).hostname or ""
+    if any(host == d or host.endswith("." + d) for d in cap[1]):
+        return cap[0]
+    return None
+
+
+def timeout_s(default: int, url: str) -> int:
+    """``default``, or the ``fail_fast`` cap for ``url`` when that is lower."""
+    cap = _cap_for(url)
     return default if cap is None else min(default, cap)
 
 
@@ -48,8 +60,8 @@ def get(
     tries: int = 3,
 ) -> bytes:
     body = urllib.parse.urlencode(data).encode() if data is not None else None
-    if _cap.get() is not None:
-        timeout, tries = timeout_s(timeout), 1
+    if _cap_for(url) is not None:
+        timeout, tries = timeout_s(timeout, url), 1
     for attempt in range(1, tries + 1):
         request = urllib.request.Request(
             url, data=body, headers={"User-Agent": USER_AGENT, **(headers or {})}

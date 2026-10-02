@@ -242,17 +242,26 @@ asks every source. A run whose feed has no features at all fails instead of publ
 job, on a GitHub-hosted runner, publishes what `publish` built.
 
 A pull request that touches the code, the page or the workflow runs the `check` job instead, on a
-GitHub-hosted runner, so code from a pull request never runs on the self-hosted one; the two jobs are
-split by event (`schedule` and `workflow_dispatch`, which no fork can trigger, against
-`pull_request`). `check` builds the same files from an empty cache without publishing them, and keeps
+GitHub-hosted runner. The two jobs are split by event (`schedule` and `workflow_dispatch`, which no
+fork can trigger, against `pull_request`), which keeps ordinary pull requests off the self-hosted
+runner. It cannot stop a hostile one: a pull request runs the workflow files of its own merge commit,
+so one that edits them could target the self-hosted runner. What stops that is the repository
+setting that requires approval of every outside contributor's run, and reading a fork's changes
+under `.github/` before approving it. The runner is also ephemeral, one job per registration, and
+has no Docker socket. `check` builds the same files from an empty cache without publishing them, and keeps
 them as the `feed-site` artifact. Its log lists every source with its state and counts. That runner is
 outside Spain, so the job sets `RADARES_SPANISH_IP_TIMEOUT=20`: a source marked Spanish IP gets one try
-of at most 20 s per request instead of three of 90 s. `euskadi` and `navarra` then show as `missing`;
-`leon` still reads iLeón, which answers from anywhere. Both jobs build through
+of at most 20 s per request to its Spain-only hosts (`spanish_ip_hosts`) instead of three of 90 s.
+Its other requests, like Overpass or iLeón, keep their normal timeouts. `euskadi` and `navarra` then
+show as `missing`; `leon` still reads iLeón, which answers from anywhere. Both jobs build through
 the same steps, in [`.github/actions/build-feed`](../.github/actions/build-feed/action.yml).
 
 The map loads Leaflet from unpkg, pinned to one version with an integrity hash, and OpenStreetMap
 tiles. A Content-Security-Policy in the page allows nothing else: no analytics, no external fonts.
+
+If the self-hosted runner is offline, a scheduled `publish` job waits in the queue for up to 24 hours
+and then fails. Nothing else raises an alarm: GitHub mails the failure to the repository's owner,
+and the map shows its warning once `status.json` is a day old.
 
 Which radars are active, and each source's state, are worked out when the feed is built, not in the
 browser. When `status.json` is more than a day old the map shows a warning that the feed has stopped

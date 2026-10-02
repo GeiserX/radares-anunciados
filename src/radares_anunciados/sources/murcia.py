@@ -22,7 +22,7 @@ from .. import net
 from ..model import Radar, SourceResult
 from ..streetnames import expand
 from ..streets import STREET_TYPES, Announced, WeeklyList, place, places_query, ways_query
-from .base import PUBLIC_SECTOR_REUSE, Context, Source
+from .base import Context, Source
 
 log = logging.getLogger(__name__)
 
@@ -254,7 +254,9 @@ SOURCE = Source(
     fetch=fetch_source,
     attribution=ATTRIBUTION,
     licence=(
-        f"the police's list, read in the local press: {PUBLIC_SECTOR_REUSE}. Geometry: ODbL 1.0"
+        "the Policía Local's weekly list, which it posts on its social networks as an "
+        "image; the feed reads it in the press and takes its facts (street, district, "
+        "week), not the article's text. Geometry: ODbL 1.0"
     ),
     max_age_s=7 * 86_400,
     provinces=frozenset({PROVINCE}),

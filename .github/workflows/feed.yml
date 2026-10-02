@@ -3,8 +3,10 @@ name: Feed
 # Builds the feed for all of Spain from every registered source and publishes it, with its
 # status and a map, to GitHub Pages.
 #
-# Two build jobs, split by event so that code from a pull request never runs on the
-# self-hosted runner:
+# Two build jobs, split by event so that an ordinary pull request never reaches the
+# self-hosted runner. A pull request runs its own copy of this file, so the split cannot
+# stop a hostile one: the repository requires approval of every outside contributor's
+# run, and the approver reads its changes under .github/ first (AGENTS.md).
 # - publish: schedule and workflow_dispatch only, which no fork can trigger. It runs on a
 #   self-hosted runner in Spain, because some sources answer only Spanish addresses.
 # - check: pull_request only, on a GitHub-hosted runner. It builds the same files from an empty

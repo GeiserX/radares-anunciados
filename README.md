@@ -45,9 +45,10 @@ every source, including those that answer only Spanish addresses, and publishes 
 
 The feed includes OpenStreetMap data, so the database is offered under
 [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) with each source's attribution: see
-[LICENSE-DATA.md](LICENSE-DATA.md). Public bodies that publish no licence of their own are reused under
+[LICENSE-DATA.md](LICENSE-DATA.md). Data from public bodies is reused under
 [Ley 37/2007](https://www.boe.es/buscar/act.php?id=BOE-A-2007-19814) on the reuse of public-sector
-information: source cited, date of last update given, content not altered.
+information, with the source cited, values unchanged, and the source's last update date where the
+source gives one.
 [How it works](docs/how-it-works.md#the-published-feed) has the details.
 
 ## Documentation
@@ -64,7 +65,9 @@ information: source cited, date of last update given, content not altered.
 | [DGT NAP](https://nap.dgt.es/dataset/radares-fijos-dgt): fixed radars, sections and mobile-radar stretches | Creative Commons Attribution |
 | [Servei Català de Trànsit](https://transit.gencat.cat/ca/seguretat_viaria/cinemometres-fixos-trams-mobils/): fixed, section and trailer radars | Llicència oberta d'ús d'informació – Catalunya |
 | [Madrid](https://datos.madrid.es/dataset/300049-0-radares-fijos-moviles) and [Salamanca](https://opendata.aytosalamanca.es/datosabiertos/catalogo/dataset/radares-fijos) open data | CC BY 4.0; GNU FDL |
-| Basque and Navarra governments, Donostia, Murcia and León councils | no licence of their own; reused under [Ley 37/2007](LICENSE-DATA.md#public-bodies-with-no-licence-of-their-own) |
+| Basque and Navarra governments, León council | no reuse licence; reused under [Ley 37/2007](LICENSE-DATA.md#public-bodies-with-no-reuse-licence) |
+| Donostia council | its own reuse terms, in its [legal notice](https://www.donostia.eus/es/aviso-legal) |
+| Murcia's Policía Local list, León's on days only iLeón covers | facts only, [read in the press](LICENSE-DATA.md#lists-read-in-the-press) |
 | [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors: cameras, speed limits, street geometry | ODbL 1.0 |
 
 The full table, with cadence and which sources need a Spanish IP, is in [docs/sources.md](docs/sources.md).

@@ -213,6 +213,10 @@ def test_fetch_reports_the_list_and_its_skipped_streets(monkeypatch):
         "leída en Murcia Actualidad); geometría © OpenStreetMap"
     )
     assert murcia.credit("u") == murcia.ATTRIBUTION
+    # the feed reads the police's list in the press: facts only, not the reuse of a
+    # public-sector document it never reads
+    assert "Ley 37/2007" not in murcia.SOURCE.licence
+    assert "not the article's text" in murcia.SOURCE.licence
     assert (status.source, status.week, status.published) == (
         "murcia",
         date(2026, 7, 6),

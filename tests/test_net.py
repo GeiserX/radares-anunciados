@@ -127,14 +127,19 @@ def test_fail_fast_gives_one_short_try(monkeypatch):
 
     monkeypatch.setattr(net.urllib.request, "urlopen", urlopen)
     monkeypatch.setattr(net.time, "sleep", lambda s: None)
-    with net.fail_fast(20), pytest.raises(OSError):
-        net.get("https://x/spain-only")
+    spain = frozenset({"ayto.es"})
+    with net.fail_fast(20, spain), pytest.raises(OSError):
+        net.get("https://www.ayto.es/radares")
     assert asked == [20]
-    assert net.timeout_s(60) == 60  # the cap ends with the block
+    asked.clear()
+    with net.fail_fast(20, spain), pytest.raises(OSError):  # another host: no cap
+        net.get("https://notayto.es/radares")
+    assert asked == [90, 90, 90]
+    assert net.timeout_s(60, "https://ayto.es/") == 60  # the cap ends with the block
     asked.clear()
     with pytest.raises(OSError):
-        net.get("https://x/spain-only")
+        net.get("https://ayto.es/radares")
     assert asked == [90, 90, 90]
-    with net.fail_fast(None), pytest.raises(OSError):
-        net.get("https://x/b", timeout=5)
+    with net.fail_fast(None, spain), pytest.raises(OSError):
+        net.get("https://ayto.es/b", timeout=5)
     assert asked[3:] == [5, 5, 5]
