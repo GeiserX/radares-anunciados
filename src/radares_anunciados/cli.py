@@ -125,7 +125,7 @@ def collect(day: date, save_history: bool = True) -> Collected:
     if ctx.provinces is not None:  # a source that knows the province says so
         radars = [r for r in radars if r.province is None or r.province in ctx.provinces]
         stretches = [s for s in stretches if s.province is None or s.province in ctx.provinces]
-    radars, stretches = feed.drop_copied_sections(radars, stretches)
+    radars, stretches = feed.drop_copied_sections(radars, stretches, day)
     radars = speed.size(speed.fill_limits(radars), ctx.radius)
     weeks = _env_int("RADARES_DORMANT_WEEKS", 26)
     remembered, history = feed.remember(store.load_announced(), radars, day, weeks)

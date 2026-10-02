@@ -2,8 +2,8 @@
 ``type=enforcement`` relations around them.
 
 Two Overpass queries: the cameras, then the relations. The relations query is
-the heavier one, and when it fails the cameras still come, without what the
-relations add, so a new install is never left without OSM cameras.
+the heavier one. When it fails the last relations answer is used, and with none
+the cameras come alone, so a new install is never left without OSM cameras.
 
 An enforcement relation (https://wiki.openstreetmap.org/wiki/Relation:enforcement)
 ties a ``device`` (the camera) to a ``from`` node on the road where the control
@@ -297,16 +297,20 @@ def fetch(ctx: Context) -> SourceResult:
         max_age_s=ctx.max_age_s,
         validate=net.overpass_answer,
     )
+    asked = {"data": relations_query(ctx.boxes)}
     try:
         relations = net.cached_get(
-            OVERPASS_URL,
-            {"data": relations_query(ctx.boxes)},
-            max_age_s=ctx.max_age_s,
-            validate=net.overpass_answer,
+            OVERPASS_URL, asked, max_age_s=ctx.max_age_s, validate=net.overpass_answer
         )
     except (OSError, ValueError) as exc:  # the cameras matter more than what relations add
-        log.warning("OSM enforcement relations failed (%s); cameras only this run", exc)
-        relations = None
+        # The last relations answer keeps the sections and their zones; with none
+        # (a new install, the published feed's empty cache) the cameras come alone.
+        relations = net.cached_copy(OVERPASS_URL, asked, validate=net.overpass_answer)
+        log.warning(
+            "OSM enforcement relations failed (%s); %s",
+            exc,
+            "using the last answer" if relations else "cameras only this run",
+        )
     return parse_all(cameras, relations)
 
 

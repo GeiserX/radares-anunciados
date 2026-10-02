@@ -59,8 +59,7 @@ def cached_get(
     before the write, so an error answer is never kept for the cache lifetime, and
     on a cached copy too: a copy that fails it (kept before the check existed) is
     stale and asked again."""
-    key = hashlib.sha256(json.dumps([url, data], sort_keys=True).encode()).hexdigest()[:32]
-    path = cache_dir() / key
+    path = _cache_path(url, data)
     if path.exists() and time.time() - path.stat().st_mtime < max_age_s:
         cached = path.read_bytes()
         try:
@@ -79,6 +78,29 @@ def cached_get(
         tmp.replace(path)
     except OSError as exc:  # an unwritable cache must not fail a download that worked
         log.warning("could not cache %s in %s: %s", url, path.parent, exc)
+    return body
+
+
+def _cache_path(url: str, data: dict[str, str] | None) -> Path:
+    key = hashlib.sha256(json.dumps([url, data], sort_keys=True).encode()).hexdigest()[:32]
+    return cache_dir() / key
+
+
+def cached_copy(
+    url: str,
+    data: dict[str, str] | None = None,
+    validate: Callable[[bytes], None] | None = None,
+) -> bytes | None:
+    """The copy ``cached_get`` keeps for this request, however old; None when there
+    is none or it fails ``validate``. Only for data that adds to a source's own
+    answer (the OSM relations around its cameras): a source's own data comes from
+    ``cached_get``, so a failed refresh still shows the source as down."""
+    try:
+        body = _cache_path(url, data).read_bytes()
+        if validate is not None:
+            validate(body)
+    except (OSError, ValueError):
+        return None
     return body
 
 

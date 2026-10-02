@@ -93,8 +93,11 @@ def test_a_device_with_no_highway_tag_is_a_camera_and_a_speed_display_is_not():
     assert "osm-12759335510" not in BY_ID  # highway=speed_display, relation 17929026
 
 
+DAY = date(2026, 10, 2)
+
+
 def sections_left(radars, stretches):
-    radars, stretches = feed.drop_copied_sections(radars, stretches)
+    radars, stretches = feed.drop_copied_sections(radars, stretches, DAY)
     lines = {s.id for s in stretches if s.source == "osm"}
     ends = {r.id.rsplit("-", 1)[0] for r in radars if r.kind == "section" and r.source == "osm"}
     assert lines == ends, "a section goes whole, line and both ends"
@@ -130,6 +133,9 @@ def test_one_copied_end_takes_the_whole_section():
     assert "osm-relation-1019388" in sections_left([fixed, *RESULT.radars], RESULT.stretches)
     fixed = replace(fixed, lat=start.lat + 0.001)  # 110 m
     assert "osm-relation-1019388" not in sections_left([fixed, *RESULT.radars], RESULT.stretches)
+    # a published radar out of force that day drops nothing: merge would drop it too
+    ended = replace(near, valid_to=date(2026, 9, 30))
+    assert "osm-relation-1019388" in sections_left([ended, *RESULT.radars], RESULT.stretches)
 
 
 def test_cameras_come_even_when_the_relations_query_fails(monkeypatch, tmp_path):
@@ -143,6 +149,25 @@ def test_cameras_come_even_when_the_relations_query_fails(monkeypatch, tmp_path)
     monkeypatch.setattr(net, "get", get)
     result = osm.fetch(Context(date(2026, 10, 2), None, (osm.MURCIA_REGION,), Radius()))
     assert len(result.radars) == 20 and result.stretches == []
+
+
+def test_a_failed_relations_query_keeps_the_last_relations_answer(monkeypatch, tmp_path):
+    """Its sections keep their zones: a source that fails never costs its zones."""
+    monkeypatch.setenv("RADARES_CACHE", str(tmp_path))
+    up = [True]
+
+    def get(url, data=None, headers=None):
+        if data["data"].startswith("[out:json][timeout:180];(relation"):
+            if not up[0]:
+                raise OSError("HTTP 504")
+            return RELATIONS
+        return CAMERAS
+
+    monkeypatch.setattr(net, "get", get)
+    ctx = Context(date(2026, 10, 2), None, (osm.MURCIA_REGION,), Radius(), max_age_s=0)
+    first = osm.fetch(ctx)
+    up[0] = False
+    assert osm.fetch(ctx) == first and len(first.stretches) == 6
 
 
 def test_the_relations_query_reads_by_bounding_box():

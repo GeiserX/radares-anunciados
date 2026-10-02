@@ -75,7 +75,7 @@ def merge(radars: list[Radar], day: date) -> list[Radar]:
 
 
 def drop_copied_sections(
-    radars: list[Radar], stretches: list[Stretch]
+    radars: list[Radar], stretches: list[Stretch], day: date
 ) -> tuple[list[Radar], list[Stretch]]:
     """Mapped sections (OSM) that copy one an authority publishes, gone whole:
     the line and both ends, the radars ``<line id>-from`` and ``-to``.
@@ -84,8 +84,9 @@ def drop_copied_sections(
     of an end of a published section, or within ``DUPLICATE_M`` of any published
     camera (``merge`` would drop that end and leave half a section). A section's
     two sources rarely put its ends at the same spot: on 2 Oct 2026 the same
-    sections had ends 150 m to 1 km apart, and a driver got an alert from each."""
-    official = [r for r in radars if _official(r)]
+    sections had ends 150 m to 1 km apart, and a driver got an alert from each.
+    Only a published radar in force on ``day`` counts, as in ``merge``."""
+    official = [r for r in radars if _official(r) and r.active and r.active_on(day)]
     section_ends = [r for r in official if r.kind == "section"]
 
     def copied(point: tuple[float, float]) -> bool:
