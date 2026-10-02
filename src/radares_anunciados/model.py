@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
@@ -112,3 +112,20 @@ class SourceResult:
     # The day the publisher says the data last changed ("2025-12-18"), when it says
     # one. Reuse terms ask for it (LICENSE-DATA.md); never guessed.
     updated: str | None = None
+
+
+def dated(result: SourceResult, day: str | None) -> SourceResult:
+    """``result`` credited with the day its data last changed: in each record's
+    attribution and in ``updated``. None changes nothing."""
+    if day is None:
+        return result
+    return replace(
+        result,
+        radars=[
+            replace(r, attribution=f"{r.attribution}, actualizado {day}") for r in result.radars
+        ],
+        stretches=[
+            replace(s, attribution=f"{s.attribution}, actualizado {day}") for s in result.stretches
+        ],
+        updated=day,
+    )

@@ -12,6 +12,8 @@ import urllib.request
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
+from datetime import UTC
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 log = logging.getLogger(__name__)
@@ -58,7 +60,10 @@ def get(
     headers: dict[str, str] | None = None,
     timeout: int = 90,
     tries: int = 3,
+    sent: dict[str, str] | None = None,
 ) -> bytes:
+    """The response body. ``sent``, when given, receives the response headers,
+    names in lower case."""
     body = urllib.parse.urlencode(data).encode() if data is not None else None
     if _cap_for(url) is not None:
         timeout, tries = timeout_s(timeout, url), 1
@@ -68,6 +73,8 @@ def get(
         )
         try:
             with urllib.request.urlopen(request, timeout=timeout) as response:
+                if sent is not None:
+                    sent.update({k.lower(): v for k, v in response.headers.items()})
                 return response.read()
         except OSError:
             if attempt == tries:
@@ -96,26 +103,73 @@ def cached_get(
     before the write, so an error answer is never kept for the cache lifetime, and
     on a cached copy too: a copy that fails it (kept before the check existed) is
     stale and asked again."""
+    return _cached(url, data, headers, max_age_s, validate, dated=False)[0]
+
+
+def cached_get_dated(url: str, max_age_s: int = 86_400) -> tuple[bytes, str | None]:
+    """``cached_get``, and the ``Last-Modified`` the server sent with these very
+    bytes (None when it sent none). The header is kept beside the cached copy, so a
+    copy reused from the cache keeps the date of its own download: a newer date the
+    server gives now would describe a file this run does not use."""
+    return _cached(url, None, None, max_age_s, None, dated=True)
+
+
+def _cached(
+    url: str,
+    data: dict[str, str] | None,
+    headers: dict[str, str] | None,
+    max_age_s: int,
+    validate: Callable[[bytes], None] | None,
+    dated: bool,
+) -> tuple[bytes, str | None]:
     path = _cache_path(url, data)
+    stamp = path.with_name(path.name + ".last-modified")
     if path.exists() and time.time() - path.stat().st_mtime < max_age_s:
         cached = path.read_bytes()
         try:
             if validate is not None:
                 validate(cached)
-            return cached
+            return cached, _read_stamp(stamp) if dated else None
         except ValueError as exc:
             log.warning("cached copy of %s fails its check, asking again: %s", url, exc)
-    body = get(url, data=data, headers=headers)
+    sent: dict[str, str] = {}
+    if dated:
+        body = get(url, data=data, headers=headers, sent=sent)
+    else:
+        body = get(url, data=data, headers=headers)
     if validate is not None:
         validate(body)
+    modified = sent.get("last-modified")
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
+        # The old stamp goes first: a copy is never left with another copy's date.
+        stamp.unlink(missing_ok=True)
         tmp = path.with_suffix(".tmp")
         tmp.write_bytes(body)
         tmp.replace(path)
+        if modified:
+            stamp.write_text(modified, "utf-8")
     except OSError as exc:  # an unwritable cache must not fail a download that worked
         log.warning("could not cache %s in %s: %s", url, path.parent, exc)
-    return body
+    return body, modified
+
+
+def last_modified_day(value: str | None) -> str | None:
+    """The day of an HTTP date ('Thu, 18 Dec 2025 10:56:20 GMT' -> '2025-12-18'), UTC,
+    or None."""
+    if not value:
+        return None
+    try:
+        return parsedate_to_datetime(value).astimezone(UTC).date().isoformat()
+    except (TypeError, ValueError):
+        return None
+
+
+def _read_stamp(stamp: Path) -> str | None:
+    try:
+        return stamp.read_text("utf-8").strip() or None
+    except OSError:
+        return None
 
 
 def _cache_path(url: str, data: dict[str, str] | None) -> Path:

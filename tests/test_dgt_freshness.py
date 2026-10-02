@@ -1,11 +1,11 @@
 import logging
-from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
-from radares_anunciados.model import Radar, SourceResult, Stretch
+from radares_anunciados import net, sources
+from radares_anunciados.model import SourceResult
 from radares_anunciados.sources import Context, Source, dgt_freshness
 from radares_anunciados.speed import Radius
 
@@ -68,18 +68,10 @@ def test_nothing_known_before_any_check():
 def test_watch_checks_before_each_fetch_and_never_fails_it(monkeypatch):
     asked = []
     monkeypatch.setattr(dgt_freshness, "head", lambda url: asked.append(url) or HEADERS)
-    radar = Radar("dgt-1", "dgt", "fixed", "A-7 km 1", 37.0, -1.0, 500, attribution="DGT")
-    stretch = Stretch("dgt-s", "dgt", "Tramo", "A-7", (37.0, -1.0), (37.1, -1.1), attribution="DGT")
-    result = SourceResult([radar], [stretch])
+    result = SourceResult()
     source = dgt_freshness.watch(Source("dgt", lambda ctx: result, "a", "l"))
     ctx = Context(day=None, provinces=None, boxes=(), radius=Radius())
-    # the reuse terms ask for the date of the last update: each record and status.json carry it
-    dated = SourceResult(
-        [replace(radar, attribution="DGT, actualizado 2025-12-18")],
-        [replace(stretch, attribution="DGT, actualizado 2025-12-18")],
-        updated="2025-12-18",
-    )
-    assert source.fetch(ctx) == dated
+    assert source.fetch(ctx) is result
     assert asked == [dgt_freshness.dgt.URL]
     assert dgt_freshness.last_modified() == CHANGED
 
@@ -87,16 +79,40 @@ def test_watch_checks_before_each_fetch_and_never_fails_it(monkeypatch):
         raise OSError("timed out")
 
     monkeypatch.setattr(dgt_freshness, "head", down)
-    # this check failed: no date, though an older one is known for the age metric
     assert source.fetch(ctx) is result
-    assert dgt_freshness.last_modified() == CHANGED
 
 
-def test_a_file_never_dated_is_credited_without_a_date(monkeypatch):
-    monkeypatch.setattr(dgt_freshness, "head", lambda url: {})
-    result = SourceResult(
-        [Radar("dgt-1", "dgt", "fixed", "A-7", 37.0, -1.0, 500, attribution="DGT")]
-    )
-    source = dgt_freshness.watch(Source("dgt", lambda ctx: result, "a", "l"))
+def test_dgt_records_carry_the_date_of_the_bytes_in_use(monkeypatch, tmp_path):
+    """The file is downloaded once a day. A copy cached yesterday keeps yesterday's
+    Last-Modified, even when today's freshness check sees a newer file: the date
+    must describe the radars in the feed, not a file this run did not read."""
+    monkeypatch.setenv("RADARES_CACHE", str(tmp_path))
+    xml = (FIX / "dgt_radares.xml").read_bytes()
+    downloads = []
+
+    def get(url, data=None, headers=None, sent=None, **kw):
+        downloads.append(url)
+        if sent is not None:
+            sent["last-modified"] = "Thu, 01 Oct 2026 10:00:00 GMT"  # yesterday
+        return xml
+
+    monkeypatch.setattr(net, "get", get)
+    yesterday = {"last-modified": "Thu, 01 Oct 2026 10:00:00 GMT"}
+    monkeypatch.setattr(dgt_freshness, "head", lambda url: yesterday)
+    source = sources.REGISTRY["dgt"]
     ctx = Context(day=None, provinces=None, boxes=(), radius=Radius())
-    assert source.fetch(ctx) is result
+    first = source.fetch(ctx)
+    assert first.updated == "2026-10-01" and first.radars
+    assert all(r.attribution.endswith(", actualizado 2026-10-01") for r in first.radars)
+    # the next run, within the day: today's check says the file changed today
+    today = {"last-modified": "Fri, 02 Oct 2026 07:00:00 GMT"}
+    monkeypatch.setattr(dgt_freshness, "head", lambda url: today)
+    second = source.fetch(ctx)
+    assert downloads == [dgt_freshness.dgt.URL]  # the cached copy was used
+    assert second.updated == "2026-10-01"
+    assert {r.attribution for r in second.radars} == {r.attribution for r in first.radars}
+    # a download without the header gives no date, and no older one is kept
+    (tmp_path / next(p.name for p in tmp_path.iterdir() if "." not in p.name)).unlink()
+    monkeypatch.setattr(net, "get", lambda url, **kw: xml)
+    assert source.fetch(ctx).updated is None
+    assert source.fetch(ctx).updated is None  # and the cached copy, reused, has none either

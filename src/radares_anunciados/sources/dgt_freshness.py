@@ -4,8 +4,7 @@ NAP says the file is updated hourly, but on 2026-10-01 its ``Last-Modified`` was
 18 Dec 2025, while DGT's own PDF of 3 Aug 2026 lists more fixed radars. The data
 in use can only be as fresh as the file, so each DGT fetch also asks for the
 file's ``Last-Modified`` (a HEAD request) and logs its age, with a warning once it
-is older than ``STALE_AFTER_S``. ``age_s`` is the value for ``/metrics``. The same
-date goes into each record's attribution, as the date of the last update.
+is older than ``STALE_AFTER_S``. ``age_s`` is the value for ``/metrics``.
 
 The PDF is not read: it has no coordinates and no open licence.
 """
@@ -50,14 +49,14 @@ def parse_last_modified(value: str | None) -> float | None:
         return None
 
 
-def refresh(
+def check(
     url: str = dgt.URL,
     now: float | None = None,
     get_headers: Callable[[str], dict[str, str]] | None = None,
 ) -> float | None:
     """Ask for the file's Last-Modified, remember it and log its age. Returns the
-    date this request got, or None when it failed or the answer had no header (the
-    last known date is kept for ``age_s``). Never raises."""
+    age in seconds. Never raises: a failed check, or an answer without the
+    header, keeps the last known date (None before any)."""
     global _last_modified
     now = time.time() if now is None else now
     try:
@@ -65,10 +64,10 @@ def refresh(
         modified = parse_last_modified(headers.get("last-modified"))
     except Exception as exc:
         log.warning("could not read Last-Modified of %s: %s", url, exc)
-        return None
+        return age_s(now)
     if modified is None:
         log.warning("%s sent no Last-Modified; its age is unknown", url)
-        return None
+        return age_s(now)
     with _lock:
         _last_modified = modified
     age = max(0.0, now - modified)
@@ -78,19 +77,7 @@ def refresh(
         log.warning("DGT fixed-radar file last changed %s, %.0f days ago: stale", day, days)
     else:
         log.info("DGT fixed-radar file last changed %s, %.0f days ago", day, days)
-    return modified
-
-
-def check(
-    url: str = dgt.URL,
-    now: float | None = None,
-    get_headers: Callable[[str], dict[str, str]] | None = None,
-) -> float | None:
-    """``refresh``, then the file's age in seconds by the latest date known. Never
-    raises: a failed check keeps the last known date (None before any)."""
-    now = time.time() if now is None else now
-    refresh(url, now, get_headers)
-    return age_s(now)
+    return age
 
 
 def last_modified() -> float | None:
@@ -107,31 +94,12 @@ def age_s(now: float | None = None) -> float | None:
     return max(0.0, (time.time() if now is None else now) - modified)
 
 
-def dated(result: SourceResult, modified: float | None) -> SourceResult:
-    """``result`` credited with the file's last update day, as the SCT and city
-    sources are: in each record's attribution and in ``updated``."""
-    if modified is None:
-        return result
-    day = time.strftime("%Y-%m-%d", time.gmtime(modified))
-    return replace(
-        result,
-        radars=[
-            replace(r, attribution=f"{r.attribution}, actualizado {day}") for r in result.radars
-        ],
-        stretches=[
-            replace(s, attribution=f"{s.attribution}, actualizado {day}") for s in result.stretches
-        ],
-        updated=day,
-    )
-
-
 def watch(source: Source) -> Source:
-    """``source`` with a freshness check before each fetch, its result dated with
-    the Last-Modified that check got. A check that failed dates nothing: an older
-    answer may not describe the file this fetch reads. It never fails the fetch."""
+    """``source`` with a freshness check before each fetch. The check never
+    fails the fetch."""
 
     def fetch(ctx: Context) -> SourceResult:
-        modified = refresh()
-        return dated(source.fetch(ctx), modified)
+        check()
+        return source.fetch(ctx)
 
     return replace(source, fetch=fetch)
