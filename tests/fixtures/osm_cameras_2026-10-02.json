@@ -1,0 +1,235 @@
+{
+ "version": 0.6,
+ "generator": "Overpass API 0.7.62.11 87bfad18",
+ "osm3s": {
+  "timestamp_osm_base": "2026-10-02T10:36:20Z",
+  "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+ },
+ "elements": [
+  {
+   "type": "node",
+   "id": 29095584,
+   "lat": 37.6727399,
+   "lon": -1.7078123,
+   "tags": {
+    "direction": "21",
+    "highway": "speed_camera",
+    "maxspeed": "80",
+    "note": "F100 XABI A-7 Km 593.28 Lorca DIR Valencia CL"
+   }
+  },
+  {
+   "type": "node",
+   "id": 992001427,
+   "lat": 41.0018299,
+   "lon": -5.6146605,
+   "tags": {
+    "highway": "speed_camera",
+    "maxspeed": "120",
+    "note": "F120 A300 A-62 Km 233.6 Salamanca DIR Burgos CL"
+   }
+  },
+  {
+   "type": "node",
+   "id": 992002534,
+   "lat": 41.6192295,
+   "lon": -0.949505,
+   "tags": {
+    "highway": "speed_camera",
+    "maxspeed": "120",
+    "note": "radar de tramo"
+   }
+  },
+  {
+   "type": "node",
+   "id": 992004847,
+   "lat": 38.0975026,
+   "lon": -0.7221708,
+   "tags": {
+    "highway": "speed_camera",
+    "maxspeed": "90",
+    "note": "F090 A300 CV-91 Km 19.1 Rojales DIR Orihuela CLAV"
+   }
+  },
+  {
+   "type": "node",
+   "id": 992004964,
+   "lat": 37.6832799,
+   "lon": -1.7108528,
+   "tags": {
+    "direction": "170",
+    "highway": "speed_camera",
+    "maxspeed": "80",
+    "note": "F100 A300 A-7 Km 594.45 Lorca DIR Cádiz CL"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1976460257,
+   "lat": 42.8571101,
+   "lon": 1.6012853,
+   "tags": {
+    "highway": "speed_camera"
+   }
+  },
+  {
+   "type": "node",
+   "id": 2378266882,
+   "lat": 41.6087959,
+   "lon": -0.9155533,
+   "tags": {
+    "direction": "280",
+    "highway": "speed_camera",
+    "maxspeed": "120",
+    "note": "radar de tramo",
+    "source": "survey"
+   }
+  },
+  {
+   "type": "node",
+   "id": 2378267338,
+   "lat": 43.4930099,
+   "lon": -8.1570102,
+   "tags": {
+    "direction": "330",
+    "highway": "speed_camera",
+    "maxspeed": "90",
+    "source": "Survey"
+   }
+  },
+  {
+   "type": "node",
+   "id": 6203468146,
+   "lat": 40.4001131,
+   "lon": -3.7637473,
+   "tags": {
+    "description": "Radar tramo (fin), funcionamiento febrero 2019",
+    "direction": "220",
+    "highway": "speed_camera",
+    "maxspeed": "70"
+   }
+  },
+  {
+   "type": "node",
+   "id": 6218566440,
+   "lat": 40.9515228,
+   "lon": -5.6815676,
+   "tags": {
+    "direction": "0",
+    "highway": "speed_camera",
+    "maxspeed": "50"
+   }
+  },
+  {
+   "type": "node",
+   "id": 7373951325,
+   "lat": 40.3999825,
+   "lon": -3.7636485,
+   "tags": {
+    "description": "Radar tramo (fin), funcionamiento febrero 2019",
+    "direction": "220",
+    "highway": "speed_camera",
+    "maxspeed": "70"
+   }
+  },
+  {
+   "type": "node",
+   "id": 7373959736,
+   "lat": 40.4074461,
+   "lon": -3.7454573,
+   "tags": {
+    "description": "Radar tramo (inicio)",
+    "direction": "245",
+    "highway": "speed_camera",
+    "maxspeed": "70"
+   }
+  },
+  {
+   "type": "node",
+   "id": 7847018894,
+   "lat": 37.6712248,
+   "lon": -1.7096699,
+   "tags": {
+    "direction": "180",
+    "highway": "speed_camera",
+    "maxspeed": "80"
+   }
+  },
+  {
+   "type": "node",
+   "id": 7847018896,
+   "lat": 37.6844527,
+   "lon": -1.7105629,
+   "tags": {
+    "direction": "1",
+    "highway": "speed_camera",
+    "maxspeed": "80",
+    "note": "F100 A300 A-7 Km 594.45 Lorca DIR Cádiz CL"
+   }
+  },
+  {
+   "type": "node",
+   "id": 8952335902,
+   "lat": 36.5211619,
+   "lon": -6.2743849,
+   "tags": {
+    "direction": "70",
+    "highway": "speed_camera",
+    "maxspeed": "80"
+   }
+  },
+  {
+   "type": "node",
+   "id": 8952335905,
+   "lat": 36.5212138,
+   "lon": -6.2743966,
+   "tags": {
+    "direction": "80",
+    "highway": "speed_camera",
+    "maxspeed": "80"
+   }
+  },
+  {
+   "type": "node",
+   "id": 11246943987,
+   "lat": 43.4823519,
+   "lon": -8.1572732,
+   "tags": {
+    "direction": "10",
+    "highway": "speed_camera",
+    "maxspeed": "90"
+   }
+  },
+  {
+   "type": "node",
+   "id": 11468893139,
+   "lat": 36.5206259,
+   "lon": -6.229478,
+   "tags": {
+    "direction": "110",
+    "highway": "speed_camera",
+    "maxspeed": "80"
+   }
+  },
+  {
+   "type": "node",
+   "id": 13734382524,
+   "lat": 37.9656601,
+   "lon": -0.7008943,
+   "tags": {
+    "highway": "speed_camera",
+    "maxspeed": "40"
+   }
+  },
+  {
+   "type": "node",
+   "id": 14214352419,
+   "lat": 42.2732214,
+   "lon": 2.9548006,
+   "tags": {
+    "highway": "speed_camera",
+    "maxspeed": "50"
+   }
+  }
+ ]
+}

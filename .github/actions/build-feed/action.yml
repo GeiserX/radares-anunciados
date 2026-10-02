@@ -43,6 +43,7 @@ runs:
       shell: bash
       env:
         RADARES_PROVINCES: all
+        RADARES_SOURCES: default,osm_notes
         RADARES_CACHE: ${{ inputs.cache }}
       run: |
         rm -rf _site

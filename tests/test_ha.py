@@ -6,7 +6,7 @@ from datetime import date
 import pytest
 
 from radares_anunciados import ha
-from radares_anunciados.model import Radar
+from radares_anunciados.model import REPORTED, Radar
 
 
 def radar(name="Radar fijo A-7 km 1.0", lat=37.1, lon=-1.1, r=500):
@@ -181,6 +181,19 @@ def test_sync_degrades_over_the_cap_instead_of_refusing():
     assert len(todo.create) == 10 and todo.left_out == 2
     # nearest to home first: the two farthest north are the ones left out
     assert {s.name for s in todo.create} == {f"Radar {i}" for i in range(10)}
+
+
+def test_a_report_nobody_published_never_becomes_a_zone():
+    """A place people report (an open OSM note) is in the feed and on the map only."""
+    report = replace(radar("Nuevo radar fijo de 90kmh"), id="osm-note-1", kind=REPORTED, radius_m=0)
+    fixed = [radar(f"Radar {i}", 37 + i / 1000, -1.0) for i in range(3)]
+    fake = FakeWS(zones=[], config={"latitude": 37.0, "longitude": -1.0})
+    client = ha.HomeAssistant("http://ha.test", "t")
+    client._ws = fake
+    todo = asyncio.run(client.sync([report, *fixed], dry_run=True, max_zones=3))
+    # no zone, and no place under the cap taken from a radar
+    assert sorted(s.name for s in todo.create) == ["Radar 0", "Radar 1", "Radar 2"]
+    assert todo.left_out == 0
 
 
 class FakeWS:

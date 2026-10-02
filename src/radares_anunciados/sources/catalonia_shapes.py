@@ -244,6 +244,13 @@ def _edge_m(lat: float, lon: float, ring: list[tuple[float, float]]) -> float:
     return best
 
 
+def inside(lat: float, lon: float) -> bool:
+    """True for a point inside one of the four outlines, with no margin: it tells
+    Catalonia from Andorra or France just across the border, where ``province``
+    and its coast margin would still answer."""
+    return any(sum(_inside(lat, lon, r) for r in rings) % 2 for rings in _SHAPES.values())
+
+
 def province(lat: float, lon: float) -> str | None:
     """INE code ("08", "17", "25", "43") of the province the point is in; the
     nearest one within ``COAST_M``; None for a point outside Catalonia."""

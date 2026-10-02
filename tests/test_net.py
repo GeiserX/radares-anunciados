@@ -100,7 +100,9 @@ def test_osm_and_murcia_check_their_overpass_answers_before_caching(tmp_path, mo
     up[0] = True
     assert osm.fetch(ctx).radars
     murcia.fetch(date(2026, 7, 8))
-    assert len(calls) == 5  # each source asked again: the error answers were not kept
+    # each source asked again: the error answers were not kept (osm asks twice,
+    # cameras and relations)
+    assert len(calls) == 6
 
 
 def test_a_cached_copy_that_fails_the_check_is_asked_again(tmp_path, monkeypatch):

@@ -43,7 +43,7 @@ import time
 from dataclasses import replace
 
 from . import net
-from .model import Radar
+from .model import REPORTED, Radar
 
 log = logging.getLogger(__name__)
 
@@ -79,6 +79,7 @@ _MPH = re.compile(r"(\d{1,3})\s*mph")
 # an urban road is 20, 30 or 50 by its lanes, so the tag alone doesn't say.
 _IMPLICIT = {"ES:motorway": 120, "ES:rural": 90}
 _ZONE = re.compile(r"ES:zone(\d{2})")
+_SKIP = ("mobile_announced", REPORTED)  # kinds never looked up
 
 Point = tuple[float, float]
 
@@ -268,9 +269,10 @@ def _save(cache: dict[str, list]) -> None:
 def fill(radars: list[Radar], now: float | None = None) -> list[Radar]:
     """``radars`` with ``maxspeed`` set from OpenStreetMap where it was None.
     Street circles keep theirs: their street's limit was read when they were
-    placed. Never raises for a failed lookup."""
+    placed; a report (``REPORTED``) gets no zone to size. Never raises for a
+    failed lookup."""
     now = time.time() if now is None else now
-    wanted = [r for r in radars if r.maxspeed is None and r.kind != "mobile_announced"]
+    wanted = [r for r in radars if r.maxspeed is None and r.kind not in _SKIP]
     if not wanted:
         return radars
     cache = _load()
@@ -306,7 +308,7 @@ def fill(radars: list[Radar], now: float | None = None) -> list[Radar]:
     out = []
     found = 0
     for r in radars:
-        entry = cache.get(_key(r)) if r.maxspeed is None and r.kind != "mobile_announced" else None
+        entry = cache.get(_key(r)) if r.maxspeed is None and r.kind not in _SKIP else None
         if entry and entry[0] is not None:
             found += 1
             credit = f"{r.attribution}; {ATTRIBUTION}" if r.attribution else ATTRIBUTION

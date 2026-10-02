@@ -15,7 +15,7 @@ Radares Anunciados is a Docker service that gathers the speed radars announced i
 - One GeoJSON feed with every announced radar, each point tagged with its source and license
 - The mobile-radar lists that councils publish: Murcia (weekly), León (monthly, every day) and Donostia (daily)
 - Fixed, section and mobile-stretch radars from the DGT, the Servei Català de Trànsit, the Basque and Navarra governments, and the cities of Madrid, Salamanca and Donostia
-- Speed cameras mapped in [OpenStreetMap](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera)
+- Speed cameras and average-speed sections mapped in [OpenStreetMap](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera), and, on the published map, the open OpenStreetMap notes that report a new one, shown as unconfirmed and never turned into zones
 - Home Assistant zones kept in sync with the radars around you, for alerts through the companion app
 - Warns from published positions only; it never senses or jams a radar signal
 
@@ -23,9 +23,9 @@ Radares Anunciados is a Docker service that gathers the speed radars announced i
 
 ```sh
 export HA_URL=https://homeassistant.example.org HA_TOKEN='<long-lived token>'
-docker run --rm -e HA_URL -e HA_TOKEN drumsergio/radares-anunciados:0.1.0 sync --dry-run
+docker run --rm -e HA_URL -e HA_TOKEN drumsergio/radares-anunciados:0.2.0 sync --dry-run
 mkdir -p data && sudo chown 65534:65534 data  # the container runs as nobody
-docker run -d --name radares -e HA_URL -e HA_TOKEN -v ./data:/data -e RADARES_CACHE=/data drumsergio/radares-anunciados:0.1.0
+docker run -d --name radares -e HA_URL -e HA_TOKEN -v ./data:/data -e RADARES_CACHE=/data drumsergio/radares-anunciados:0.2.0
 ```
 
 Then import the [alert blueprint](blueprints/radar_zone_alert.yaml). Full steps in [Getting started](docs/getting-started.md).
@@ -68,7 +68,7 @@ source gives one.
 | Basque and Navarra governments, León council | no reuse licence; reused under [Ley 37/2007](LICENSE-DATA.md#public-bodies-with-no-reuse-licence) |
 | Donostia council | its own reuse terms, in its [legal notice](https://www.donostia.eus/es/aviso-legal) |
 | Murcia's Policía Local list, León's on days only iLeón covers | facts only, [read in the press](LICENSE-DATA.md#lists-read-in-the-press) |
-| [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors: cameras, speed limits, street geometry | ODbL 1.0 |
+| [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors: cameras, sections, notes, speed limits, street geometry | ODbL 1.0 |
 
 The full table, with cadence and which sources need a Spanish IP, is in [docs/sources.md](docs/sources.md).
 

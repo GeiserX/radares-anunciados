@@ -14,7 +14,7 @@ import pytest
 import yaml
 
 from radares_anunciados import cli, net, sources, store
-from radares_anunciados.model import Radar, SourceResult, Stretch
+from radares_anunciados.model import REPORTED, Radar, SourceResult, Stretch
 from radares_anunciados.sources import Source
 
 ROOT = Path(__file__).parent.parent
@@ -38,8 +38,8 @@ def fake(key, answers, spanish_ip_hosts=frozenset()):
     return Source(key, fetch, f"{key} people", f"{key} licence", spanish_ip_hosts=spanish_ip_hosts)
 
 
-def radar(source, n=0, **kw):
-    return Radar(f"{source}-{n}", source, "fixed", f"Radar {n}", 37.0 + n / 10, -1.0, 500, **kw)
+def radar(source, n=0, kind="fixed", **kw):
+    return Radar(f"{source}-{n}", source, kind, f"Radar {n}", 37.0 + n / 10, -1.0, 500, **kw)
 
 
 def test_status_says_which_sources_are_fresh_stale_or_missing(monkeypatch):
@@ -51,6 +51,7 @@ def test_status_says_which_sources_are_fresh_stale_or_missing(monkeypatch):
                 [SourceResult([radar("ok"), radar("ok", 1)], [stretch], updated="2026-09-17")] * 2
             ),
         ),
+        "notes": fake("notes", iter([SourceResult([radar("notes", kind=REPORTED)])] * 2)),
         "stale": fake("stale", iter([SourceResult([radar("stale", 5)]), OSError("HTTP 403")])),
         "missing": fake(
             "missing", iter([OSError("TLS handshake")] * 2), spanish_ip_hosts=frozenset({"x.es"})
@@ -62,12 +63,15 @@ def test_status_says_which_sources_are_fresh_stale_or_missing(monkeypatch):
     report = cli.status(found, now=1_790_000_000.0)
     rows = {r["source"]: r for r in report["sources"]}
     assert report["generated"] == "2026-09-21T14:13:20+00:00"
-    assert report["features"] == 4
+    assert report["features"] == 5 and report["reported"] == 1
+    notes = rows["notes"]
+    assert (notes["radars"], notes["reported"], notes["in_feed"]) == (0, 1, 1)
     assert rows["ok"] | {"data_time": None} == {
         "source": "ok",
         "status": "ok",
         "radars": 2,
         "stretches": 1,
+        "reported": 0,
         "in_feed": 3,
         "data_time": None,
         "updated": "2026-09-17",
@@ -88,6 +92,7 @@ def test_status_says_which_sources_are_fresh_stale_or_missing(monkeypatch):
         "status": "missing",
         "radars": 0,
         "stretches": 0,
+        "reported": 0,
         "in_feed": 0,
         "data_time": None,
         "updated": None,

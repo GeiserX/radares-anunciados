@@ -29,7 +29,8 @@ build, and `updated`, the date the source gives for its last update, when it giv
 | Source | What it gives | Attribution | Terms |
 |---|---|---|---|
 | `dgt` | fixed radars and average-speed sections from the [DGT National Access Point](https://nap.dgt.es/dataset/radares-fijos-dgt) | Dirección General de Tráfico, with the file's last update date | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
-| `osm` | `highway=speed_camera` nodes from [OpenStreetMap](https://www.openstreetmap.org/copyright) | © OpenStreetMap contributors | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) |
+| `osm` | `highway=speed_camera` nodes and `type=enforcement` relations from [OpenStreetMap](https://www.openstreetmap.org/copyright) | © OpenStreetMap contributors | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) |
+| `osm_notes` | open OpenStreetMap [notes](https://wiki.openstreetmap.org/wiki/Notes) that report a speed camera, unconfirmed | © OpenStreetMap contributors | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/), see below |
 | `murcia` | the weekly mobile-radar list of the Policía Local de Murcia, read in the local press, placed on OpenStreetMap streets | Policía Local de Murcia, and the newspaper it was read in; geometry © OpenStreetMap contributors | the facts of the police's list (street, district, week) as the press reports them, not the article's text (see below); geometry ODbL 1.0 |
 | `dgt_invive` | stretches of road where DGT runs mobile radars, from the [DGT National Access Point](https://nap.dgt.es/es/dataset/tramos-invive); road geometry from OpenStreetMap | Dirección General de Tráfico; geometry © OpenStreetMap contributors | Creative Commons Attribution, as the dataset page states it with no version; geometry ODbL 1.0 |
 | `sct` | fixed and section radars in Catalonia, from the [Servei Català de Trànsit](https://transit.gencat.cat/ca/seguretat_viaria/cinemometres-fixos-trams-mobils/) | Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit, with the file's last update date | Llicència oberta d'ús d'informació – Catalunya |
@@ -78,7 +79,7 @@ source, with or without a licence:
 
 | Art. 8 | Condition | How the feed meets it |
 |---|---|---|
-| a | the content, metadata included, is not altered | values are not changed: positions, roads, km, streets, days and limits are the source's. The feed transforms them only in form: positions given in ETRS89 UTM (SCT, Basque Government, Navarra) are reprojected to WGS84 longitude and latitude; abbreviations in street names are spelled out ("Avda." becomes "Avenida"); duplicates are dropped (one camera per site in Madrid, the Navarra radars the DGT file also lists, an OpenStreetMap camera within 150 m of an official radar). The feed never repairs a position; it skips a record with broken coordinates. It adds a radius and, for an announced street, circles along it; street geometry and a limit the source does not give come from OpenStreetMap and are credited to it |
+| a | the content, metadata included, is not altered | values are not changed: positions, roads, km, streets, days and limits are the source's. The feed transforms them only in form: positions given in ETRS89 UTM (SCT, Basque Government, Navarra) are reprojected to WGS84 longitude and latitude; abbreviations in street names are spelled out ("Avda." becomes "Avenida"); duplicates are dropped (one camera per site in Madrid, the Navarra radars the DGT file also lists, an OpenStreetMap camera within 150 m of an official radar, an OpenStreetMap section near a published one). The feed never repairs a position; it skips a record with broken coordinates. It adds a radius and, for an announced street, circles along it; street geometry and a limit the source does not give come from OpenStreetMap and are credited to it |
 | b | the meaning is not distorted | each record keeps its kind and the days it is valid on; a street whose period has ended is marked `active: false`, never shown as announced |
 | c | the source is cited | every feature carries `source` and `attribution`; `status.json` gives each source's attribution and terms |
 | d | the date of the last update is given | where the source gives one (the DGT and SCT file dates, the Madrid and Salamanca catalogue dates), each record's attribution carries "actualizado" and the date, and `status.json` gives it as `updated`. The Basque, Navarra, Donostia, Murcia and León lists give none; for every source, `status.json` gives `data_time`, when its data was read, and a daily or weekly list carries the days it is valid on (`valid_from`, `valid_to`) |
@@ -99,6 +100,11 @@ each radar's attribution, as where the list was read.
 
 ## Sources added later
 
+OpenStreetMap publishes its notes, anonymous ones included, with the rest of its database at
+https://planet.openstreetmap.org/, where every file published after 12 September 2012 is under ODbL 1.0.
+A note written from an account is a contribution under the OpenStreetMap
+[Contributor Terms](https://osmfoundation.org/wiki/Licence/Contributor_Terms), like a mapped camera.
+
 A source added later carries its own attribution and terms in its module (`sources/<key>.py`), in every
 feature it adds and in `status.json`; it is added to the table of sources in the same change.
 
@@ -106,5 +112,7 @@ The map tiles on the published page are © OpenStreetMap contributors and are no
 
 ## What the feed is
 
-Positions published by the sources above, merged and deduplicated. It warns from published positions
-only and is offered as is, with no warranty: a radar can be missing, moved or out of date.
+Positions published by the sources above, merged and deduplicated, plus the unconfirmed reports of
+`osm_notes` (kind `reported`), which no source has confirmed and which never become a zone. It warns
+from published positions only and is offered as is, with no warranty: a radar can be missing, moved or
+out of date.

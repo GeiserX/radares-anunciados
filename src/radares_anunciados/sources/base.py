@@ -56,6 +56,10 @@ class Source:
     # True: an authority publishes these positions. False: a crowd-sourced map
     # (OSM), whose camera within feed.DUPLICATE_M of an official radar is a copy.
     official: bool = True
+    # False: read only when RADARES_SOURCES names it ("default,osm_notes"). A
+    # source no install needs that puts load on a shared service (the OSM notes
+    # API) is read once, by the published feed.
+    default: bool = True
 
     @property
     def spanish_ip(self) -> bool:
