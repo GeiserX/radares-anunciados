@@ -55,14 +55,14 @@ source, with or without a licence:
 
 | Art. 8 | Condition | How the feed meets it |
 |---|---|---|
-| a | the content, metadata included, is not altered | positions, roads, km, streets, days and limits are published as the source gives them, with street-name abbreviations spelled out. A position is never repaired: a record with broken coordinates is skipped. The feed adds a radius and, for an announced street, circles along it; street geometry and a limit the source does not give come from OpenStreetMap and are credited to it |
+| a | the content, metadata included, is not altered | positions, roads, km, streets, days and limits are published as the source gives them, with street-name abbreviations spelled out. The feed never repairs a position; it skips a record with broken coordinates. The feed adds a radius and, for an announced street, circles along it; street geometry and a limit the source does not give come from OpenStreetMap and are credited to it |
 | b | the meaning is not distorted | each record keeps its kind and the days it is valid on; a street whose period has ended is marked `active: false`, never shown as announced |
 | c | the source is cited | every feature carries `source` and `attribution`; `status.json` gives each source's attribution and terms |
 | d | the date of the last update is given | where the source gives one (the DGT and SCT file dates, the Madrid and Salamanca catalogue dates), each record's attribution carries "actualizado" and the date, and `status.json` gives it as `updated`. For every source, `status.json` gives `data_time`, when its data was read; a daily or weekly list also carries the days it is valid on (`valid_from`, `valid_to`) |
-| e, f | personal data | none: the records are places, roads and dates |
+| e, f | personal data | none; the records are places, roads and dates |
 
-The feed does not say or suggest that any source takes part in it or endorses it (art. 4.9 forbids that
-for the State's bodies).
+The feed does not say or suggest that any source takes part in it or endorses it. Art. 4.9 forbids that
+for the State's bodies.
 
 Two lists reach the feed through a newspaper: Murcia's, through La Opinión de Murcia (Murcia Actualidad
 as a fallback), and León's, on days the council's own post does not cover, through iLeón, whose
