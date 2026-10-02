@@ -18,6 +18,12 @@ from ..model import SourceResult
 from ..provinces import Box
 from ..speed import Radius
 
+# The terms of a public body that publishes no reuse licence (LICENSE-DATA.md).
+PUBLIC_SECTOR_REUSE = (
+    "no reuse licence; the data is reused under Ley 37/2007 on the reuse of public-sector "
+    "information"
+)
+
 
 @dataclass(frozen=True)
 class Context:
@@ -29,6 +35,9 @@ class Context:
     radius: Radius  # use radius.street_m(limit) for the circles along an announced street
     max_age_s: int = 86_400  # the source's own cache age, from its Source entry
     stretch_zones: bool = False  # RADARES_STRETCH_ZONES=on: stretch sources give zones too
+    # RADARES_SPANISH_IP_TIMEOUT: requests to a source's spanish_ip_hosts run under
+    # net.fail_fast(this)
+    spanish_ip_timeout_s: int | None = None
 
 
 @dataclass(frozen=True)
@@ -37,7 +46,9 @@ class Source:
     fetch: Callable[[Context], SourceResult]
     attribution: str
     licence: str
-    spanish_ip: bool = False  # the publisher answers only from a Spanish IP
+    # The publisher's hosts that answer only Spanish addresses (a domain covers its
+    # subdomains). Other hosts the source reads, like Overpass, answer anywhere.
+    spanish_ip_hosts: frozenset[str] = frozenset()
     max_age_s: int = 86_400  # how long a download stays fresh in the cache
     # The provinces it covers (a city's list: its province). None: any. A source
     # is skipped when none of its provinces is selected.
@@ -49,3 +60,8 @@ class Source:
     # source no install needs that puts load on a shared service (the OSM notes
     # API) is read once, by the published feed.
     default: bool = True
+
+    @property
+    def spanish_ip(self) -> bool:
+        """Part of the source answers only from a Spanish IP."""
+        return bool(self.spanish_ip_hosts)

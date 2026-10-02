@@ -84,6 +84,7 @@ def result_to_json(r: SourceResult) -> dict:
         "radars": [radar_to_json(x) for x in r.radars],
         "stretches": [stretch_to_json(x) for x in r.stretches],
         "lists": [list_to_json(x) for x in r.lists],
+        "updated": r.updated,
     }
 
 
@@ -92,6 +93,7 @@ def result_from_json(d: dict) -> SourceResult:
         radars=[radar_from_json(x) for x in d.get("radars", [])],
         stretches=[stretch_from_json(x) for x in d.get("stretches", [])],
         lists=[list_from_json(x) for x in d.get("lists", [])],
+        updated=d.get("updated"),
     )
 
 

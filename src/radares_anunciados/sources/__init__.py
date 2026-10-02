@@ -12,7 +12,7 @@ import time
 from dataclasses import dataclass, replace
 from datetime import date
 
-from .. import store
+from .. import net, store
 from ..model import SourceResult, WeeklyList
 from . import (
     dgt,
@@ -105,7 +105,8 @@ def run(source: Source, ctx: Context, now: float | None = None) -> Outcome:
     ctx = replace(ctx, max_age_s=source.max_age_s)
     key = fingerprint(source, ctx)
     try:
-        result = source.fetch(ctx)
+        with net.fail_fast(ctx.spanish_ip_timeout_s, source.spanish_ip_hosts):
+            result = source.fetch(ctx)
     except Exception as exc:  # a source is never worth a failed run
         last = store.load_result(source.key, key)
         if last is None:

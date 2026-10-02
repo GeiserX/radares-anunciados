@@ -9,7 +9,7 @@ single-quoted. Each named street with a line is covered with circles; a street
 without one is skipped and reported. A plan is valid on its day only; the
 next day its streets go dormant like any periodic list's (``feed.remember``).
 
-The page states no reuse licence.
+Reuse terms: the council's own, as for its fixed radars (``donostia.LICENCE``).
 """
 
 from __future__ import annotations
@@ -25,6 +25,7 @@ from .. import net
 from ..geo import cover
 from ..model import Announced, Radar, SourceResult, WeeklyList
 from .base import Context, Source
+from .donostia import LICENCE
 
 log = logging.getLogger(__name__)
 
@@ -34,7 +35,6 @@ PAGE = (
 )
 SCRIPT = "https://www.donostia.eus/info/ciudadano/radar_movil.nsf/javascript_geo.js"
 ATTRIBUTION = "Ayuntamiento de Donostia / San Sebastián, ubicación del radar móvil"
-LICENCE = "no reuse licence stated on the page"
 PROVINCE = "20"
 PLACE = "Donostia"
 ENCODING = "cp1252"  # the page says ISO-8859-1; browsers read that as windows-1252

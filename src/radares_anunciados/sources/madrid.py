@@ -203,7 +203,7 @@ def parse(payload: bytes, url: str, updated: str | None = None) -> SourceResult:
             )
     if not radars:
         raise ValueError("no radar could be read from the CSV")
-    return SourceResult(radars=_one_per_site(radars), stretches=stretches)
+    return SourceResult(radars=_one_per_site(radars), stretches=stretches, updated=updated)
 
 
 def _one_per_site(radars: list[Radar]) -> list[Radar]:

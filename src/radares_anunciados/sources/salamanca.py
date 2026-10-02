@@ -161,7 +161,7 @@ def parse(payload: bytes, url: str, updated: str | None = None) -> SourceResult:
                 attribution=attribution,
             )
         )
-    return SourceResult(radars=radars, stretches=stretches)
+    return SourceResult(radars=radars, stretches=stretches, updated=updated)
 
 
 def fetch(ctx: Context) -> SourceResult:
@@ -176,7 +176,8 @@ def fetch(ctx: Context) -> SourceResult:
             raise ValueError(f"no radar could be read from {url}")
         radars += part.radars
         stretches += part.stretches
-    return SourceResult(radars=radars, stretches=stretches)
+    days = [day for _, day in layers if day]
+    return SourceResult(radars=radars, stretches=stretches, updated=max(days, default=None))
 
 
 SOURCE = Source(

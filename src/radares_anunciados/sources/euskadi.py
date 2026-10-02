@@ -7,8 +7,9 @@ and a free-text speed limit ("80 km/h", "80 Km/h", "80", "60/80 km/h", "-").
 Each block repeats its popup for the Basque-language page; the first one is the
 Spanish text. The site answers only from a Spanish IP.
 
-No reuse licence is published: the euskadi.eus legal notice reserves the
-content's intellectual property to the Basque Government.
+The Basque Government publishes no reuse licence for it, and the euskadi.eus
+legal notice reserves the site's content. The feed reuses the data under Ley
+37/2007 on the reuse of public-sector information (LICENSE-DATA.md).
 """
 
 from __future__ import annotations
@@ -21,17 +22,14 @@ import unicodedata
 from .. import net
 from ..geo import utm_to_wgs84
 from ..model import Radar, SourceResult
-from .base import Context, Source
+from .base import PUBLIC_SECTOR_REUSE, Context, Source
 
 log = logging.getLogger(__name__)
 
 URL = "https://apps.trafikoa.euskadi.eus/lfr/web/trafikoa/cabinas-de-radar-fijo"
 LEGAL_URL = "https://www.euskadi.eus/informacion/-/informacion-legal"
 ATTRIBUTION = "Gobierno Vasco / Eusko Jaurlaritza, Dirección de Tráfico (Trafikoa)"
-LICENCE = (
-    "no reuse licence published; the euskadi.eus legal notice reserves the content's "
-    f"intellectual property to the Basque Government ({LEGAL_URL})"
-)
+LICENCE = f"{PUBLIC_SECTOR_REUSE}. Its legal notice reserves the site's content: {LEGAL_URL}"
 PROVINCES = {"Araba": "01", "Gipuzkoa": "20", "Bizkaia": "48"}
 UTM_ZONE = 30  # the page draws with wkid ETRS89, coordType UTM
 
@@ -128,7 +126,7 @@ SOURCE = Source(
     fetch=fetch,
     attribution=ATTRIBUTION,
     licence=LICENCE,
-    spanish_ip=True,
+    spanish_ip_hosts=frozenset({"euskadi.eus"}),
     max_age_s=86_400,
     provinces=frozenset(PROVINCES.values()),
 )

@@ -15,15 +15,19 @@ Every radar in the feed keeps its source and that source's license, and the feed
 | `dgt_invive` | DGT mobile-radar stretches, [NAP](https://nap.dgt.es/es/dataset/tramos-invive); lines, zones opt-in (`RADARES_STRETCH_ZONES`) | same |
 | `osm` | [`highway=speed_camera`](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera) nodes and enforcement relations; also the speed-limit lookup (`osm_limits.py`) | ODbL 1.0 |
 | `osm_notes` | open OSM notes reporting a camera: kind `reported`, unconfirmed, never a zone; off by default, the published feed turns it on | ODbL 1.0 |
-| `murcia` | Policía Local weekly list, through the press | no reuse terms published |
+| `murcia` | Policía Local weekly list, through the press | facts only, read in the press |
 | `sct`, `sct_remolc` | Servei Català de Trànsit fixed, section and trailer radars | Llicència oberta d'ús d'informació – Catalunya |
-| `euskadi`, `navarra` | Basque and Navarra government fixed radars (Spanish IP only) | no reuse terms published |
-| `donostia`, `donostia_movil` | Donostia fixed radars and its daily mobile-radar streets | no reuse terms published |
+| `euskadi`, `navarra` | Basque and Navarra government fixed radars (Spanish IP only) | no reuse licence; reused under Ley 37/2007 |
+| `donostia`, `donostia_movil` | Donostia fixed radars and its daily mobile-radar streets | the council's own reuse terms |
 | `madrid`, `salamanca` | city open data, fixed and section radars | CC BY 4.0; GNU FDL |
-| `leon` | León's monthly mobile-radar post, iLeón as a fallback (Spanish IP only) | no reuse terms published; iLeón CC BY-NC 4.0 |
+| `leon` | León's monthly mobile-radar post, iLeón as a fallback (Spanish IP only) | no reuse licence; reused under Ley 37/2007; iLeón CC BY-NC 4.0, facts only |
 
 Cadence, publishers and the places that publish nothing usable: [`docs/sources.md`](docs/sources.md).
-Check a publisher's reuse terms before adding it, and record them in its `Source.licence`.
+Check a publisher's reuse terms before adding it, and record them in its `Source.licence`. A public
+body with no reuse licence gets `PUBLIC_SECTOR_REUSE` (`sources/base.py`) and its legal notice; the
+conditions are in [`LICENSE-DATA.md`](LICENSE-DATA.md#public-bodies-with-no-reuse-licence). Where a
+source gives the date of its last update, put it in each record's attribution and in
+`SourceResult.updated`.
 
 ## The legal line
 
@@ -36,7 +40,7 @@ interferes with a radar signal is out of scope, whoever asks for it.
 ## Layout
 
 - `src/radares_anunciados/sources/`: one module per source (key in the table above). Each exposes
-  `SOURCE = Source(key, fetch, attribution, licence, spanish_ip, max_age_s, provinces, official)` and
+  `SOURCE = Source(key, fetch, attribution, licence, spanish_ip_hosts, max_age_s, provinces, official)` and
   is listed once in `sources/__init__.py`. `official=False` marks a crowd map (OSM): `feed.merge` drops
   its camera within 150 m of a radar from an official source. `fetch(Context)` returns a
   `SourceResult` (radars, stretches, weekly lists) and raises on any failure; the registry then reuses
@@ -53,7 +57,8 @@ interferes with a radar signal is out of scope, whoever asks for it.
 - `metrics.py`: `/metrics` and `/healthz` of `radares run`, standard library only ([`docs/alerting.md`](docs/alerting.md))
 - [`blueprints/radar_zone_alert.yaml`](blueprints/radar_zone_alert.yaml): the automation that sends the alert
 - [`.github/workflows/feed.yml`](.github/workflows/feed.yml): builds `feed.geojson`, `status.json` and the
-  map in [`site/`](site/) every 6 hours and publishes them to GitHub Pages. The data is ODbL
+  map in [`site/`](site/) every 6 hours and publishes them to GitHub Pages, through the steps in
+  [`.github/actions/build-feed`](.github/actions/build-feed/action.yml). The data is ODbL
   ([`LICENSE-DATA.md`](LICENSE-DATA.md)); a new source gets a row there in the same change (a test checks).
 - [`tests/fixtures/`](tests/fixtures/): real pages and responses, trimmed. Tests never touch the network.
 - [`docs/how-it-works.md`](docs/how-it-works.md) explains the design in full.
@@ -86,6 +91,14 @@ interferes with a radar signal is out of scope, whoever asks for it.
 - La Opinión's street list is `ul.ft-list--primary`. A plain `ft-list` on the same page holds headlines.
 - A street or district not found is skipped, never guessed. It is logged, exported as
   `radares_street_skipped` and named in the "Radares actualizados" notification.
+- `feed.yml` publishes from a self-hosted runner in Spain (job `publish`, `schedule` and
+  `workflow_dispatch` only); a pull request builds on `ubuntu-latest` (job `check`). No other job
+  in any workflow targets the self-hosted runner, and none uses `pull_request_target` (a test
+  checks both). That keeps ordinary pull requests off the runner, but a pull request runs its own
+  copy of the workflows, so one that edits them could target it. What stops that: the repository
+  requires approval of every outside contributor's run, and the runner is ephemeral (one job per
+  registration) with no Docker socket.
+- Never approve a run of a fork's pull request without reading its changes under `.github/`.
 - One radar drawn as several circles is named `Radar anunciado …` (police list) or `Radar de tramo …`
   (section). The blueprint alerts once per such name; every other zone alerts on its own, because
   names like OSM's `Radar (límite 50)` repeat across different cameras.
