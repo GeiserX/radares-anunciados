@@ -20,7 +20,7 @@ Every radar in the feed keeps its source and that source's license, and the feed
 | `donostia`, `donostia_movil` | Donostia fixed radars and its daily mobile-radar streets | no reuse terms published |
 | `madrid`, `salamanca` | city open data, fixed and section radars | CC BY 4.0; GNU FDL |
 | `leon` | León's monthly mobile-radar post, iLeón as a fallback (Spanish IP only) | no reuse terms published; iLeón CC BY-NC 4.0 |
-| `barcelona_multas`, `madrid_multas` | places where city traffic fines show cameras and mobile radars stood, months behind | CC BY 4.0 |
+| `barcelona_multas`, `madrid_multas` | places where city traffic fines show mobile radars stood, months behind; Madrid placed by its street register | CC BY 4.0 |
 
 Cadence, publishers and the places that publish nothing usable: [`docs/sources.md`](docs/sources.md).
 Check a publisher's reuse terms before adding it, and record them in its `Source.licence`.
@@ -83,8 +83,10 @@ interferes with a radar signal is out of scope, whoever asks for it.
   first, then search `around` them.
 - An Overpass query that scans a whole city's box asks for `[maxsize:67108864]`. On 2 Oct 2026 four
   queries over Madrid's box answered 504 within 12 s with the default; with 64 MB they answered in 2 to 13 s.
-- A place where fines show a radar on some days only is `mobile_recurring`. It is no copy of a mapped
-  camera (`feed.CAMERAS`), and `ha.select` keeps it after fixed radars and before stretch circles.
+- A place where fines show a mobile radar is `mobile_recurring`, named without counts so its zone stays
+  when a new period arrives. `feed.merge` drops it within 150 m of a camera of any other source and it
+  never drops a camera; with no limit it is sized for 50 km/h; `ha.select` keeps it after fixed radars
+  and before stretch circles.
 - La Opinión's street list is `ul.ft-list--primary`. A plain `ft-list` on the same page holds headlines.
 - A street or district not found is skipped, never guessed. It is logged, exported as
   `radares_street_skipped` and named in the "Radares actualizados" notification.

@@ -28,10 +28,12 @@ Two radars at the same spot become one zone. The DGT lists both directions of a 
 two ends, and the phone has no slots to waste.
 
 Barcelona and Madrid publish every traffic fine as open data, months late. A speed fine names its
-place, so the places that keep fining are where radars stand. A Barcelona place that fined on most days
-of a quarter is a fixed camera; one that fined on fewer is where a mobile radar stood. Madrid writes a
-mobile radar's place as a street and a number, and the source finds that number on OpenStreetMap. A
-mobile radar's place is no camera standing there, so an OpenStreetMap camera beside one keeps its zone.
+place. A place that fines in sessions of a few hours, on scattered days, is where a mobile radar stands;
+one that fines day after day at all hours is a fixed camera and gets no zone from the fines. Madrid
+writes a mobile radar's place as a street and a number, placed at that address in the city's street
+register. A camera that another source publishes or maps within 150 m of such a place already warns
+there, so the place gives no zone. The zone is named after the place alone; how often it fined and in
+which period are in its attribution, so a new quarter or month does not recreate it.
 
 Murcia's police post their weekly list on X as an image. The press prints it as text: one street and district per
 line, such as `Cno. Tiñosa, RM-F6, Los Dolores`. The first part is the street and the last the district.

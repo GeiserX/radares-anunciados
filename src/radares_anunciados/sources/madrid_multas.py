@@ -3,22 +3,25 @@
 Dataset 210104 "Multas de circulación: detalle" on https://datos.madrid.es
 (CC BY 4.0, cited like ``madrid``): one CSV a month with every fine the city
 processed, found through the CKAN API by its "Detalle. <mes> <año>" resource. A
-speed fine names its place; a mobile radar's place is coded as a street number
-and a street, such as ``N378 AV ARAGON``, with no coordinates (fixed cameras are
-coded otherwise and come from ``madrid``). The data runs about seven months
-behind: on 2 Oct 2026 the newest month was February 2026.
+speed fine names its place, without coordinates. A place coded ``N<number>
+<street>`` is a street number ("P.SM.CABEZA_N115" and "PO SANTA MARIA CABEZA,
+115" in the same files). A place coded ``F<number>`` is a lamp post ("F040 AV
+PUERTA DE HIERRO" next to "AV PUERTA DE HIERRO FAROLA 40"); the city publishes
+no lamp post by its number, so those places get no zone. The data runs about
+seven months behind: on 2 Oct 2026 the newest month was February 2026.
 
 A place gets a zone when it fined in ``MIN_MONTHS`` of the last ``MONTHS``
-months. It is placed on OpenStreetMap: its street is matched, by name, against
-the streets mapped around Madrid, then placed at that street's house number, or
-at the nearest number on the same side within ``NUMBER_GAP``, inside Madrid's
-municipal border. A place that cannot be placed that way is skipped and logged,
-never guessed.
+months, in the hours a mobile radar works rather than at all hours. It is placed
+at its number in the city's official street register (dataset 213605, "Relación
+de direcciones vigentes, con coordenadas", CC BY 4.0): the portal point the city
+gives that address. A place whose street or number the register does not hold
+is skipped and logged, never guessed.
 
-Each month's file is about 60 MB. Only what a month says about these places (a
-few kilobytes) is kept, under ``sources/madrid_multas/`` in the cache folder,
-which the published feed keeps between runs, so a month is downloaded once and
-again only when the portal replaces its file.
+Each month's file is about 60 MB and the register about 35 MB; both are read as
+they arrive. What a month says about its places and where each place stands are
+kept, a few kilobytes, under ``sources/madrid_multas/`` in the cache folder,
+which the published feed keeps between runs. So a month is downloaded once, and
+the register only when a new place needs it.
 """
 
 from __future__ import annotations
@@ -33,11 +36,11 @@ import urllib.request
 from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass
+from pathlib import Path
 
 from .. import net
-from ..geo import distance_m
+from ..geo import distance_m, utm_to_wgs84
 from ..model import Radar, SourceResult
-from ..streetnames import expand, same_words, split
 from ..streets import fold
 from .base import Context, Source
 
@@ -47,12 +50,10 @@ PROVINCE = "28"
 DATASET = "210104-0-multas-circulacion-detalle"
 API = f"https://datos.madrid.es/api/3/action/package_show?id={DATASET}"
 URL = f"https://datos.madrid.es/dataset/{DATASET}"
+REGISTER = "213605-0-callejero-oficial-madrid"
+REGISTER_API = f"https://datos.madrid.es/api/3/action/package_show?id={REGISTER}"
 ATTRIBUTION = "Origen de los datos: Ayuntamiento de Madrid (CC BY 4.0)"
-OVERPASS = "https://overpass-api.de/api/interpreter"
-# The municipality of Madrid (OSM relation 5326784: 40.312-40.644, -3.889 to
-# -3.518). (south, west, north, east)
-BBOX = (40.31, -3.89, 40.645, -3.518)
-MAP_AGE_S = 30 * 86_400  # street names and house numbers change slowly
+VERSION = 2  # of the kept month summaries; another one is read again
 
 # Recurrence measured over Sep 2025 to Feb 2026: 124 places coded "N", 91 of them
 # in one month only, 16 in two, 9 in three, 4 in four, 2 in five and 2 in all six.
@@ -61,31 +62,41 @@ MAP_AGE_S = 30 * 86_400  # street names and house numbers change slowly
 # came back, at a cost of the oldest data being about 13 months old.
 MONTHS = 6
 MIN_MONTHS = 2
+# A mobile radar works in sessions of a few hours. Over those six months no recurring "N"
+# place fined in more than 14 distinct hours of the day, all months together; a
+# fixed camera fines at every hour. A place that fines in this many distinct
+# hours within one month is a camera, not a mobile radar's spot.
+CAMERA_HOURS = 18
+# Places of one street this close are one spot (Avenida de Valladolid 51 and 55,
+# 25 m; Juan de Herrera 1, 2 and 6): one zone, at the place with the lowest
+# number, so it stays put while that place is in the data.
+MERGE_M = 200
+# One number can be several points in the register (a portal, a garage, a
+# plot). Farther apart than this, it is no single place: skipped.
+SAME_NUMBER_M = 50
 
 # The place field keeps 20 characters of the street ("ALCALDE SAINZ BARAND"),
 # and a name cut after a space loses that space too: a street written in 19 or
-# 20 characters may continue on the map ("PO GENERAL MARTINEZ" is "Paseo del
+# 20 characters may continue in the register ("PO GENERAL MARTINEZ" is "Paseo del
 # General Martínez Campos").
 CUT_AT = 19
-# Street types as the file writes them; no type is a "Calle".
+# Street types as the fines write them; no type is a "Calle".
 TYPES = {
-    "AV": "Avenida",
-    "CR": "Carretera",
-    "CU": "Cuesta",
-    "GL": "Glorieta",
-    "PO": "Paseo",
-    "PZ": "Plaza",
-    "RD": "Ronda",
+    "AV": "avenida",
+    "CR": "carretera",
+    "CU": "cuesta",
+    "GL": "glorieta",
+    "PO": "paseo",
+    "PZ": "plaza",
+    "RD": "ronda",
+    "TR": "travesia",
 }
-# Not every house number is mapped. A place whose number is not uses the
-# nearest one on the same side of the street, at most this many numbers away
-# (five doorways, about 50 to 150 m, well inside the zone).
-NUMBER_GAP = 10
-# The points one house number is mapped at (a node and a building, or a street
-# that repeats in another district) more than this far apart: not one place.
-SAME_PLACE_M = 200
+WORDS = {"fco": "francisco"}
+SMALL = {"a", "d", "de", "del", "el", "la", "las", "los", "y"}
+ROMAN = {"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII"}
 
 _PLACE = re.compile(r"^N(\d{1,4})(\S*)\s+(\S.*)$")
+_LAMP_POST = re.compile(r"^F(L|\d)")
 MONTH_NAMES = (
     "enero febrero marzo abril mayo junio julio agosto septiembre octubre noviembre diciembre"
 ).split()
@@ -123,19 +134,19 @@ def months(package: bytes) -> list[Month]:
 
 
 def parse_month(lines: Iterable[str]) -> dict[str, dict]:
-    """{place: {"fines": n, "limits": {limit: n}}} for the speed fines at places
-    coded "N<number> <street>". Raises when the header lacks a column it needs
-    or the month holds no speed fine at all (a changed file)."""
+    """{place: {"fines": n, "limits": {limit: n}, "hours": [hour, ...]}} for the
+    speed fines at places coded "N<number> <street>". Raises when the header lacks
+    a column it needs or the month holds no speed fine at all (a changed file)."""
     rows = csv.reader(lines, delimiter=";")
     header = [h.strip() for h in next(rows, [])]
-    needed = ("LUGAR", "VEL_LIMITE", "VEL_CIRCULA")
+    needed = ("LUGAR", "HORA", "VEL_LIMITE", "VEL_CIRCULA")
     if any(c not in header for c in needed):
         raise ValueError(f"fines CSV header lacks {needed}: {header}")
-    where, limit, speed = (header.index(c) for c in needed)
+    where, hour, limit, speed = (header.index(c) for c in needed)
     places: dict[str, dict] = {}
-    speeding = 0
+    speeding = lamp_posts = 0
     for row in rows:
-        if len(row) <= max(where, limit, speed):
+        if len(row) <= max(where, hour, limit, speed):
             continue
         kmh, driven = row[limit].strip(), row[speed].strip()
         if not (kmh.isdigit() and driven.isdigit()):
@@ -143,270 +154,343 @@ def parse_month(lines: Iterable[str]) -> dict[str, dict]:
         speeding += 1
         place = " ".join(row[where].split())
         if not _PLACE.match(place):
+            lamp_posts += bool(_LAMP_POST.match(place))
             continue
-        entry = places.setdefault(place, {"fines": 0, "limits": {}})
+        entry = places.setdefault(place, {"fines": 0, "limits": {}, "hours": []})
         entry["fines"] += 1
         entry["limits"][kmh] = entry["limits"].get(kmh, 0) + 1
+        h = re.match(r"\s*(\d{1,2})[.:]", row[hour])
+        if h and int(h.group(1)) not in entry["hours"]:
+            entry["hours"] = sorted([*entry["hours"], int(h.group(1))])
     if not speeding:
         raise ValueError("the fines CSV holds no speed fine")
+    log.info("madrid_multas: %d speed fines at lamp posts get no zone", lamp_posts)
     return places
 
 
-def _month_path(m: Month):
-    return net.cache_dir() / "sources" / "madrid_multas" / f"{m.year}-{m.month:02d}.json"
+def _folder() -> Path:
+    return net.cache_dir() / "sources" / "madrid_multas"
 
 
-def _download(url: str) -> dict[str, dict]:
-    """Read a month's CSV as it arrives: a whole file in memory is 60 MB."""
-    request = urllib.request.Request(url, headers={"User-Agent": net.USER_AGENT})
-    with urllib.request.urlopen(request, timeout=300) as response:
-        return parse_month(io.TextIOWrapper(response, encoding="latin-1", newline=""))
-
-
-def month_places(m: Month) -> dict[str, dict]:
-    """A month's places, from the kept summary while the portal's file is the same."""
-    path = _month_path(m)
-    try:
-        kept = json.loads(path.read_text("utf-8"))
-        if kept.get("resource") == m.resource and kept.get("modified") == m.modified:
-            return kept["places"]
-    except FileNotFoundError:
-        pass
-    except (OSError, ValueError, KeyError) as exc:
-        log.warning("ignoring a damaged summary of %s: %s", m.label(), exc)
-    places = _download(m.url)
-    data = {"resource": m.resource, "modified": m.modified, "places": places}
+def _keep(path: Path, data: dict) -> None:
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".tmp")
         tmp.write_text(json.dumps(data, ensure_ascii=False), "utf-8")
         tmp.replace(path)
     except OSError as exc:  # an unwritable cache must not fail a download that worked
-        log.warning("could not keep the summary of %s: %s", m.label(), exc)
+        log.warning("could not keep %s: %s", path, exc)
+
+
+def _stream(url: str):
+    """A CSV as text as it arrives: a whole file in memory would be 35 to 60 MB."""
+    request = urllib.request.Request(url, headers={"User-Agent": net.USER_AGENT})
+    response = urllib.request.urlopen(request, timeout=300)
+    return io.TextIOWrapper(response, encoding="latin-1", newline="")
+
+
+def _download(url: str) -> dict[str, dict]:
+    with _stream(url) as text:
+        return parse_month(text)
+
+
+def month_places(m: Month) -> dict[str, dict]:
+    """A month's places, from the kept summary while the portal's file is the same."""
+    path = _folder() / f"{m.year}-{m.month:02d}.json"
+    try:
+        kept = json.loads(path.read_text("utf-8"))
+        if (kept.get("version"), kept.get("resource"), kept.get("modified")) == (
+            VERSION,
+            m.resource,
+            m.modified,
+        ):
+            return kept["places"]
+    except FileNotFoundError:
+        pass
+    except (OSError, ValueError, KeyError) as exc:
+        log.warning("ignoring a damaged summary of %s: %s", m.label(), exc)
+    places = _download(m.url)
+    _keep(
+        path, {"version": VERSION, "resource": m.resource, "modified": m.modified, "places": places}
+    )
     return places
 
 
-# ---- the map --------------------------------------------------------------
-
-
-def _quote(text: str) -> str:
-    return text.replace("\\", "\\\\").replace('"', '\\"')
-
-
-# Every street name mapped in BBOX, one element per name (about 14,500, 1.3 MB).
-# A smaller maxsize than Overpass's default gets a slot when it is busy.
-_HEAD = "[out:json][timeout:90][maxsize:67108864][bbox:{},{},{},{}];".format(*BBOX)
-NAMES_QUERY = _HEAD + 'way["highway"]["name"];for (t["name"]) { make street name=_.val; out; }'
-
-
-def addresses_query(names: list[str]) -> str:
-    """The house numbers mapped on these streets, and Madrid's border. An exact
-    name is an index lookup; a name regex over the municipality times out."""
-    wanted = "".join(f'nwr["addr:street"="{_quote(n)}"]["addr:housenumber"];' for n in names)
-    border = 'relation["boundary"="administrative"]["admin_level"="8"]["name"="Madrid"];'
-    return f"{_HEAD}({wanted});out center;{border}out geom;"
-
-
-def written(street: str) -> tuple[str | None, tuple[str, ...]]:
-    """'AV FCO J SAENZ OIZA' -> ('avenida', ('francisco', 'j', 'saenz', 'oiza'))."""
-    first, _, rest = street.partition(" ")
-    text = f"{TYPES[first]} {rest}" if first in TYPES and rest else f"Calle {street}"
-    return split(expand(text))
-
-
-def matches(street: str, names: list[str]) -> list[str]:
-    """The mapped names ``street`` can be: the same words (an initial matches a
-    word; a street cut at CUT_AT may continue) and the same street type. A street
-    written with no type is a Calle, or a name mapped with none ("Gran Vía")."""
-    kind, words = written(street)
-    if not words:
-        return []
-    types = {kind} if street.partition(" ")[0] in TYPES else {kind, None}
-    cut = len(street) >= CUT_AT
-    found = set()
-    for name in names:
-        mapped_kind, mapped = split(name)
-        if mapped_kind not in types:
-            continue
-        if cut and len(mapped) > len(words):
-            mapped = mapped[: len(words)]
-        if cut and mapped and mapped[-1].startswith(words[-1]):
-            mapped = (*mapped[:-1], words[-1])
-        if same_words(words, mapped):
-            found.add(name)
-    return sorted(found)
+# ---- the street register ----------------------------------------------------
 
 
 @dataclass(frozen=True)
-class Address:
-    street: str
-    number: int
-    point: tuple[float, float]
+class Street:
+    kind: str  # "calle", folded
+    name: str  # "josefa valcarcel", folded
+    label: str  # "Calle de Josefa Valcárcel"
 
 
-class AddressMap:
-    """The house numbers of the queried streets that lie inside Madrid."""
-
-    def __init__(self, overpass_json: bytes):
-        elements = json.loads(overpass_json).get("elements", [])
-        border = [
-            ((a["lat"], a["lon"]), (b["lat"], b["lon"]))
-            for e in elements
-            if e["type"] == "relation"
-            for m in e.get("members", [])
-            if m.get("role") in ("outer", "inner") and m.get("geometry")
-            for a, b in zip(m["geometry"], m["geometry"][1:], strict=False)
-            if a and b
-        ]
-        if not border:
-            raise OSError("the map of Madrid came without the municipality's border")
-        self.by_street: dict[str, list[Address]] = {}
-        for e in elements:
-            tags = e.get("tags", {})
-            point = (e["lat"], e["lon"]) if "lat" in e else e.get("center")
-            if isinstance(point, dict):
-                point = (point["lat"], point["lon"])
-            number = re.match(r"\d+", tags.get("addr:housenumber", ""))
-            if point and number and _inside(border, *point):
-                street = tags["addr:street"]
-                self.by_street.setdefault(street, []).append(
-                    Address(street, int(number.group()), point)
-                )
-
-    def find(self, names: list[str], number: int) -> tuple[Address, ...]:
-        """The mapped addresses at ``number``, or at the nearest number on the same
-        side within NUMBER_GAP. () when there is none."""
-        mapped = [a for n in names for a in self.by_street.get(n, [])]
-        side = [a for a in mapped if a.number % 2 == number % 2]
-        gaps = [abs(a.number - number) for a in side if abs(a.number - number) <= NUMBER_GAP]
-        if not gaps:
-            return ()
-        return tuple(a for a in side if abs(a.number - number) == min(gaps))
+def _words(text: str) -> tuple[str, ...]:
+    return tuple(WORDS.get(w, w) for w in fold(text).split() if w not in SMALL)
 
 
-def _inside(border, lat: float, lon: float) -> bool:
-    inside = False
-    for (y1, x1), (y2, x2) in border:
-        if (y1 > lat) != (y2 > lat) and lon < x1 + (lat - y1) * (x2 - x1) / (y2 - y1):
-            inside = not inside
-    return inside
+def written(street: str) -> tuple[str, tuple[str, ...]]:
+    """'AV FCO J SAENZ OIZA' -> ('avenida', ('francisco', 'j', 'saenz', 'oiza'))."""
+    first, _, rest = street.partition(" ")
+    if first in TYPES and rest:
+        return TYPES[first], _words(rest)
+    return "calle", _words(street)
+
+
+def same_street(street: str, kind: str, name: str) -> bool:
+    """Whether the fines' ``street`` can be the register's street: same type, the
+    same words (a written initial matches a word; a name cut at CUT_AT may
+    continue), and one word written in full."""
+    want_kind, words = written(street)
+    mapped = _words(name)
+    if kind != want_kind or not words:
+        return False
+    cut = len(street) >= CUT_AT
+    if cut:
+        mapped = mapped[: len(words)]
+    if len(mapped) != len(words):
+        return False
+    for i, (a, b) in enumerate(zip(words, mapped, strict=True)):
+        last = cut and i == len(words) - 1
+        if a != b and not ((len(a) == 1 or last) and b.startswith(a)):
+            return False
+    return any(a == b for a, b in zip(words, mapped, strict=True))
+
+
+def _label(clase: str, particle: str, name: str) -> str:
+    """'CALLE', 'DEL', 'ALFONSO XII' -> 'Calle del Alfonso XII'."""
+    words = []
+    for w in name.split():
+        if w in ROMAN:
+            words.append(w)
+        elif fold(w) in SMALL:
+            words.append(w.lower())
+        else:
+            words.append(w.capitalize() if "'" not in w else w.title())
+    return " ".join(p for p in (clase.capitalize(), particle.lower(), " ".join(words)) if p)
+
+
+def register_csv(package: bytes) -> tuple[str, str]:
+    """(URL, last change) of the register's current addresses with coordinates."""
+    data = json.loads(package)
+    if not data.get("success"):
+        raise ValueError(f"CKAN package_show for {REGISTER} did not succeed")
+    for r in data["result"].get("resources", []):
+        desc = fold(str(r.get("description", "")))
+        if "direcciones vigentes" in desc and "coordenadas" in desc and r.get("format") == "CSV":
+            return r["url"], str(r.get("last_modified") or "")
+    raise ValueError(f"no current addresses CSV in {REGISTER}")
+
+
+def read_register(lines: Iterable[str], numbers: set[int]) -> tuple[list[Street], dict]:
+    """Every street of the register, and the points of the wanted ``numbers``:
+    {(kind, name, number): [(qualifier, type, (lat, lon))]}."""
+    streets: dict[tuple[str, str], Street] = {}
+    points: dict[tuple[str, str, int], list] = {}
+    for row in csv.DictReader(lines, delimiter=";"):
+        kind, name = fold(row["VIA_CLASE"]), fold(row["VIA_NOMBRE"])
+        if (kind, name) not in streets:
+            label = _label(row["VIA_CLASE"], row["VIA_PAR"], row["VIA_NOMBRE_ACENTOS"])
+            streets[kind, name] = Street(kind, name, label)
+        number = row["NUMERO"].strip()
+        if (
+            row["CLASE_APP"].strip() != "NUMERO"
+            or not number.isdigit()
+            or int(number) not in numbers
+        ):
+            continue
+        x, y = (float(row[c].replace(",", ".")) for c in ("UTMX_ETRS", "UTMY_ETRS"))
+        point = utm_to_wgs84(x, y, 30)
+        entry = (row["CALIFICADOR"].strip(), row["TIPO_NDP"].strip(), point)
+        points.setdefault((kind, name, int(number)), []).append(entry)
+    if not streets:
+        raise ValueError("the street register holds no address")
+    return list(streets.values()), points
+
+
+def locate(place: str, streets: list[Street], points: dict) -> tuple[Street, tuple] | str:
+    """(street, (lat, lon)) of a place, or why it cannot be placed."""
+    m = _PLACE.match(place)
+    number, suffix, written_street = int(m.group(1)), m.group(2), m.group(3)
+    if not number or suffix:
+        return f"{number}{suffix} is no house number"
+    found = [s for s in streets if same_street(written_street, s.kind, s.name)]
+    if len(found) != 1:
+        return "street not in the register" if not found else "several streets match"
+    street = found[0]
+    rows = points.get((street.kind, street.name, number), [])
+    plain = [r for r in rows if not r[0]] or rows
+    chosen = [p for q, t, p in plain if t == "PORTAL"] or [p for _, _, p in plain]
+    if not chosen:
+        return f"no number {number} in the register"
+    if max(distance_m(a, b) for a in chosen for b in chosen) > SAME_NUMBER_M:
+        return f"number {number} is several places in the register"
+    lat = math.fsum(p[0] for p in chosen) / len(chosen)
+    lon = math.fsum(p[1] for p in chosen) / len(chosen)
+    return street, (round(lat, 7), round(lon, 7))
 
 
 # ---- the radars -------------------------------------------------------------
 
 
-@dataclass
-class Placement:
-    """How the recurring places of one run were placed, for the log."""
-
-    places: int = 0  # distinct places in the window
-    recurring: int = 0
-    by_number: int = 0
-    by_neighbour: int = 0
-    skipped: list[str] | None = None
-
-
 def recurring(window: list[dict[str, dict]]) -> dict[str, tuple[int, Counter]]:
-    """{place: (months it fined in, fines by limit)} for the places in MIN_MONTHS."""
+    """{place: (months it fined in, fines by limit)} for the places that fined in
+    MIN_MONTHS months and never at camera hours."""
     seen: dict[str, tuple[int, Counter]] = {}
+    camera: set[str] = set()
     for places in window:
         for place, entry in places.items():
             n, limits = seen.get(place, (0, Counter()))
             seen[place] = (n + 1, limits + Counter(entry["limits"]))
-    return {p: v for p, v in seen.items() if v[0] >= MIN_MONTHS}
+            if len(entry["hours"]) >= CAMERA_HOURS:
+                camera.add(place)
+    for place in sorted(camera):
+        log.info(
+            "madrid_multas: %s fines at %d hours or more, like a camera; no zone",
+            place,
+            CAMERA_HOURS,
+        )
+    return {p: v for p, v in seen.items() if v[0] >= MIN_MONTHS and p not in camera}
+
+
+def place_all(wanted: list[str], kept: dict, register: tuple[str, str] | None, read) -> dict:
+    """Records for the ``wanted`` places: a kept one as it was (its position and
+    limit never move while it is kept), the others from the register, read with
+    ``read(url, numbers)`` only when one is missing."""
+    records = dict(kept.get("places", {}))
+    url, modified = register or ("", "")
+    todo = [
+        p
+        for p in wanted
+        if p not in records or ("skip" in records[p] and records[p].get("register") != modified)
+    ]
+    if todo and register is not None:
+        numbers = {int(_PLACE.match(p).group(1)) for p in todo}
+        streets, points = read(url, numbers)
+        for p in todo:
+            where = locate(p, streets, points)
+            if isinstance(where, str):
+                records[p] = {"skip": where, "register": modified}
+            else:
+                street, (lat, lon) = where
+                records[p] = {
+                    "street": street.label,
+                    "key": [street.kind, street.name],
+                    "number": int(_PLACE.match(p).group(1)),
+                    "lat": lat,
+                    "lon": lon,
+                }
+    return records
 
 
 def to_radars(
     window: list[Month],
     places: dict[str, tuple[int, Counter]],
-    names: list[str],
-    addresses: AddressMap,
-    stats: Placement,
+    records: dict,
+    in_months: dict[str, set[int]],
     updated: str | None = None,
-) -> list[Radar]:
-    period = f"{window[0].label()} a {window[-1].label()}"
-    attribution = (
-        f"{ATTRIBUTION}, multas de circulación de {period}, lugares con multas en "
-        f"{MIN_MONTHS} meses o más"
+) -> tuple[list[Radar], list[str]]:
+    """One radar per spot, and the places skipped. Places of one street within
+    MERGE_M of each other (in a chain) are one spot, at the lowest number."""
+    placed = sorted(
+        (p for p in places if "lat" in records.get(p, {})),
+        key=lambda p: (records[p]["key"], records[p]["number"], p),
     )
-    if updated:
-        attribution += f", actualizado {updated}"
-    attribution += "; posición © OpenStreetMap"
-    stats.skipped = []
-    radars: list[Radar] = []
-    for place, (seen, limits) in sorted(places.items()):
-        m = _PLACE.match(place)
-        number, suffix, street = int(m.group(1)), m.group(2), m.group(3)
-        candidates = matches(street, names)
-        found = addresses.find(candidates, number) if number and not suffix else ()
-        points = [a.point for a in found]
-        why = ""
-        if not candidates:
-            why = "street not on the map"
-        elif not found:
-            why = f"no house number mapped within {NUMBER_GAP} of {number}{suffix}"
-        elif max(distance_m(a, b) for a in points for b in points) > SAME_PLACE_M:
-            why = "house number mapped at several places"
-        if why:
-            log.warning("madrid_multas: could not place %s (%s); skipped", place, why)
-            stats.skipped.append(place)
-            continue
-        if found[0].number == number:
-            stats.by_number += 1
+    skipped = sorted(p for p in places if p not in placed)
+    for p in skipped:
+        why = records.get(p, {}).get("skip", "street register not read")
+        log.warning("madrid_multas: could not place %s (%s); skipped", p, why)
+    groups: list[list[str]] = []
+    for p in placed:
+        r = records[p]
+        near = [
+            g
+            for g in groups
+            if any(
+                records[q]["key"] == r["key"]
+                and distance_m((records[q]["lat"], records[q]["lon"]), (r["lat"], r["lon"]))
+                <= MERGE_M
+                for q in g
+            )
+        ]
+        for g in near[1:]:
+            near[0].extend(g)
+            groups.remove(g)
+        if near:
+            near[0].append(p)
         else:
-            stats.by_neighbour += 1
-        lat = math.fsum(p[0] for p in points) / len(points)
-        lon = math.fsum(p[1] for p in points) / len(points)
-        label = Counter(a.street for a in found).most_common(1)[0][0]
-        limit = max(limits, key=lambda k: (limits[k], int(k)))
+            groups.append([p])
+    attribution = (
+        f"{ATTRIBUTION}: multas de circulación de {window[0].label()} a {window[-1].label()}"
+        + (f", actualizado {updated}" if updated else "")
+        + ", y callejero oficial"
+    )
+    radars = []
+    for group in groups:
+        first = min(group, key=lambda p: (records[p]["number"], p))
+        r = records[first]
+        if len(group) > 1:
+            log.info("madrid_multas: %s takes in %s", first, sorted(set(group) - {first}))
+        seen = len(set().union(*(in_months[p] for p in group)))
         radars.append(
             Radar(
-                id=f"madrid_multas-{fold(place).replace(' ', '-')}",
+                id=f"madrid_multas-{fold(first).replace(' ', '-')}",
                 source="madrid_multas",
                 kind="mobile_recurring",
-                name=f"Radar móvil frecuente {label} {number} ({seen} meses de {len(window)})",
-                lat=lat,
-                lon=lon,
+                name=f"Radar móvil frecuente {r['street']} {r['number']}",
+                lat=r["lat"],
+                lon=r["lon"],
                 radius_m=500,
                 url=URL,
-                attribution=attribution,
-                maxspeed=int(limit),
+                attribution=f"{attribution}; multas aquí en {seen} de {len(window)} meses",
+                maxspeed=r.get("limit"),
                 province=PROVINCE,
             )
         )
-    return radars
+    return radars, skipped
+
+
+def _read_register(url: str, numbers: set[int]):
+    with _stream(url) as text:
+        return read_register(text, numbers)
 
 
 def fetch(ctx: Context) -> SourceResult:
-    package = net.cached_get(API, max_age_s=ctx.max_age_s)
-    updated = str(json.loads(package)["result"].get("modified") or "")[:10] or None
-    window = months(package)[-MONTHS:]
+    window = months(net.cached_get(API, max_age_s=ctx.max_age_s))[-MONTHS:]
     month_data = [month_places(m) for m in window]
     places = recurring(month_data)
-    stats = Placement(len(set().union(*month_data)), len(places))
-    check = net.overpass_answer
-    names_json = net.cached_get(
-        OVERPASS, {"data": NAMES_QUERY}, max_age_s=MAP_AGE_S, validate=check
-    )
-    names = sorted({e["tags"]["name"] for e in json.loads(names_json)["elements"]})
-    wanted = sorted({n for p in places for n in matches(_PLACE.match(p).group(3), names)})
-    addresses = AddressMap(
-        net.cached_get(
-            OVERPASS, {"data": addresses_query(wanted)}, max_age_s=MAP_AGE_S, validate=check
-        )
-    )
-    radars = to_radars(window, places, names, addresses, stats, updated)
+    in_months = {p: {i for i, d in enumerate(month_data) if p in d} for p in places}
+    path = _folder() / "places.json"
+    try:
+        kept = json.loads(path.read_text("utf-8"))
+    except FileNotFoundError:
+        kept = {}
+    except (OSError, ValueError) as exc:
+        log.warning("ignoring the damaged kept places of Madrid: %s", exc)
+        kept = {}
+    records = kept.get("places", {})
+    missing = [p for p in places if p not in records or "skip" in records[p]]
+    register = None
+    if missing:
+        register = register_csv(net.cached_get(REGISTER_API, max_age_s=ctx.max_age_s))
+    records = place_all(sorted(places), kept, register, _read_register)
+    for p, (_, limits) in places.items():
+        # the limit a place is first placed with stays, so its zone does not move
+        if "lat" in records[p] and "limit" not in records[p]:
+            records[p]["limit"] = int(max(limits, key=lambda k: (limits[k], int(k))))
+    _keep(path, {"places": records})
+    updated = window[-1].modified[:10] or None
+    radars, skipped = to_radars(window, places, records, in_months, updated)
     log.info(
-        "madrid_multas: %s to %s, %d places, %d in %d months or more: %d placed by house "
-        "number, %d by a neighbouring number, %d skipped",
+        "madrid_multas: %s to %s, %d places in %d months or more: %d placed, %d skipped, %d zones",
         window[0].label(),
         window[-1].label(),
-        stats.places,
-        stats.recurring,
+        len(places),
         MIN_MONTHS,
-        stats.by_number,
-        stats.by_neighbour,
-        len(stats.skipped or []),
+        len(places) - len(skipped),
+        len(skipped),
+        len(radars),
     )
     if not radars:
         raise ValueError("no recurring place of the Madrid fines could be placed")
@@ -416,8 +500,8 @@ def fetch(ctx: Context) -> SourceResult:
 SOURCE = Source(
     key="madrid_multas",
     fetch=fetch,
-    attribution=ATTRIBUTION + ", multas de circulación: detalle; posición © OpenStreetMap",
-    licence="CC BY 4.0. Geometry: ODbL 1.0",
+    attribution=ATTRIBUTION + ": multas de circulación (detalle) y callejero oficial",
+    licence="CC BY 4.0",
     max_age_s=7 * 86_400,  # a new month appears about once a month
     provinces=frozenset({PROVINCE}),
 )

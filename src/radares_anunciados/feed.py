@@ -39,14 +39,18 @@ def merge(radars: list[Radar], day: date) -> list[Radar]:
     """Radars in force on ``day`` and dormant ones, active first, then by id,
     without duplicates.
 
-    Dropped: mapped cameras that copy an official radar, and any radar at exactly the
-    spot of one already kept (the DGT lists both directions of a section with
-    the same two end points). The phone watches only 20 zones; two at one spot
-    waste one. A dormant circle under an active one gives way to it.
+    Dropped: mapped cameras that copy an official radar, a place where fines show
+    a mobile radar (``mobile_recurring``) within DUPLICATE_M of a camera of another
+    source, official or mapped (the camera already warns there, with its own
+    limit), and any radar at exactly the spot of one already kept (the DGT lists
+    both directions of a section with the same two end points). The phone watches
+    only 20 zones; two at one spot waste one. A dormant circle under an active one
+    gives way to it.
     """
     wanted = (r for r in radars if not r.active or r.active_on(day))
     ordered = sorted(wanted, key=lambda r: (not r.active, r.id))
     official = [r for r in ordered if _official(r)]
+    cameras = [r for r in ordered if r.kind in CAMERAS]
     kept: list[Radar] = []
     spots: set[tuple[float, float]] = set()
     for r in ordered:
@@ -55,6 +59,11 @@ def merge(radars: list[Radar], day: date) -> list[Radar]:
             continue
         if _mapped(r) and any(
             distance_m((r.lat, r.lon), (o.lat, o.lon)) <= DUPLICATE_M for o in official
+        ):
+            continue
+        if r.kind == "mobile_recurring" and any(
+            c.source != r.source and distance_m((r.lat, r.lon), (c.lat, c.lon)) <= DUPLICATE_M
+            for c in cameras
         ):
             continue
         spots.add(spot)
