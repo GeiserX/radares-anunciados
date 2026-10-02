@@ -397,4 +397,4 @@ def test_registry_terms_of_the_new_sources():
         assert reg[key].attribution and reg[key].licence
     # skipped outside their provinces
     selected = sources.selected(None, frozenset({"31"}))
-    assert [s.key for s in selected] == ["dgt", "osm", "dgt_invive", "navarra"]
+    assert [s.key for s in selected] == ["dgt", "osm", "osm_notes", "dgt_invive", "navarra"]

@@ -36,6 +36,7 @@ def test_every_source_is_registered_with_its_terms():
     assert list(sources.REGISTRY) == [
         "dgt",
         "osm",
+        "osm_notes",
         "murcia",
         "sct",
         "sct_remolc",
@@ -59,12 +60,30 @@ def test_every_source_is_registered_with_its_terms():
 
 def test_selected_sources():
     keys = lambda found: [s.key for s in found]  # noqa: E731
-    assert keys(sources.selected(None, frozenset({"30"}))) == ["dgt", "osm", "murcia", "dgt_invive"]
+    assert keys(sources.selected(None, frozenset({"30"}))) == [
+        "dgt",
+        "osm",
+        "osm_notes",
+        "murcia",
+        "dgt_invive",
+    ]
     assert keys(sources.selected(["osm", "dgt"], None)) == ["dgt", "osm"]
     # a city list outside the selected provinces is not fetched
-    assert keys(sources.selected(None, frozenset({"28"}))) == ["dgt", "osm", "dgt_invive", "madrid"]
+    assert keys(sources.selected(None, frozenset({"28"}))) == [
+        "dgt",
+        "osm",
+        "osm_notes",
+        "dgt_invive",
+        "madrid",
+    ]
     # DGT runs no mobile-radar stretches in Catalonia
-    assert keys(sources.selected(None, frozenset({"08"}))) == ["dgt", "osm", "sct", "sct_remolc"]
+    assert keys(sources.selected(None, frozenset({"08"}))) == [
+        "dgt",
+        "osm",
+        "osm_notes",
+        "sct",
+        "sct_remolc",
+    ]
     assert keys(sources.selected(None, None)) == list(sources.REGISTRY)
     with pytest.raises(ValueError, match="nope"):
         sources.selected(["dgt", "nope"], None)

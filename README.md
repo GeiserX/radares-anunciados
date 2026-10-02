@@ -15,7 +15,7 @@ Radares Anunciados is a Docker service that gathers the speed radars announced i
 - One GeoJSON feed with every announced radar, each point tagged with its source and license
 - The mobile-radar lists that councils publish: Murcia (weekly), León (monthly, every day) and Donostia (daily)
 - Fixed, section and mobile-stretch radars from the DGT, the Servei Català de Trànsit, the Basque and Navarra governments, and the cities of Madrid, Salamanca and Donostia
-- Speed cameras mapped in [OpenStreetMap](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera)
+- Speed cameras and average-speed sections mapped in [OpenStreetMap](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera), and the open OpenStreetMap notes that report a new one, shown on the map as unconfirmed and never turned into zones
 - Home Assistant zones kept in sync with the radars around you, for alerts through the companion app
 - Warns from published positions only; it never senses or jams a radar signal
 
@@ -61,7 +61,7 @@ addresses shows as `missing` there. [How it works](docs/how-it-works.md#the-publ
 | [Servei Català de Trànsit](https://transit.gencat.cat/ca/seguretat_viaria/cinemometres-fixos-trams-mobils/): fixed, section and trailer radars | Llicència oberta d'ús d'informació – Catalunya |
 | [Madrid](https://datos.madrid.es/dataset/300049-0-radares-fijos-moviles) and [Salamanca](https://opendata.aytosalamanca.es/datosabiertos/catalogo/dataset/radares-fijos) open data | CC BY 4.0; GNU FDL |
 | Basque and Navarra governments, Donostia, Murcia and León councils | no reuse terms published |
-| [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors: cameras, speed limits, street geometry | ODbL 1.0 |
+| [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors: cameras, sections, notes, speed limits, street geometry | ODbL 1.0 |
 
 The full table, with cadence and which sources need a Spanish IP, is in [docs/sources.md](docs/sources.md).
 

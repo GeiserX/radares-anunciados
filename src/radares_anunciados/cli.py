@@ -35,7 +35,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 
 from . import feed, ha, metrics, provinces, sources, speed, store
-from .model import Radar, Stretch, today_in_spain
+from .model import REPORTED, Radar, Stretch, today_in_spain
 from .sources import Context, Outcome
 from .streets import Announced, WeeklyList
 
@@ -138,7 +138,8 @@ def collect(day: date, save_history: bool = True) -> Collected:
         if r.source in keys_run
         and (ctx.provinces is None or r.province is None or r.province in ctx.provinces)
     ]
-    return Collected(feed.merge(radars + remembered, day), lists, stretches, outcomes)
+    merged = feed.merge(radars + remembered, day)
+    return Collected(merged, lists, feed.merge_stretches(stretches, merged), outcomes)
 
 
 def _iso(ts: float | None) -> str | None:
@@ -150,7 +151,8 @@ def _iso(ts: float | None) -> str | None:
 def status(found: Collected, now: float) -> dict:
     """What the published feed is made of, per source: "ok" (fetched this run),
     "stale" (this run failed; its last good result is in the feed, from
-    ``data_time``) or "missing" (never fetched here; it adds nothing)."""
+    ``data_time``) or "missing" (never fetched here; it adds nothing). Places
+    people report and no source publishes count as ``reported``, not as radars."""
     in_feed: dict[str, int] = {}
     for item in [*found.radars, *found.stretches]:
         in_feed[item.source] = in_feed.get(item.source, 0) + 1
@@ -158,12 +160,14 @@ def status(found: Collected, now: float) -> dict:
     for o in found.outcomes:
         source = sources.REGISTRY[o.key]
         state = "ok" if o.up else "stale" if o.fetched_at is not None else "missing"
+        reported = sum(r.kind == REPORTED for r in o.result.radars)
         rows.append(
             {
                 "source": o.key,
                 "status": state,
-                "radars": len(o.result.radars),
+                "radars": len(o.result.radars) - reported,
                 "stretches": len(o.result.stretches),
+                "reported": reported,
                 "in_feed": in_feed.get(o.key, 0),
                 "data_time": _iso(o.fetched_at),
                 "error": o.error[:300],
@@ -175,6 +179,7 @@ def status(found: Collected, now: float) -> dict:
     return {
         "generated": _iso(now),
         "features": len(found.radars) + len(found.stretches),
+        "reported": sum(r.kind == REPORTED for r in found.radars),
         "sources": rows,
     }
 
@@ -277,11 +282,13 @@ def main(argv: list[str] | None = None) -> int:
             report = status(found, time.time())
             for row in report["sources"]:
                 log.info(
-                    "source %s: %s, %d radars, %d stretches, %d in the feed, data from %s%s",
+                    "source %s: %s, %d radars, %d stretches, %d reported, %d in the feed,"
+                    " data from %s%s",
                     row["source"],
                     row["status"],
                     row["radars"],
                     row["stretches"],
+                    row["reported"],
                     row["in_feed"],
                     row["data_time"] or "never",
                     f" ({row['error']})" if row["error"] else "",

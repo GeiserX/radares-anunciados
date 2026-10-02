@@ -46,9 +46,8 @@ def radar_to_json(r: Radar) -> dict:
 def radar_from_json(d: dict) -> Radar:
     known = {f.name for f in fields(Radar)}
     d = {k: v for k, v in d.items() if k in known}
-    return Radar(
-        **{**d, "valid_from": _date(d.get("valid_from")), "valid_to": _date(d.get("valid_to"))}
-    )
+    dates = {k: _date(d.get(k)) for k in ("valid_from", "valid_to", "reported")}
+    return Radar(**{**d, **dates})
 
 
 def stretch_to_json(s: Stretch) -> dict:

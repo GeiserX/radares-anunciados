@@ -1,0 +1,757 @@
+{
+ "version": 0.6,
+ "generator": "Overpass API 0.7.62.11 87bfad18",
+ "osm3s": {
+  "timestamp_osm_base": "2026-10-02T08:59:46Z",
+  "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+ },
+ "elements": [
+  {
+   "type": "node",
+   "id": 36406772,
+   "lat": 42.8562036,
+   "lon": 1.6011866
+  },
+  {
+   "type": "node",
+   "id": 36406777,
+   "lat": 42.8581125,
+   "lon": 1.6017267
+  },
+  {
+   "type": "node",
+   "id": 243763806,
+   "lat": 40.4681507,
+   "lon": -3.4308419
+  },
+  {
+   "type": "node",
+   "id": 306024146,
+   "lat": 38.0975862,
+   "lon": -0.7226808
+  },
+  {
+   "type": "node",
+   "id": 306024148,
+   "lat": 38.0970975,
+   "lon": -0.7206383
+  },
+  {
+   "type": "node",
+   "id": 370318912,
+   "lat": 40.4680418,
+   "lon": -3.4263455
+  },
+  {
+   "type": "node",
+   "id": 615705016,
+   "lat": 36.5205952,
+   "lon": -6.2293916
+  },
+  {
+   "type": "node",
+   "id": 992002534,
+   "lat": 41.6192295,
+   "lon": -0.949505,
+   "tags": {
+    "highway": "speed_camera",
+    "maxspeed": "120",
+    "note": "radar de tramo"
+   }
+  },
+  {
+   "type": "node",
+   "id": 992004847,
+   "lat": 38.0975026,
+   "lon": -0.7221708,
+   "tags": {
+    "highway": "speed_camera",
+    "maxspeed": "90",
+    "note": "F090 A300 CV-91 Km 19.1 Rojales DIR Orihuela CLAV"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1227607591,
+   "lat": 37.9665474,
+   "lon": -0.6999856
+  },
+  {
+   "type": "node",
+   "id": 1976460257,
+   "lat": 42.8571101,
+   "lon": 1.6012853,
+   "tags": {
+    "highway": "speed_camera"
+   }
+  },
+  {
+   "type": "node",
+   "id": 2378266882,
+   "lat": 41.6087959,
+   "lon": -0.9155533,
+   "tags": {
+    "direction": "280",
+    "highway": "speed_camera",
+    "maxspeed": "120",
+    "note": "radar de tramo",
+    "source": "survey"
+   }
+  },
+  {
+   "type": "node",
+   "id": 2378267338,
+   "lat": 43.4930099,
+   "lon": -8.1570102,
+   "tags": {
+    "direction": "330",
+    "highway": "speed_camera",
+    "maxspeed": "90",
+    "source": "Survey"
+   }
+  },
+  {
+   "type": "node",
+   "id": 5097456924,
+   "lat": 36.5212246,
+   "lon": -6.2743131
+  },
+  {
+   "type": "node",
+   "id": 6203468146,
+   "lat": 40.4001131,
+   "lon": -3.7637473,
+   "tags": {
+    "description": "Radar tramo (fin), funcionamiento febrero 2019",
+    "direction": "220",
+    "highway": "speed_camera",
+    "maxspeed": "70"
+   }
+  },
+  {
+   "type": "node",
+   "id": 7024118307,
+   "lat": 40.4680659,
+   "lon": -3.4275484
+  },
+  {
+   "type": "node",
+   "id": 7373951325,
+   "lat": 40.3999825,
+   "lon": -3.7636485,
+   "tags": {
+    "description": "Radar tramo (fin), funcionamiento febrero 2019",
+    "direction": "220",
+    "highway": "speed_camera",
+    "maxspeed": "70"
+   }
+  },
+  {
+   "type": "node",
+   "id": 7373959736,
+   "lat": 40.4074461,
+   "lon": -3.7454573,
+   "tags": {
+    "description": "Radar tramo (inicio)",
+    "direction": "245",
+    "highway": "speed_camera",
+    "maxspeed": "70"
+   }
+  },
+  {
+   "type": "node",
+   "id": 8040893769,
+   "lat": 43.4824581,
+   "lon": -8.1573094
+  },
+  {
+   "type": "node",
+   "id": 8952335902,
+   "lat": 36.5211619,
+   "lon": -6.2743849,
+   "tags": {
+    "direction": "70",
+    "highway": "speed_camera",
+    "maxspeed": "80"
+   }
+  },
+  {
+   "type": "node",
+   "id": 8952335905,
+   "lat": 36.5212138,
+   "lon": -6.2743966,
+   "tags": {
+    "direction": "80",
+    "highway": "speed_camera",
+    "maxspeed": "80"
+   }
+  },
+  {
+   "type": "node",
+   "id": 10054661158,
+   "lat": 37.965742,
+   "lon": -0.7006474
+  },
+  {
+   "type": "node",
+   "id": 10059663982,
+   "lat": 37.9656689,
+   "lon": -0.7008173,
+   "tags": {
+    "crossing": "uncontrolled",
+    "crossing:markings": "zebra",
+    "highway": "crossing"
+   }
+  },
+  {
+   "type": "node",
+   "id": 10061401568,
+   "lat": 37.9639118,
+   "lon": -0.7023684
+  },
+  {
+   "type": "node",
+   "id": 11237096828,
+   "lat": 41.3284821,
+   "lon": -5.0760432,
+   "tags": {
+    "crossing": "traffic_signals",
+    "highway": "crossing"
+   }
+  },
+  {
+   "type": "node",
+   "id": 11246943987,
+   "lat": 43.4823519,
+   "lon": -8.1572732,
+   "tags": {
+    "direction": "10",
+    "highway": "speed_camera",
+    "maxspeed": "90"
+   }
+  },
+  {
+   "type": "node",
+   "id": 11248473592,
+   "lat": 40.4000238,
+   "lon": -3.7637129
+  },
+  {
+   "type": "node",
+   "id": 11248473594,
+   "lat": 40.4072475,
+   "lon": -3.7457657
+  },
+  {
+   "type": "node",
+   "id": 11468893138,
+   "lat": 36.5211782,
+   "lon": -6.2743025
+  },
+  {
+   "type": "node",
+   "id": 11468893139,
+   "lat": 36.5206259,
+   "lon": -6.229478,
+   "tags": {
+    "direction": "110",
+    "highway": "speed_camera",
+    "maxspeed": "80"
+   }
+  },
+  {
+   "type": "node",
+   "id": 11574666535,
+   "lat": 41.6087708,
+   "lon": -0.9155718
+  },
+  {
+   "type": "node",
+   "id": 11574666536,
+   "lat": 41.6191942,
+   "lon": -0.9495213
+  },
+  {
+   "type": "node",
+   "id": 12166505102,
+   "lat": 41.3284396,
+   "lon": -5.0759304,
+   "tags": {
+    "highway": "traffic_signals",
+    "traffic_signals:direction": "forward"
+   }
+  },
+  {
+   "type": "node",
+   "id": 12759335510,
+   "lat": 41.3282053,
+   "lon": -5.0751468,
+   "tags": {
+    "direction": "130",
+    "highway": "speed_display",
+    "maxspeed": "40"
+   }
+  },
+  {
+   "type": "node",
+   "id": 12759335511,
+   "lat": 41.3280189,
+   "lon": -5.0748193
+  },
+  {
+   "type": "node",
+   "id": 13436370606,
+   "lat": 43.4930575,
+   "lon": -8.1570467
+  },
+  {
+   "type": "node",
+   "id": 13734382524,
+   "lat": 37.9656601,
+   "lon": -0.7008943,
+   "tags": {
+    "highway": "speed_camera",
+    "maxspeed": "40"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 1019388,
+   "members": [
+    {
+     "type": "node",
+     "ref": 7373959736,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 11248473594,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 11248473592,
+     "role": "to"
+    },
+    {
+     "type": "node",
+     "ref": 6203468146,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 7373951325,
+     "role": "device"
+    },
+    {
+     "type": "way",
+     "ref": 1214100219,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 907151350,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 907151349,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 1428941008,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 1327929433,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 74098057,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 74098059,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 70961400,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 1428941005,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 70962818,
+     "role": "section"
+    }
+   ],
+   "tags": {
+    "description": "Radar de tramo A-5 P.K 4+000 - P.K.5+750, SENTIDO SALIDA",
+    "enforcement": "average_speed",
+    "maxspeed": "70",
+    "type": "enforcement"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 1907383,
+   "members": [
+    {
+     "type": "node",
+     "ref": 11246943987,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 8040893769,
+     "role": "from"
+    },
+    {
+     "type": "way",
+     "ref": 1213940859,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 10558603,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 10558562,
+     "role": "section"
+    },
+    {
+     "type": "node",
+     "ref": 2378267338,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 13436370606,
+     "role": "to"
+    }
+   ],
+   "tags": {
+    "enforcement": "average_speed",
+    "maxspeed": "90",
+    "type": "enforcement"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 2517637,
+   "members": [
+    {
+     "type": "node",
+     "ref": 36406777,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 1976460257,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 36406772,
+     "role": "to"
+    }
+   ],
+   "tags": {
+    "enforcement": "maxspeed",
+    "maxspeed": "50",
+    "milestone": "PK85+964",
+    "name": "Tarascon sur Ariège",
+    "ref": "D618",
+    "type": "enforcement"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 8407199,
+   "members": [
+    {
+     "type": "node",
+     "ref": 992004847,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 306024148,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 306024146,
+     "role": "to"
+    }
+   ],
+   "tags": {
+    "enforcement": "maxspeed",
+    "maxspeed": "90",
+    "type": "enforcement"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 10358149,
+   "members": [
+    {
+     "type": "node",
+     "ref": 243763806,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 370318912,
+     "role": "to"
+    },
+    {
+     "type": "node",
+     "ref": 7024118307,
+     "role": "device"
+    }
+   ],
+   "tags": {
+    "enforcement": "maxspeed",
+    "maxspeed": "80",
+    "type": "enforcement"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 16901376,
+   "members": [
+    {
+     "type": "node",
+     "ref": 11468893139,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 8952335905,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 8952335902,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 5097456924,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 11468893138,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 615705016,
+     "role": "to"
+    },
+    {
+     "type": "way",
+     "ref": 1235478908,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 1235478909,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 1235478922,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 912705742,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 339201201,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 255187313,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 255187318,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 1389124707,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 1235478906,
+     "role": "section"
+    }
+   ],
+   "tags": {
+    "enforcement": "average_speed",
+    "maxspeed": "80",
+    "type": "enforcement"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 17135243,
+   "members": [
+    {
+     "type": "node",
+     "ref": 11574666535,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 2378266882,
+     "role": "device"
+    },
+    {
+     "type": "way",
+     "ref": 1245080232,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 416557432,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 71579045,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 68668245,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 1320781089,
+     "role": "section"
+    },
+    {
+     "type": "node",
+     "ref": 11574666536,
+     "role": "to"
+    },
+    {
+     "type": "node",
+     "ref": 992002534,
+     "role": "device"
+    }
+   ],
+   "tags": {
+    "enforcement": "average_speed",
+    "maxspeed": "100",
+    "type": "enforcement"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 17929026,
+   "members": [
+    {
+     "type": "node",
+     "ref": 12759335511,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 12759335510,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 12166505102,
+     "role": "force"
+    },
+    {
+     "type": "node",
+     "ref": 11237096828,
+     "role": "to"
+    }
+   ],
+   "tags": {
+    "enforcement": "maxspeed",
+    "maxspeed": "40",
+    "type": "enforcement"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 20455293,
+   "members": [
+    {
+     "type": "node",
+     "ref": 13734382524,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 1227607591,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 10059663982,
+     "role": "to"
+    }
+   ],
+   "tags": {
+    "enforcement": "maxspeed",
+    "maxspeed": "40",
+    "type": "enforcement"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 20455294,
+   "members": [
+    {
+     "type": "node",
+     "ref": 13734382524,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 10061401568,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 10054661158,
+     "role": "to"
+    }
+   ],
+   "tags": {
+    "enforcement": "maxspeed",
+    "maxspeed": "40",
+    "type": "enforcement"
+   }
+  }
+ ]
+}

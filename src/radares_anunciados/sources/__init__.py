@@ -26,6 +26,7 @@ from . import (
     murcia,
     navarra,
     osm,
+    osm_notes,
     salamanca,
     sct,
 )
@@ -38,6 +39,7 @@ REGISTRY: dict[str, Source] = {
     for s in (
         dgt_freshness.watch(dgt.SOURCE),
         osm.SOURCE,
+        osm_notes.SOURCE,
         murcia.SOURCE,
         sct.SOURCE,
         sct.TRAILER,

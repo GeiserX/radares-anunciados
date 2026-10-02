@@ -11,6 +11,11 @@ from zoneinfo import ZoneInfo
 # Spanish midnight, whatever time zone the container runs in (UTC by default).
 SPAIN = ZoneInfo("Europe/Madrid")
 
+# The kind of a place people report and no source publishes (an open OpenStreetMap
+# note). It goes in the feed and on the map, never in a zone (``ha.zoned``), and
+# never drops or replaces another radar (``feed.merge``).
+REPORTED = "reported"
+
 
 def today_in_spain(now: float | None = None) -> date:
     """Spain's date (peninsular time) at ``now`` (epoch seconds; None: the clock)."""
@@ -27,7 +32,7 @@ class Radar:
 
     id: str  # stable across runs: source + source id (+ circle index)
     source: str  # "dgt", "osm", "murcia"
-    kind: str  # "fixed", "section", "trailer", "mobile_announced", "mobile_stretch"
+    kind: str  # "fixed", "section", "trailer", "mobile_announced", "mobile_stretch", REPORTED
     name: str  # what the driver reads in the alert
     lat: float
     lon: float
@@ -42,6 +47,7 @@ class Radar:
     # False: a street from a periodic list whose period ended. It keeps its zone,
     # with another icon, until it is announced again or ages out.
     active: bool = True
+    reported: date | None = None  # a REPORTED one: the day a person reported it
 
     def active_on(self, day: date) -> bool:
         if self.valid_from and day < self.valid_from:

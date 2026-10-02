@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from radares_anunciados import net, osm_limits, speed
-from radares_anunciados.model import Radar
+from radares_anunciados.model import REPORTED, Radar
 
 FIX = Path(__file__).parent / "fixtures"
 PAYLOAD = (FIX / "overpass_limits.json").read_bytes()
@@ -315,6 +315,13 @@ def test_the_lookup_runs_before_zones_are_sized(monkeypatch, cache):
     radar = CASES[1][0]  # M-40, 80 in OpenStreetMap; the fallback would size it for 90
     sized = speed.size(speed.fill_limits([radar]), speed.Radius())
     assert sized[0].maxspeed == 80 and sized[0].radius_m == speed.auto_radius(80, 40)
+
+
+def test_a_report_is_neither_looked_up_nor_sized(monkeypatch, cache):
+    calls = asked_by(monkeypatch)
+    note = Radar("osm-note-1", "osm_notes", REPORTED, "radar fijo", 38.0, -1.0, 0)
+    assert speed.size(speed.fill_limits([note]), speed.Radius()) == [note]
+    assert calls == []  # a report gets no zone: nothing to size, nothing to ask Overpass
 
 
 def test_no_test_reaches_overpass():
