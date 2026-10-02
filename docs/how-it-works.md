@@ -84,7 +84,8 @@ Android lets one app watch at most 100 geofences, and the companion app does not
 takes Home Assistant's zones sorted by entity id and stops at 100. A radar outside those 100 fires no
 `android.zone_entered`. The blueprint does not depend on that event: Home Assistant itself works out
 which zones each location update falls in, so with high accuracy mode on (a location every 5 seconds)
-every radar zone alerts, whatever the count.
+a radar zone alerts whatever the count, as long as one of those locations falls inside it. At 120 km/h
+the car covers about 170 m between two locations, and the smallest zone is 200 m across.
 
 ## Zones that don't change presence
 
@@ -101,7 +102,8 @@ The blueprint listens to three things for each phone you pick:
 - `ios.zone_entered`, which the iPhone sends about 0.25 s before the tracker update;
 - `android.zone_entered`, sent from the same GPS fix as the tracker update, in either order.
 
-The tracker is the one that never misses. The app events are lost in cases we measured: iOS drops the
+The tracker covers the cases where the app events are lost; it alerts for every zone that one of the
+phone's reported locations falls in. The app events are lost in cases we measured: iOS drops the
 event when it relaunches a terminated app for the region, and fires none for a zone that joins its 20
 while the phone is already inside; Android fires none for a zone outside its 100. In all of those the
 tracker still lists the zone. The events stay as triggers because, when they do arrive, they can be
