@@ -58,6 +58,11 @@ def test_notes_are_kept_inside_spain_where_the_catalan_boxes_overreach(place, po
         ("Radar fix en ambdós sentits. Limitació: 50 km/h.", True),
         ('"RADAR 30KM/H" OSM snapshot date: 2026-08-11T11:19:54Z', True),
         ("Radar fijo, no está mapeado", True),
+        ("Radar fijo de 50 junto a la estación de servicio", True),
+        # note 5125136: a commercial radar app's community is that app's data
+        ("Radar fijo ambos sentidos de 90kmh https://lincegps.com/comunidad/", False),
+        ("Radar de tramo, lo marca Radarbot", False),
+        ("NATO radar station", False),
         ("Radar foto rojo", False),
         ("semáforo, no está más el radar #OsmAnd", False),
         ("pas de radar ici en ce moment #OsmAnd", False),
@@ -70,6 +75,13 @@ def test_notes_are_kept_inside_spain_where_the_catalan_boxes_overreach(place, po
 )
 def test_the_filter_keeps_speed_camera_reports_only(text, kept):
     assert osm_notes.about_speed(text) is kept
+
+
+def test_notes_stay_inside_the_selected_provinces():
+    madrid = (provinces.PROVINCES["28"][1],)
+    assert osm_notes.parse(PAYLOAD, madrid) == []
+    alicante = (provinces.PROVINCES["03"][1],)
+    assert len(osm_notes.parse(PAYLOAD, alicante)) == 3
 
 
 def test_a_closed_note_leaves_on_the_next_run(monkeypatch, tmp_path):
@@ -107,14 +119,17 @@ def test_a_report_keeps_its_date_in_the_last_good_result():
     assert again == result and again.radars[0].reported == date(2026, 2, 10)
 
 
-def test_a_note_in_another_shape_is_skipped_and_the_rest_kept(caplog):
+def test_a_note_in_another_shape_is_skipped_and_logged_by_id_only(caplog):
     data = json.loads(PAYLOAD)
     broken = json.loads(json.dumps(data["features"][0]))
     del broken["geometry"]
     odd_date = json.loads(json.dumps(data["features"][1]))
     odd_date["properties"]["date_created"] = "yesterday"
-    data["features"] += [broken, odd_date]
-    data["features"] = data["features"][2:]  # the two originals only in their broken copies
-    notes = osm_notes.parse(json.dumps(data).encode(), SPAIN)
-    assert [n.id for n in notes] == ["osm-note-5144458"]
-    assert caplog.text.count("OSM note skipped") == 2
+    odd_comment = json.loads(json.dumps(data["features"][2]))
+    odd_comment["properties"]["comments"] = ["opened"]  # not a dict
+    data["features"] = [broken, odd_date, odd_comment, *data["features"][3:]]
+    assert osm_notes.parse(json.dumps(data).encode(), SPAIN) == []
+    assert caplog.text.count("skipped") == 3
+    assert "OSM note 5162275 skipped" in caplog.text
+    # a note's comments carry user names and the published feed's log is public
+    assert "Doppler" not in caplog.text and "comments" not in caplog.text

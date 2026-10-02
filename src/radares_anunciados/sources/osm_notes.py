@@ -46,11 +46,20 @@ _SPEED = re.compile(r"radar|cinem[oó]metr", re.IGNORECASE)
 # that is gone, a radar station or antenna, a speed display ("radar
 # pédagogique"), a "RADAR key" toilet, an app's automatic note, or anything a
 # radar detector found (the project never uses that, see AGENTS.md).
+#
+# A note that names or links a commercial radar app or its community is that
+# app's data; the project does not use it (docs/how-it-works.md, the legal line).
+_APPS = re.compile(
+    r"lincegps|comunidad\s*radar|radarbot|waze|coyote|socialdrive|blitzer|scdb|radares\.es"
+    r"|todoradares|lufop",
+    re.IGNORECASE,
+)
 _OTHER = re.compile(
     r"foto\s*-?\s*rojo|fotomulta|sem[aà]f[oò]r|feu\s+(rouge|tricolore)|red[\s-]*light"
     r"|ya no|no hay radar|no est[aá] (m[aá]s )?el radar|pas de radar|retirad|removed"
     r"|gone or never existed"
-    r"|militar|military|nato\b|estaci[oó]n|station|antena|antenna|aeron|aviation|meteo|weather"
+    r"|militar|military|nato\b|estaci[oó]n de radar|radar station|antena|antenna|aeron|aviation"
+    r"|meteo|weather"
     r"|p[eé]dagogique|\bkey\b|toilet|weed\s+radar|detector",
     re.IGNORECASE,
 )
@@ -72,7 +81,7 @@ def in_spain(lat: float, lon: float) -> bool:
 
 def about_speed(text: str) -> bool:
     """True when a note's opening text reports a speed camera."""
-    return bool(_SPEED.search(text)) and not _OTHER.search(text)
+    return bool(_SPEED.search(text)) and not _OTHER.search(text) and not _APPS.search(text)
 
 
 def answer(body: bytes) -> None:
@@ -98,12 +107,20 @@ def parse(payload: bytes, boxes: list[Box] | tuple[Box, ...]) -> list[Radar]:
     for feature in json.loads(payload)["features"]:
         try:
             note = _note(feature, boxes)
-        except (KeyError, TypeError, ValueError) as exc:
-            log.warning("OSM note skipped, not in the shape expected (%r): %s", exc, feature)
+        except (AttributeError, KeyError, TypeError, ValueError) as exc:
+            # the id only: a note's comments carry user names, and the log can be public
+            log.warning("OSM note %s skipped, not in the shape expected: %r", _id(feature), exc)
             continue
         if note is not None:
             radars.append(note)
     return radars
+
+
+def _id(feature: object) -> object:
+    try:
+        return feature["properties"]["id"]
+    except (KeyError, TypeError, IndexError):
+        return "?"
 
 
 def _note(feature: dict, boxes: list[Box] | tuple[Box, ...]) -> Radar | None:
