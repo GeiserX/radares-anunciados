@@ -23,9 +23,9 @@ Radares Anunciados is a Docker service that gathers the speed radars announced i
 
 ```sh
 export HA_URL=https://homeassistant.example.org HA_TOKEN='<long-lived token>'
-docker run --rm -e HA_URL -e HA_TOKEN drumsergio/radares-anunciados:0.1.0 sync --dry-run
+docker run --rm -e HA_URL -e HA_TOKEN drumsergio/radares-anunciados:0.2.0 sync --dry-run
 mkdir -p data && sudo chown 65534:65534 data  # the container runs as nobody
-docker run -d --name radares -e HA_URL -e HA_TOKEN -v ./data:/data -e RADARES_CACHE=/data drumsergio/radares-anunciados:0.1.0
+docker run -d --name radares -e HA_URL -e HA_TOKEN -v ./data:/data -e RADARES_CACHE=/data drumsergio/radares-anunciados:0.2.0
 ```
 
 Then import the [alert blueprint](blueprints/radar_zone_alert.yaml). Full steps in [Getting started](docs/getting-started.md).

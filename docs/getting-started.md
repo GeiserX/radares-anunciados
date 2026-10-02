@@ -14,7 +14,7 @@ The service uses it to create, move and delete its radar zones.
 # docker-compose.yml
 services:
   radares-anunciados:
-    image: drumsergio/radares-anunciados:0.1.0
+    image: drumsergio/radares-anunciados:0.2.0
     restart: unless-stopped
     environment:
       HA_URL: https://homeassistant.example.org
