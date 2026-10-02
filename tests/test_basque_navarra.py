@@ -395,6 +395,40 @@ def test_registry_terms_of_the_new_sources():
     assert reg["donostia"].provinces == reg["donostia_movil"].provinces == {"20"}
     for key in ("euskadi", "navarra", "donostia", "donostia_movil"):
         assert reg[key].attribution and reg[key].licence
+    # Donostia publishes its own reuse terms; the Basque and Navarra legal notices
+    # reserve the site's content, and the feed says so next to its legal basis
+    for key in ("donostia", "donostia_movil"):
+        assert "https://www.donostia.eus/es/aviso-legal" in reg[key].licence
+        assert "no reuse licence" not in reg[key].licence
+    for key, url in (("euskadi", euskadi.LEGAL_URL), ("navarra", navarra.LEGAL_URL)):
+        assert "Ley 37/2007" in reg[key].licence and "reserves" in reg[key].licence
+        assert url in reg[key].licence
+    # RADARES_SPANISH_IP_TIMEOUT caps the requests to these hosts, so they must
+    # cover every URL the source reads that answers only from Spain
+    for url, key in [
+        (euskadi.URL, "euskadi"),
+        (navarra.VIEWER, "navarra"),
+        (navarra.API, "navarra"),
+    ]:
+        with net.fail_fast(20, reg[key].spanish_ip_hosts):
+            assert net.timeout_s(90, url) == 20, url
+        with net.fail_fast(20, reg[key].spanish_ip_hosts):
+            assert net.timeout_s(90, dgt.URL) == 90  # the DGT file answers anywhere
+
+
+def test_the_navarra_api_call_obeys_fail_fast(monkeypatch):
+    asked = []
+
+    def urlopen(request, timeout):
+        asked.append(timeout)
+        raise TimeoutError("timed out")
+
+    monkeypatch.setattr(navarra.urllib.request, "urlopen", urlopen)
+    with net.fail_fast(20, navarra.SOURCE.spanish_ip_hosts), pytest.raises(OSError):
+        navarra.post_api()
+    with pytest.raises(OSError):
+        navarra.post_api()
+    assert asked == [20, 60]
     # skipped outside their provinces
     selected = sources.selected(None, frozenset({"31"}))
     assert [s.key for s in selected] == ["dgt", "osm", "dgt_invive", "navarra"]

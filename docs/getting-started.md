@@ -102,7 +102,7 @@ aviso". That street gets no zone, so it gives no warning this week.
 | Variable | Default | What it does |
 |---|---|---|
 | `HA_URL`, `HA_TOKEN` | | Home Assistant address and long-lived token |
-| `RADARES_SOURCES` | all of them | which sources to use, such as `dgt,osm,murcia`; keys in [Sources](sources.md) |
+| `RADARES_SOURCES` | all of them but `osm_notes` | which sources to use, such as `dgt,osm,murcia`; `default` stands for the default ones, so `default,osm_notes` adds the notes; keys in [Sources](sources.md) |
 | `RADARES_PROVINCES` | `30` | INE province codes, such as `30` (Murcia) or `3,46`, or `all` for the whole country. `RADARES_DGT_PROVINCES` is the old name and still works |
 | `RADARES_OSM_BBOX` | the provinces' boxes | `south,west,north,east` for OpenStreetMap cameras, or `all` for the whole country |
 | `RADARES_FIXED_RADIUS` | `auto` | metres around a fixed radar; `auto` is 200 m plus 40 s at the speed limit |
@@ -110,6 +110,7 @@ aviso". That street gets no zone, so it gives no warning this week.
 | `RADARES_MAX_ZONES` | `1000` | most radar zones in Home Assistant, 1 or more; past it, the farthest fixed radars, the farthest stretch circles and the oldest silent streets get none |
 | `RADARES_STRETCH_ZONES` | `off` | `on` gives zones along DGT's mobile-radar stretches; needs a province list in `RADARES_PROVINCES` |
 | `RADARES_DORMANT_WEEKS` | `26` | weeks an announced street keeps its zones, silent, after its week; `0` deletes them when the week ends |
+| `RADARES_SPANISH_IP_TIMEOUT` | | seconds; set it outside Spain so that a request to a host that answers only Spanish addresses gets one short try, not three of 90 s |
 | `RADARES_NOTIFY` | | notify services told to open the app after a change |
 | `RADARES_INTERVAL` | `3600` | seconds between runs |
 | `RADARES_CACHE` | `~/.cache/radares-anunciados` | where downloads, each source's last good result and the announced streets are kept |

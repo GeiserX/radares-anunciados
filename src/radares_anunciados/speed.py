@@ -23,7 +23,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 
 from . import osm_limits
-from .model import Radar
+from .model import REPORTED, Radar
 
 MIN_RADIUS_M = 100  # under 100 m the iOS app splits a zone into 3 of its 20 regions
 ENTRY_M = 200  # a phone reports the entry about this far past the edge
@@ -103,5 +103,9 @@ LAID_OUT = ("mobile_announced", "mobile_stretch")  # circles placed along a line
 def size(radars: list[Radar], radius: Radius) -> list[Radar]:
     """Set the radius of every point radar (fixed and section ends). Circles along
     a street or a stretch keep theirs: their spacing was laid out for it, and a
-    smaller radius would leave road between them uncovered."""
-    return [r if r.kind in LAID_OUT else replace(r, radius_m=radius.point(r)) for r in radars]
+    smaller radius would leave road between them uncovered. A report
+    (``REPORTED``) gets no zone, so it keeps its radius of 0."""
+    return [
+        r if r.kind in (*LAID_OUT, REPORTED) else replace(r, radius_m=radius.point(r))
+        for r in radars
+    ]

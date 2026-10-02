@@ -41,7 +41,7 @@ from .. import net
 from ..model import Radar, SourceResult
 from ..streetnames import expand, same_words, split
 from ..streets import Announced, WeeklyList, fold, place, place_words
-from .base import Context, Source
+from .base import PUBLIC_SECTOR_REUSE, Context, Source
 
 log = logging.getLogger(__name__)
 
@@ -56,6 +56,7 @@ RSS = (
     "https://aytoleon.es/es/actualidad/noticias/articulos/_layouts/15/listfeed.aspx"
     "?List=%7B4D573294-DC3C-4DAB-BFC8-0FEF9D1BCA7F%7D"
 )
+LEGAL_URL = "https://www.aytoleon.es/es/inicio/Paginas/terminos-y-condiciones-generales.aspx"
 ILEON_SITEMAP = "https://ileon.eldiario.es/sitemap_contents_{year}_{month:02d}_961b5_001.xml"
 OVERPASS = "https://overpass-api.de/api/interpreter"
 OVERPASS_QUERY = (
@@ -618,11 +619,12 @@ SOURCE = Source(
         "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es); geometría © OpenStreetMap"
     ),
     licence=(
-        "Ayuntamiento de León: no reuse licence published; its portal terms reserve "
-        "reproduction except for personal and private use. iLeón: CC BY-NC 4.0. "
-        "Geometry: ODbL 1.0"
+        f"Ayuntamiento de León's posts: {PUBLIC_SECTOR_REUSE}; its portal's terms reserve "
+        f"reproduction except for personal and private use ({LEGAL_URL}). Days only iLeón "
+        "covers: the facts iLeón reports (street, day, limit), not its text, which is "
+        "CC BY-NC 4.0. Geometry: ODbL 1.0"
     ),
-    spanish_ip=True,
+    spanish_ip_hosts=frozenset({"aytoleon.es"}),  # the council; iLeón answers anywhere
     max_age_s=6 * 3600,
     provinces=frozenset({PROVINCE}),
 )

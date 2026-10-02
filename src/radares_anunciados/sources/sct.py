@@ -34,24 +34,22 @@ Reuse: the files fall under the gencat.cat reuse terms, the "Llicència oberta
 d'ús d'informació – Catalunya" (the open-data catalogue lists radars.txt as
 dataset re3y-fftf with that licence). It asks to cite the source as
 "Generalitat de Catalunya. Departament de ... . [organisme]" and to state the
-date of the last update: the file's ``Last-Modified``, asked with a HEAD
-request on each fetch and added to the attribution.
+date of the last update: the ``Last-Modified`` the file came with, kept beside
+the cached copy (``net.cached_get_dated``) and added to the attribution.
 """
 
 from __future__ import annotations
 
 import logging
 import re
-import time
 from collections.abc import Callable, Iterator
 from dataclasses import replace
 
 from .. import net
 from ..geo import utm_to_wgs84
-from ..model import Radar, SourceResult
+from ..model import Radar, SourceResult, dated
 from .base import Context, Source
 from .catalonia_shapes import province
-from .dgt_freshness import head, parse_last_modified
 
 log = logging.getLogger(__name__)
 
@@ -192,29 +190,15 @@ def parse_trailer(text: str) -> list[Radar]:
     return _parse(trailer_rows(text), "sct_remolc", TRAILER_URL, trailer=True)
 
 
-def last_update(url: str) -> str | None:
-    """The day the file last changed (its Last-Modified), or None. Never raises:
-    without the date the radars still come, credited without it."""
-    try:
-        modified = parse_last_modified(head(url).get("last-modified"))
-    except Exception as exc:
-        log.warning("could not read Last-Modified of %s: %s", url, exc)
-        return None
-    if modified is None:
-        log.warning("%s sent no Last-Modified; credited without a date", url)
-        return None
-    return time.strftime("%Y-%m-%d", time.gmtime(modified))
-
-
 def _fetch(ctx: Context, url: str, parse: Callable[[str], list[Radar]]) -> SourceResult:
-    text = net.cached_get(url, max_age_s=ctx.max_age_s).decode("utf-8", errors="replace")
-    radars = parse(text)
-    updated = last_update(url)
-    if updated:
-        radars = [replace(r, attribution=f"{r.attribution}, actualizado {updated}") for r in radars]
+    body, modified = net.cached_get_dated(url, max_age_s=ctx.max_age_s)
+    radars = parse(body.decode("utf-8", errors="replace"))
+    updated = net.last_modified_day(modified)
+    if updated is None:
+        log.warning("%s came with no Last-Modified; credited without a date", url)
     if ctx.provinces is not None:
         radars = [r for r in radars if r.province in ctx.provinces]
-    return SourceResult(radars=radars)
+    return dated(SourceResult(radars=radars), updated)
 
 
 def fetch_fixed(ctx: Context) -> SourceResult:

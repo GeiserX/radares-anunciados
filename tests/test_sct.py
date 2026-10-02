@@ -26,11 +26,8 @@ HEAD = dict(
 
 
 @pytest.fixture(autouse=True)
-def offline_head(monkeypatch):
-    def head(url):
-        raise OSError("tests never touch the network")
-
-    monkeypatch.setattr(sct, "head", head)
+def own_cache(monkeypatch, tmp_path):
+    monkeypatch.setenv("RADARES_CACHE", str(tmp_path / "cache"))
 
 
 def by_id(radars: list[Radar]) -> dict[str, Radar]:
@@ -152,9 +149,20 @@ def test_a_changed_format_raises_instead_of_emptying_the_source():
         sct.parse_fixed(only_broken)
 
 
-def test_fetch_keeps_only_the_selected_provinces(monkeypatch):
+def serve(monkeypatch, headers: dict[str, str]):
+    """Both files from the fixtures, as a download that came with ``headers``."""
     payloads = {sct.FIXED_URL: FIXED.encode(), sct.TRAILER_URL: TRAILER.encode()}
-    monkeypatch.setattr(net, "cached_get", lambda url, **kw: payloads[url])
+
+    def get(url, data=None, headers_=None, sent=None, **kw):
+        if sent is not None:
+            sent.update({k.lower(): v for k, v in headers.items()})
+        return payloads[url]
+
+    monkeypatch.setattr(net, "get", get)
+
+
+def test_fetch_keeps_only_the_selected_provinces(monkeypatch):
+    serve(monkeypatch, {})
     ctx = Context(day=date(2026, 10, 1), provinces=frozenset({"17"}), boxes=(), radius=Radius())
     fixed = sct.SOURCE.fetch(ctx).radars
     assert [r.id for r in fixed] == ["sct-GI-552-13.345"]
@@ -208,12 +216,16 @@ def test_a_file_that_lost_a_large_share_of_its_rows_is_refused(caplog):
 
 def test_the_attribution_carries_the_date_of_the_files_last_update(monkeypatch):
     # The gencat reuse terms ask for the date of the last update.
-    payloads = {sct.FIXED_URL: FIXED.encode(), sct.TRAILER_URL: TRAILER.encode()}
-    monkeypatch.setattr(net, "cached_get", lambda url, **kw: payloads[url])
+    # The date is the one the file came with (the real headers of 2026-10-01).
+    serve(monkeypatch, HEAD)
     every = Context(day=date(2026, 10, 1), provinces=None, boxes=(), radius=Radius())
-    monkeypatch.setattr(sct, "head", lambda url: {k.lower(): v for k, v in HEAD.items()})
-    radars = sct.SOURCE.fetch(every).radars
-    assert {r.attribution for r in radars} == {sct.ATTRIBUTION + ", actualizado 2026-09-17"}
+    result = sct.SOURCE.fetch(every)
+    assert {r.attribution for r in result.radars} == {sct.ATTRIBUTION + ", actualizado 2026-09-17"}
+    assert result.updated == "2026-09-17"
+    # a copy reused from the cache keeps its own date, whatever the server says now
+    serve(monkeypatch, {"Last-Modified": "Fri, 02 Oct 2026 08:00:00 GMT"})
+    assert sct.SOURCE.fetch(every).updated == "2026-09-17"
     # no date to be had: the radars still come, credited without it
-    monkeypatch.setattr(sct, "head", lambda url: {})
-    assert {r.attribution for r in sct.SOURCE.fetch(every).radars} == {sct.ATTRIBUTION}
+    serve(monkeypatch, {})
+    result = sct.TRAILER.fetch(every)
+    assert {r.attribution for r in result.radars} == {sct.ATTRIBUTION} and result.updated is None

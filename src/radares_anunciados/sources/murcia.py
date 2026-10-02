@@ -14,6 +14,7 @@ import html
 import json
 import logging
 import re
+import urllib.parse
 from collections.abc import Callable
 from datetime import date, timedelta
 
@@ -28,7 +29,13 @@ log = logging.getLogger(__name__)
 # Municipality of Murcia with a margin, (south, west, north, east)
 BBOX = (37.78, -1.40, 38.10, -0.93)
 PROVINCE = "30"
-ATTRIBUTION = "Policía Local de Murcia (lista semanal); geometría © OpenStreetMap"
+CREDIT = "Policía Local de Murcia (lista semanal, leída en {}); geometría © OpenStreetMap"
+ATTRIBUTION = CREDIT.format("la prensa local")
+# The outlets the police's list is read in, credited by name in each radar.
+OUTLETS = {
+    "laopiniondemurcia.es": "La Opinión de Murcia",
+    "murciaactualidad.com": "Murcia Actualidad",
+}
 
 OVERPASS = "https://overpass-api.de/api/interpreter"
 LAOPINION_SITEMAP = "https://www.laopiniondemurcia.es/sitemapMonth.xml"
@@ -159,6 +166,16 @@ def find_article(day: date) -> tuple[str, date, str] | None:
     return None
 
 
+def credit(url: str | None) -> str:
+    """The attribution of a radar from the article at ``url``: the police's list, and
+    the outlet it was read in."""
+    host = urllib.parse.urlsplit(url or "").hostname or ""
+    for domain, outlet in OUTLETS.items():
+        if host == domain or host.endswith("." + domain):
+            return CREDIT.format(outlet)
+    return ATTRIBUTION
+
+
 def to_radars(
     items: list[Announced],
     overpass_json: bytes,
@@ -193,7 +210,7 @@ def to_radars(
                     valid_from=start,
                     valid_to=end,
                     url=url,
-                    attribution=ATTRIBUTION,
+                    attribution=credit(url),
                     maxspeed=placed.maxspeed,
                     province=PROVINCE,
                 )
@@ -236,7 +253,11 @@ SOURCE = Source(
     key="murcia",
     fetch=fetch_source,
     attribution=ATTRIBUTION,
-    licence="the council's list as reprinted by the press; geometry ODbL 1.0",
+    licence=(
+        "the Policía Local's weekly list, which it posts on its social networks as an "
+        "image; the feed reads it in the press and takes its facts (street, district, "
+        "week), not the article's text. Geometry: ODbL 1.0"
+    ),
     max_age_s=7 * 86_400,
     provinces=frozenset({PROVINCE}),
 )

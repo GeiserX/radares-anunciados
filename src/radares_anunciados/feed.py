@@ -8,12 +8,15 @@ from dataclasses import replace
 from datetime import date, timedelta
 
 from .geo import distance_m
-from .model import Radar, Stretch
+from .model import REPORTED, Radar, Stretch
 from .sources import REGISTRY
 
 # A mapped camera (OSM) this close to a radar an authority publishes is the same
 # camera mapped twice.
 DUPLICATE_M = 150
+
+# A mapped section end this close to an end of a published section is that end.
+SECTION_COPY_M = 1000
 
 # Kinds that stand for one camera at one place. A street from a police list
 # (mobile_announced), a circle of a DGT mobile-radar stretch (mobile_stretch) and a
@@ -31,7 +34,11 @@ def _official(r: Radar) -> bool:
 
 def _mapped(r: Radar) -> bool:
     """A camera from a source the registry marks as not official (OSM)."""
-    source = REGISTRY.get(r.source)
+    return _mapped_source(r.source)
+
+
+def _mapped_source(key: str) -> bool:
+    source = REGISTRY.get(key)
     return source is not None and not source.official
 
 
@@ -46,6 +53,9 @@ def merge(radars: list[Radar], day: date) -> list[Radar]:
     both directions of a section with the same two end points). The phone watches
     only 20 zones; two at one spot waste one. A dormant circle under an active one
     gives way to it.
+
+    A report nobody published (``REPORTED``) is kept as it is and takes no spot:
+    it never drops or replaces another radar, and nothing drops it.
     """
     wanted = (r for r in radars if not r.active or r.active_on(day))
     ordered = sorted(wanted, key=lambda r: (not r.active, r.id))
@@ -54,6 +64,9 @@ def merge(radars: list[Radar], day: date) -> list[Radar]:
     kept: list[Radar] = []
     spots: set[tuple[float, float]] = set()
     for r in ordered:
+        if r.kind == REPORTED:
+            kept.append(r)
+            continue
         spot = (round(r.lat, 5), round(r.lon, 5))
         if spot in spots:
             continue
@@ -69,6 +82,36 @@ def merge(radars: list[Radar], day: date) -> list[Radar]:
         spots.add(spot)
         kept.append(r)
     return kept
+
+
+def drop_copied_sections(
+    radars: list[Radar], stretches: list[Stretch], day: date
+) -> tuple[list[Radar], list[Stretch]]:
+    """Mapped sections (OSM) that copy one an authority publishes, gone whole:
+    the line and both ends, the radars ``<line id>-from`` and ``-to``.
+
+    A mapped section is a copy when one of its ends is within ``SECTION_COPY_M``
+    of an end of a published section, or within ``DUPLICATE_M`` of any published
+    camera (``merge`` would drop that end and leave half a section). A section's
+    two sources rarely put its ends at the same spot: on 2 Oct 2026 the same
+    sections had ends 150 m to 1 km apart, and a driver got an alert from each.
+    Only a published radar in force on ``day`` counts, as in ``merge``."""
+    official = [r for r in radars if _official(r) and r.active and r.active_on(day)]
+    section_ends = [r for r in official if r.kind == "section"]
+
+    def copied(point: tuple[float, float]) -> bool:
+        return any(distance_m(point, (o.lat, o.lon)) <= DUPLICATE_M for o in official) or any(
+            distance_m(point, (o.lat, o.lon)) <= SECTION_COPY_M for o in section_ends
+        )
+
+    gone = {
+        s.id for s in stretches if _mapped_source(s.source) and (copied(s.start) or copied(s.end))
+    }
+    ends = {f"{i}-{which}" for i in gone for which in ("from", "to")}
+    return (
+        [r for r in radars if not (_mapped(r) and r.id in ends)],
+        [s for s in stretches if s.id not in gone],
+    )
 
 
 def remember(
@@ -123,6 +166,7 @@ def to_geojson(radars: list[Radar], stretches: list[Stretch] | None = None) -> s
                     "active": r.active,
                     "valid_from": r.valid_from.isoformat() if r.valid_from else None,
                     "valid_to": r.valid_to.isoformat() if r.valid_to else None,
+                    "reported": r.reported.isoformat() if r.reported else None,
                 },
                 r,
             ),

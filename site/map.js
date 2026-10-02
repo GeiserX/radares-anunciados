@@ -7,6 +7,7 @@ const KINDS = {
   mobile_announced: { color: "#e36209", label: "Radar móvil anunciado" },
   mobile_recurring: { color: "#bf8700", label: "Radar móvil frecuente (según multas)" },
   stretch: { color: "#0969da", label: "Tramo vigilado" },
+  reported: { color: "#bf3989", label: "Aviso sin confirmar: nota de OpenStreetMap, sin zona" },
 };
 const OTHER = { color: "#57606a", label: "Otro" };
 const SPAIN = { center: [40.2, -3.7], zoom: 6 };
@@ -44,6 +45,16 @@ function popup(p, licences) {
     dd.append(value instanceof Node ? value : document.createTextNode(value));
     dl.append(dd);
   };
+  if (p.kind === "reported") {
+    // A person's note on OpenStreetMap: nobody published or checked it.
+    row("Aviso", p.name || "sin texto");
+    row("Estado", "sin confirmar: lo reporta una persona y ninguna fuente lo publica; no da alerta");
+    row("Reportado el", p.reported || "sin fecha");
+    row("Fuente", p.attribution ? `${p.source}: ${p.attribution}` : p.source || "desconocida");
+    row("Licencia", licences[p.source] || p.attribution || "ver LICENSE-DATA.md");
+    row("Nota", safeLink(p.url));
+    return dl;
+  }
   row("Nombre", p.name || "Radar");
   row("Límite", p.maxspeed ? `${p.maxspeed} km/h` : "sin dato");
   row("Estado", p.active === false ? "inactivo: su periodo acabó" : "activo");
@@ -57,12 +68,13 @@ function popup(p, licences) {
 function style(p) {
   const kind = KINDS[p.kind] || OTHER;
   const dormant = p.active === false;
+  const reported = p.kind === "reported";
   return {
     color: dormant ? "#8c959f" : kind.color,
-    weight: p.kind === "stretch" ? 4 : 1.5,
-    dashArray: dormant ? "4 4" : null,
+    weight: p.kind === "stretch" ? 4 : reported ? 2 : 1.5,
+    dashArray: dormant ? "4 4" : reported ? "2 2" : null,
     fillColor: kind.color,
-    fillOpacity: dormant ? 0 : 0.7,
+    fillOpacity: dormant ? 0 : reported ? 0.3 : 0.7,
     opacity: 0.9,
     radius: 5,
   };
@@ -72,7 +84,7 @@ function legend() {
   const ul = document.getElementById("legend");
   for (const [kind, { color, label }] of Object.entries(KINDS)) {
     const li = el("li");
-    const sw = el("span", null, kind === "stretch" ? "swatch line" : "swatch");
+    const sw = el("span", null, kind === "stretch" ? "swatch line" : `swatch ${kind}`);
     sw.style.borderColor = color;
     if (kind !== "stretch") sw.style.background = color;
     li.append(sw, el("span", label));
@@ -100,7 +112,8 @@ function sourcesTable(status) {
     if (s.error) tr.title = s.error;
     body.append(tr);
     const terms = s.attribution.includes(s.licence) ? "" : ` (${s.licence})`;
-    credits.append(el("li", `${s.source}: ${s.attribution}${terms}`));
+    const updated = s.updated ? `, actualizado ${s.updated}` : "";
+    credits.append(el("li", `${s.source}: ${s.attribution}${updated}${terms}`));
   }
 }
 
@@ -148,14 +161,18 @@ async function main() {
     pointToLayer: (f, latlng) => L.circleMarker(latlng, style(f.properties || {})),
     onEachFeature: (f, lyr) => lyr.bindPopup(() => popup(f.properties || {}, licences)),
   }).addTo(map);
-  const active = features.filter((f) => (f.properties || {}).active !== false).length;
+  const isReported = (f) => (f.properties || {}).kind === "reported";
+  const reported = features.filter(isReported).length;
+  const active = features.filter((f) => !isReported(f) && (f.properties || {}).active !== false).length;
   const when = status.generated
     ? ` Generado el ${status.generated.replace("T", " ").replace("+00:00", " UTC")}.`
     : "";
   if (features.length) {
     map.fitBounds(layer.getBounds(), { maxZoom: 12, padding: [20, 20] });
-    const dormant = features.length - active;
-    summary.textContent = `${features.length} elementos: ${active} activos, ${dormant} inactivos.${when}`;
+    const dormant = features.length - active - reported;
+    summary.textContent =
+      `${features.length} elementos: ${active} activos, ${dormant} inactivos, ` +
+      `${reported} avisos sin confirmar.${when}`;
   } else {
     summary.textContent = `El feed no tiene radares ahora mismo.${when}`;
   }

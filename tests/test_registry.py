@@ -6,6 +6,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 import pytest
+import yaml
 
 from radares_anunciados import cli, feed, metrics, net, provinces, sources, store
 from radares_anunciados.geo import distance_m
@@ -36,6 +37,7 @@ def test_every_source_is_registered_with_its_terms():
     assert list(sources.REGISTRY) == [
         "dgt",
         "osm",
+        "osm_notes",
         "murcia",
         "sct",
         "sct_remolc",
@@ -79,7 +81,7 @@ def test_selected_sources():
         "sct_remolc",
         "barcelona_multas",
     ]
-    assert keys(sources.selected(None, None)) == list(sources.REGISTRY)
+    assert keys(sources.selected(None, None)) == [k for k in sources.REGISTRY if k != "osm_notes"]
     with pytest.raises(ValueError, match="nope"):
         sources.selected(["dgt", "nope"], None)
 
@@ -210,7 +212,7 @@ def test_the_last_good_result_round_trips_every_field():
         1.5, 3.0, 100, "MADRID", "30", "u", "at",
     )  # fmt: skip
     week = WeeklyList("murcia", MONDAY, MONDAY, [cli.Announced("Calle", None)], [])
-    result = SourceResult([radar], [stretch], [week])
+    result = SourceResult([radar], [stretch], [week], updated="2026-09-17")
     store.save_result("x", "fp", result, now=1.0)
     assert store.load_result("x", "fp") == (result, 1.0)
     assert store.load_result("x", "other settings") is None
@@ -352,6 +354,35 @@ def test_collect_turns_last_weeks_street_dormant_and_back(monkeypatch):
     week["radars"] = announced(date(2026, 10, 5))
     found = cli.collect(date(2026, 10, 5)).radars
     assert len(found) == 2 and all(r.active for r in found)
+
+
+def test_osm_notes_is_read_only_when_named(monkeypatch):
+    """Notes give no zone, so an install gains nothing from them, and every install
+    asking OSM's editing API each day is the load its usage policy warns about."""
+    selected = lambda raw: [s.key for s in sources.selected(raw, None)]  # noqa: E731
+    assert "osm_notes" not in selected(None)
+    assert selected(["osm_notes"]) == ["osm_notes"]
+    assert selected(["default", "osm_notes"]) == list(sources.REGISTRY)
+    assert selected(["default"]) == selected(None)
+    # through the environment, as a run reads it
+    notes = replace(fake_source("osm_notes", lambda: SourceResult()), default=False)
+    monkeypatch.setattr(
+        sources, "REGISTRY", {"dgt": fake_source("dgt", lambda: SourceResult()), "osm_notes": notes}
+    )
+    monkeypatch.setenv("RADARES_PROVINCES", "all")
+    monkeypatch.delenv("RADARES_SOURCES", raising=False)
+    assert [o.key for o in cli.collect(MONDAY, save_history=False).outcomes] == ["dgt"]
+    monkeypatch.setenv("RADARES_SOURCES", "default,osm_notes")
+    assert [o.key for o in cli.collect(MONDAY, save_history=False).outcomes] == ["dgt", "osm_notes"]
+    # the published feed is the one reader
+    root = Path(__file__).parent.parent / ".github"
+    jobs = yaml.safe_load((root / "workflows" / "feed.yml").read_text())["jobs"]
+    for job in ("publish", "check"):  # both build through the shared action
+        build = next(st for st in jobs[job]["steps"] if st.get("name") == "Build the feed")
+        assert build["uses"] == "./.github/actions/build-feed", job
+    action = yaml.safe_load((root / "actions" / "build-feed" / "action.yml").read_text())
+    step = next(st for st in action["runs"]["steps"] if st.get("name") == "Build the feed")
+    assert step["env"]["RADARES_SOURCES"] == "default,osm_notes"
 
 
 def test_a_remembered_street_gives_no_zone_once_its_source_or_province_is_deselected(monkeypatch):

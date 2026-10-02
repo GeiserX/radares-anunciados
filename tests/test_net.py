@@ -100,7 +100,9 @@ def test_osm_and_murcia_check_their_overpass_answers_before_caching(tmp_path, mo
     up[0] = True
     assert osm.fetch(ctx).radars
     murcia.fetch(date(2026, 7, 8))
-    assert len(calls) == 5  # each source asked again: the error answers were not kept
+    # each source asked again: the error answers were not kept (osm asks twice,
+    # cameras and relations)
+    assert len(calls) == 6
 
 
 def test_a_cached_copy_that_fails_the_check_is_asked_again(tmp_path, monkeypatch):
@@ -114,3 +116,32 @@ def test_a_cached_copy_that_fails_the_check_is_asked_again(tmp_path, monkeypatch
     for _ in range(2):
         assert net.cached_get("https://x/p", {"data": "q"}, validate=net.overpass_answer) == GOOD
     assert len(calls) == 1  # the bad copy was replaced, the good one then served
+
+
+def test_fail_fast_gives_one_short_try(monkeypatch):
+    # A source that answers only Spanish addresses times out from abroad: three tries
+    # of 90 s per request, unless the run caps it (RADARES_SPANISH_IP_TIMEOUT).
+    asked = []
+
+    def urlopen(request, timeout):
+        asked.append(timeout)
+        raise TimeoutError("timed out")
+
+    monkeypatch.setattr(net.urllib.request, "urlopen", urlopen)
+    monkeypatch.setattr(net.time, "sleep", lambda s: None)
+    spain = frozenset({"ayto.es"})
+    with net.fail_fast(20, spain), pytest.raises(OSError):
+        net.get("https://www.ayto.es/radares")
+    assert asked == [20]
+    asked.clear()
+    with net.fail_fast(20, spain), pytest.raises(OSError):  # another host: no cap
+        net.get("https://notayto.es/radares")
+    assert asked == [90, 90, 90]
+    assert net.timeout_s(60, "https://ayto.es/") == 60  # the cap ends with the block
+    asked.clear()
+    with pytest.raises(OSError):
+        net.get("https://ayto.es/radares")
+    assert asked == [90, 90, 90]
+    with net.fail_fast(None, spain), pytest.raises(OSError):
+        net.get("https://ayto.es/b", timeout=5)
+    assert asked[3:] == [5, 5, 5]

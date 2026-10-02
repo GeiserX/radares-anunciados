@@ -6,10 +6,10 @@ the phone enters a zone, and the [blueprint](../blueprints/radar_zone_alert.yaml
 
 ## Sources
 
-Fifteen sources: the DGT, the Servei Català de Trànsit, the Basque and Navarra governments, the cities
+Sixteen sources: the DGT, the Servei Català de Trànsit, the Basque and Navarra governments, the cities
 of Madrid, Salamanca, Donostia, Murcia and León, the traffic fines of Barcelona and Madrid, and
-OpenStreetMap. [Sources](sources.md) lists what
-each gives, its licence, how often it changes and which need a Spanish IP.
+OpenStreetMap's cameras and notes. [Sources](sources.md) lists what each gives, its licence, how often
+it changes and which need a Spanish IP.
 
 `RADARES_PROVINCES` picks the area by INE province code (`30` is Murcia, the default), or `all`. A
 radar whose source knows its province is kept only in a selected one, and a city's list is fetched
@@ -23,7 +23,12 @@ one exception is opt-in: with `RADARES_STRETCH_ZONES=on` and a province list, DG
 stretches get circles along the road.
 
 An OpenStreetMap camera within 150 m of a radar an authority publishes (the DGT, the Servei Català de
-Trànsit, a city) is the same camera mapped twice, so it's dropped.
+Trànsit, a city) is the same camera mapped twice, so it's dropped. An OpenStreetMap average-speed
+section goes whole, line and both ends, when one end is within 1 km of an end of a published section
+(the two rarely put an end at the same spot) or within 150 m of a published camera.
+
+An open OpenStreetMap note that reports a camera is a `reported` point: unconfirmed, on the map in its
+own colour, never a zone. It is left out of the merge altogether: it drops nothing and nothing drops it.
 Two radars at the same spot become one zone. The DGT lists both directions of a section with the same
 two ends, and the phone has no slots to waste.
 
@@ -220,8 +225,9 @@ tries again.
 
 ## The published feed
 
-[`.github/workflows/feed.yml`](../.github/workflows/feed.yml) runs every 6 hours, and on demand, on a
-GitHub-hosted runner. It builds the feed for all of Spain (`RADARES_PROVINCES=all`) from every
+[`.github/workflows/feed.yml`](../.github/workflows/feed.yml) runs every 6 hours, and on demand. Its
+`publish` job runs on a self-hosted runner in Spain, because `euskadi`, `navarra` and the León council
+answer only Spanish addresses. It builds the feed for all of Spain (`RADARES_PROVINCES=all`) from every
 registered source:
 
 ```sh
@@ -234,9 +240,10 @@ and publishes `feed.geojson`, `status.json`, the map in [`site/`](../site/) and
 | Field | Meaning |
 |---|---|
 | `status` | `ok`: the source answered in this run. `stale`: this run failed; the feed holds its last good result. `missing`: never fetched here; it adds nothing |
-| `radars`, `stretches` | what the source gave (or its last good result) |
+| `radars`, `stretches`, `reported` | what the source gave (or its last good result); `reported` counts the unconfirmed notes, which are not counted as radars |
 | `in_feed` | its features left in the feed after duplicates are dropped |
 | `data_time` | when the data in use was fetched, UTC; `null` for a missing source |
+| `updated` | the date the source gives for its last update (for DGT and SCT, the `Last-Modified` the file in use came with, kept with the cached copy; Madrid and Salamanca catalogue dates); `null` when it gives none |
 | `error` | why this run's fetch failed |
 | `attribution`, `licence`, `spanish_ip` | the source's terms, and whether it answers only Spanish addresses |
 
@@ -244,17 +251,32 @@ Each source's last good result and the announced streets are kept between runs w
 so a source that is down falls back to its last good copy as described above, and an announced street
 turns dormant on the map after its week. The downloads are not kept. A download younger than its
 source's cache age is reused without asking the source, so a kept one would report a source as `ok`,
-with this run's time, while its site is down. With no download kept, every
-published run asks every source. The runner is outside Spain:
-a source that refuses other countries never answers there, and shows as `missing` until a copy reaches
-the cache some other way. A run whose feed has no features at all fails instead of publishing it.
+with this run's time, while its site is down. The self-hosted runner is not wiped between runs, so the
+job deletes the cache folder before restoring the kept part. With no download kept, every published run
+asks every source. A run whose feed has no features at all fails instead of publishing it. The `deploy`
+job, on a GitHub-hosted runner, publishes what `publish` built.
 
-A pull request that touches the code, the page or the workflow builds the same files from an empty
-cache without publishing them, and keeps them as the `feed-site` artifact. Its log lists every source
-with its state and counts.
+A pull request that touches the code, the page or the workflow runs the `check` job instead, on a
+GitHub-hosted runner. The two jobs are split by event (`schedule` and `workflow_dispatch`, which no
+fork can trigger, against `pull_request`), which keeps ordinary pull requests off the self-hosted
+runner. It cannot stop a hostile one: a pull request runs the workflow files of its own merge commit,
+so one that edits them could target the self-hosted runner. What stops that is the repository
+setting that requires approval of every outside contributor's run, and reading a fork's changes
+under `.github/` before approving it. The runner is also ephemeral, one job per registration, and
+has no Docker socket. `check` builds the same files from an empty cache without publishing them, and keeps
+them as the `feed-site` artifact. Its log lists every source with its state and counts. That runner is
+outside Spain, so the job sets `RADARES_SPANISH_IP_TIMEOUT=20`: a source marked Spanish IP gets one try
+of at most 20 s per request to its Spain-only hosts (`spanish_ip_hosts`) instead of three of 90 s.
+Its other requests, like Overpass or iLeón, keep their normal timeouts. `euskadi` and `navarra` then
+show as `missing`; `leon` still reads iLeón, which answers from anywhere. Both jobs build through
+the same steps, in [`.github/actions/build-feed`](../.github/actions/build-feed/action.yml).
 
 The map loads Leaflet from unpkg, pinned to one version with an integrity hash, and OpenStreetMap
 tiles. A Content-Security-Policy in the page allows nothing else: no analytics, no external fonts.
+
+If the self-hosted runner is offline, a scheduled `publish` job waits in the queue for up to 24 hours
+and then fails. Nothing else raises an alarm: GitHub mails the failure to the repository's owner,
+and the map shows its warning once `status.json` is a day old.
 
 Which radars are active, and each source's state, are worked out when the feed is built, not in the
 browser. When `status.json` is more than a day old the map shows a warning that the feed has stopped

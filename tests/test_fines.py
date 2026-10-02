@@ -138,6 +138,7 @@ def test_barcelona_gives_a_zone_only_where_a_mobile_radar_fined_on_two_days():
         "octubre a diciembre de 2025, actualizado 2026-09-01; multas aquí en 14 días de 92"
     )
     assert b10.maxspeed is None and b10.province == "08" and b10.valid_to is None
+    assert result.updated == "2026-09-01"  # status.json shows it
 
 
 def test_barcelona_names_a_place_the_same_in_every_quarter():
@@ -372,6 +373,7 @@ def test_madrid_fetch_places_the_places_that_recur(monkeypatch, caplog):
     moret = by_name["Radar móvil frecuente Paseo de Moret 1"]
     assert moret.maxspeed == 50 and moret.valid_to is None
     assert len(downloads) == 3 and len(reads) == 1
+    assert result.updated == "2026-10-02"  # the newest month's file
 
     # The next run downloads nothing and reads no register: months and places are kept.
     reads.clear()

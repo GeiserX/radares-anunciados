@@ -300,7 +300,7 @@ def parse(answer: bytes, quarter: Quarter, updated: str | None = None) -> Source
                 province=PROVINCE,
             )
         )
-    return SourceResult(radars=radars)
+    return SourceResult(radars=radars, updated=updated)
 
 
 def _merge(mobile: list[tuple[Place, set[date]]]) -> list[tuple[Place, set[date]]]:

@@ -381,7 +381,13 @@ def test_nothing_published_yet_is_an_empty_week(monkeypatch):
 def test_registered_for_leon_only():
     source = sources.REGISTRY["leon"]
     assert source.provinces == {"24"} and source.spanish_ip
-    assert "CC BY-NC 4.0" in source.licence and "no reuse licence" in source.licence
+    assert "CC BY-NC 4.0" in source.licence and "Ley 37/2007" in source.licence
+    assert "personal and private use" in source.licence and leon.LEGAL_URL in source.licence
+    # only the council answers from Spain only; iLeón and Overpass are not capped
+    with net.fail_fast(20, source.spanish_ip_hosts):
+        assert net.timeout_s(90, leon.RSS) == 20
+        assert net.timeout_s(90, leon.ILEON_SITEMAP) == 90
+        assert net.timeout_s(90, leon.OVERPASS) == 90
     selected = sources.selected(None, frozenset({"24"}))
     assert [s.key for s in selected] == ["dgt", "osm", "dgt_invive", "leon"]
 

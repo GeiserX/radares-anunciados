@@ -204,6 +204,19 @@ def test_fetch_reports_the_list_and_its_skipped_streets(monkeypatch):
     monkeypatch.setattr(murcia.net, "cached_get", lambda *a, **k: next(answers))
     radars, status = murcia.fetch(date(2026, 7, 8))
     assert radars
+    # the list is the police's; the newspaper is credited as where it was read
+    assert {r.attribution for r in radars} == {
+        "Policía Local de Murcia (lista semanal, leída en La Opinión de Murcia); "
+        "geometría © OpenStreetMap"
+    }
+    assert murcia.credit("https://www.murciaactualidad.com/x").endswith(
+        "leída en Murcia Actualidad); geometría © OpenStreetMap"
+    )
+    assert murcia.credit("u") == murcia.ATTRIBUTION
+    # the feed reads the police's list in the press: facts only, not the reuse of a
+    # public-sector document it never reads
+    assert "Ley 37/2007" not in murcia.SOURCE.licence
+    assert "not the article's text" in murcia.SOURCE.licence
     assert (status.source, status.week, status.published) == (
         "murcia",
         date(2026, 7, 6),

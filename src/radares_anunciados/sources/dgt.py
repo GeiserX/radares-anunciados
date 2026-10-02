@@ -10,7 +10,7 @@ from __future__ import annotations
 import xml.etree.ElementTree as ET
 
 from .. import net
-from ..model import Radar, SourceResult, Stretch
+from ..model import Radar, SourceResult, Stretch, dated
 from .base import Context, Source
 
 URL = "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml"
@@ -147,7 +147,10 @@ def parse_all(
 
 
 def fetch(ctx: Context) -> SourceResult:
-    return parse_all(net.cached_get(URL, max_age_s=ctx.max_age_s), ctx.provinces)
+    """Dated with the Last-Modified the file came with, kept beside the cached copy:
+    the date describes the bytes in use, never a newer file."""
+    xml, modified = net.cached_get_dated(URL, max_age_s=ctx.max_age_s)
+    return dated(parse_all(xml, ctx.provinces), net.last_modified_day(modified))
 
 
 SOURCE = Source(

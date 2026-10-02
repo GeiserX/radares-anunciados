@@ -31,7 +31,7 @@ from itertools import count
 import websockets
 
 from .geo import distance_m
-from .model import Radar
+from .model import REPORTED, Radar
 from .speed import MIN_RADIUS_M
 
 log = logging.getLogger(__name__)
@@ -97,6 +97,12 @@ class Plan:
     @property
     def changed(self) -> bool:
         return bool(self.create or self.delete or self.update)
+
+
+def zoned(radars: list[Radar]) -> list[Radar]:
+    """The radars that may become zones: all but the places people report and no
+    source publishes (``REPORTED``), which stay in the feed and on the map."""
+    return [r for r in radars if r.kind != REPORTED]
 
 
 def select(
@@ -224,6 +230,7 @@ class HomeAssistant:
         self, radars: list[Radar], dry_run: bool = False, max_zones: int = MAX_ZONES
     ) -> Plan:
         existing = await self.call("zone/list")
+        radars = zoned(radars)
         left_out = 0
         if len(radars) > max_zones:
             radars, left_out = select(radars, max_zones, await self.home())

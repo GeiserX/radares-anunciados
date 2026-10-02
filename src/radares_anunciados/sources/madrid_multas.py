@@ -494,7 +494,7 @@ def fetch(ctx: Context) -> SourceResult:
     )
     if not radars:
         raise ValueError("no recurring place of the Madrid fines could be placed")
-    return SourceResult(radars=radars)
+    return SourceResult(radars=radars, updated=updated)
 
 
 SOURCE = Source(

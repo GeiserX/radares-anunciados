@@ -16,7 +16,7 @@ Radares Anunciados is a Docker service that gathers the speed radars announced i
 - The mobile-radar lists that councils publish: Murcia (weekly), León (monthly, every day) and Donostia (daily)
 - Fixed, section and mobile-stretch radars from the DGT, the Servei Català de Trànsit, the Basque and Navarra governments, and the cities of Madrid, Salamanca and Donostia
 - Where Barcelona's and Madrid's traffic fines show mobile radars stood, from the cities' open data
-- Speed cameras mapped in [OpenStreetMap](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera)
+- Speed cameras and average-speed sections mapped in [OpenStreetMap](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera), and, on the published map, the open OpenStreetMap notes that report a new one, shown as unconfirmed and never turned into zones
 - Home Assistant zones kept in sync with the radars around you, for alerts through the companion app
 - Warns from published positions only; it never senses or jams a radar signal
 
@@ -33,19 +33,24 @@ Then import the [alert blueprint](blueprints/radar_zone_alert.yaml). Full steps 
 
 ## Open feed
 
-Every 6 hours a GitHub Actions run builds the feed for all of Spain from every source and publishes it
-on GitHub Pages, at [geiserx.github.io/radares-anunciados](https://geiserx.github.io/radares-anunciados/):
+Every 6 hours a GitHub Actions run on a self-hosted runner in Spain builds the feed for all of Spain from
+every source, including those that answer only Spanish addresses, and publishes it on GitHub Pages, at
+[geiserx.github.io/radares-anunciados](https://geiserx.github.io/radares-anunciados/):
 
 - [`feed.geojson`](https://geiserx.github.io/radares-anunciados/feed.geojson): every radar as a point and every
   watched stretch as a line, each with its source, attribution, limit and link
 - [`status.json`](https://geiserx.github.io/radares-anunciados/status.json): per source, `ok`, `stale` (this run
-  failed, its last good copy is used) or `missing`, with record counts and the time of its data
+  failed, its last good copy is used) or `missing`, with record counts, the time of its data and the
+  source's own last update date when it gives one
 - a map of the feed
 
 The feed includes OpenStreetMap data, so the database is offered under
 [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) with each source's attribution: see
-[LICENSE-DATA.md](LICENSE-DATA.md). The run happens outside Spain, so a source that answers only Spanish
-addresses shows as `missing` there. [How it works](docs/how-it-works.md#the-published-feed) has the details.
+[LICENSE-DATA.md](LICENSE-DATA.md). Data from public bodies is reused under
+[Ley 37/2007](https://www.boe.es/buscar/act.php?id=BOE-A-2007-19814) on the reuse of public-sector
+information, with the source cited, values unchanged, and the source's last update date where the
+source gives one.
+[How it works](docs/how-it-works.md#the-published-feed) has the details.
 
 ## Documentation
 
@@ -62,8 +67,10 @@ addresses shows as `missing` there. [How it works](docs/how-it-works.md#the-publ
 | [Servei Català de Trànsit](https://transit.gencat.cat/ca/seguretat_viaria/cinemometres-fixos-trams-mobils/): fixed, section and trailer radars | Llicència oberta d'ús d'informació – Catalunya |
 | [Madrid](https://datos.madrid.es/dataset/300049-0-radares-fijos-moviles) and [Salamanca](https://opendata.aytosalamanca.es/datosabiertos/catalogo/dataset/radares-fijos) open data | CC BY 4.0; GNU FDL |
 | [Barcelona](https://opendata-ajuntament.barcelona.cat/data/es/dataset/denuncies_sancions_transit_bcn_detall) and [Madrid](https://datos.madrid.es/dataset/210104-0-multas-circulacion-detalle) traffic-fines open data, and Madrid's [street register](https://datos.madrid.es/dataset/213605-0-callejero-oficial-madrid): where mobile radars fined, months ago | CC BY 4.0 |
-| Basque and Navarra governments, Donostia, Murcia and León councils | no reuse terms published |
-| [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors: cameras, speed limits, street geometry | ODbL 1.0 |
+| Basque and Navarra governments, León council | no reuse licence; reused under [Ley 37/2007](LICENSE-DATA.md#public-bodies-with-no-reuse-licence) |
+| Donostia council | its own reuse terms, in its [legal notice](https://www.donostia.eus/es/aviso-legal) |
+| Murcia's Policía Local list, León's on days only iLeón covers | facts only, [read in the press](LICENSE-DATA.md#lists-read-in-the-press) |
+| [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors: cameras, sections, notes, speed limits, street geometry | ODbL 1.0 |
 
 The full table, with cadence and which sources need a Spanish IP, is in [docs/sources.md](docs/sources.md).
 
