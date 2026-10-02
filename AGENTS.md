@@ -83,5 +83,8 @@ interferes with a radar signal is out of scope, whoever asks for it.
 - La Opinión's street list is `ul.ft-list--primary`. A plain `ft-list` on the same page holds headlines.
 - A street or district not found is skipped, never guessed. It is logged, exported as
   `radares_street_skipped` and named in the "Radares actualizados" notification.
+- One radar drawn as several circles is named `Radar anunciado …` (police list) or `Radar de tramo …`
+  (section). The blueprint alerts once per such name; every other zone alerts on its own, because
+  names like OSM's `Radar (límite 50)` repeat across different cameras.
 
 Checks: `uv run ruff check . && uv run ruff format --check . && uv run pytest -q`.

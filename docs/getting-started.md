@@ -1,7 +1,7 @@
 # Getting started
 
-You need Home Assistant with the iOS companion app on each phone that should get alerts, and a
-machine that runs Docker.
+You need Home Assistant 2026.6 or newer with the companion app (iOS or Android) on each phone that
+should get alerts, and a machine that runs Docker.
 
 ## 1. Create a Home Assistant token
 
@@ -45,16 +45,54 @@ docker compose run --rm radares-anunciados sync --dry-run
 [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2FGeiserX%2Fradares-anunciados%2Fblob%2Fmain%2Fblueprints%2Fradar_zone_alert.yaml)
 
 Or copy [`blueprints/radar_zone_alert.yaml`](../blueprints/radar_zone_alert.yaml) into Home Assistant
-by hand. Create one automation from it. When a phone enters a radar zone, that phone gets a
-notification titled with the radar. It's marked time-sensitive, so it shows through Focus modes.
+by hand. Create one automation from it and pick the phones' location trackers under **Phones**. Each
+phone needs its own device name in the companion app. Its notify action is
+`notify.mobile_app_<device name>`, so two phones with the same name share one action, and one of them
+gets both phones' alerts. When a phone enters a radar zone, that phone gets a notification titled with
+the radar, such as "Radar (límite 50)". On an iPhone it's time-sensitive, so it shows through Focus
+modes; on Android it's a heads-up notification on the high-importance channel "Radares". Turn on
+**Critical alert** to have it ring in silent mode: an iOS critical alert, or Android's alarm stream.
 
-## 4. Open the app once after each change
+A street from a police list, or an average-speed section, is several zones with one name, so each
+phone gets one alert for it and then stays quiet about it for the **Cooldown** (10 minutes by
+default). Another radar, or another phone, is alerted at once. No helper is needed. If a push is lost
+on the way to the phone, the rest of that street stays quiet too;
+[how it works](how-it-works.md#one-alert-per-street) has the details.
 
-The iOS app only downloads new zones while it is open on screen. After every change the service sends
-"Radares actualizados" to the phones in `RADARES_NOTIFY`; tap it and the new zones load. Until you do,
-the phone has only the zones it loaded before: last week's streets, now silent, and none of this
-week's. If the app is already open during a change, it loads the new zones on its own within half a
-minute.
+### Updating from an earlier blueprint
+
+The earlier blueprint had no **Phones** input; this one requires it. After you re-import the
+blueprint, an automation made from the earlier one stops working: it shows as unavailable, and the log
+says `Failed to generate automation from blueprint: Missing input phones`. Pick its phones to fix it:
+
+1. Re-import the blueprint: **Settings → Automations & scenes → Blueprints**, open the menu of "Radar
+   ahead (radares-anunciados)" and choose **Re-import blueprint**.
+2. Open the automation made from it, pick each phone's location tracker under **Phones**, and save.
+
+Sound, Time sensitive and Critical alert keep their values.
+
+## 4. Set up each phone
+
+**iPhone.** Allow location **Always** and **Precise** for the app. The iOS app only downloads new
+zones while it is open on screen. After every change the service sends "Radares actualizados" to the
+phones in `RADARES_NOTIFY`; tap it and the new zones load. Until you do, the phone has only the zones
+it loaded before: last week's streets, now silent, and none of this week's. If the app is already open
+during a change, it loads the new zones on its own within half a minute. For **Critical alert**, allow critical alerts in iOS Settings → Notifications →
+Home Assistant.
+
+**Android.** In the app, **Settings → Companion app → Manage sensors**:
+
+- turn on **Location zone** and **Background location**;
+- under Background location, turn on **High accuracy mode** and limit it to "only when connected to
+  BT devices", choosing the car's Bluetooth. It sends a location every 5 seconds, so the alert lands
+  within a few seconds of the zone's edge. Without it, Android may report the entry minutes late, after
+  the radar. It costs battery and shows a permanent notification, which is why it's limited to the car.
+
+In Android's location settings keep **Google Location Accuracy** on: with it off, the app's geofences
+fail without telling you. The app watches only the first 100 zones by entity id, not the nearest;
+high accuracy mode is what makes every other radar alert. The app loads zones only when its process
+starts or a location setting changes, so after a change turn **Location zone** off and on again, or
+force-stop the app and reopen it.
 
 If a street from the week's list can't be placed on the map, that notification names it after "Sin
 aviso". That street gets no zone, so it gives no warning this week.

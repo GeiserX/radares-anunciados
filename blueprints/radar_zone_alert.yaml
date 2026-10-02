@@ -1,60 +1,307 @@
 blueprint:
   name: Radar ahead (radares-anunciados)
   description: >-
-    Sends a notification to the iPhone that just entered a radar zone created by
-    radares-anunciados. The iOS companion app fires `ios.zone_entered` for passive
-    zones too, so presence (home / not_home) is untouched.
+    Alerts a phone (iPhone or Android) when it enters a radar zone created by
+    radares-anunciados. It watches each selected phone's location tracker, whose
+    `in_zones` lists the zones the phone is in, and also listens for the apps'
+    own zone events, which can arrive first. A street from a police list, or an
+    average-speed section, is several zones with one name, so each phone is
+    alerted once per radar. Zones that are not in force (icon `mdi:camera-off`)
+    never alert.
   domain: automation
+  homeassistant:
+    # the location tracker's `in_zones` attribute
+    min_version: 2026.6.0
   source_url: https://github.com/GeiserX/radares-anunciados/blob/main/blueprints/radar_zone_alert.yaml
   input:
+    phones:
+      name: Phones
+      description: >-
+        The location tracker of each phone to alert, from the Home Assistant
+        companion app. Each phone gets the alert through its own notify action,
+        `notify.mobile_app_<device name>`, so give each phone a different device
+        name in the companion app. Two phones with one name share one action,
+        and one of them gets both phones' alerts.
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: device_tracker
+              integration: mobile_app
     sound:
-      name: Sound
+      name: Sound (iPhone)
       description: iOS notification sound name.
       default: default
       selector:
         text:
     time_sensitive:
-      name: Time sensitive
-      description: Break through Focus modes (iOS "time-sensitive" interruption level).
+      name: Time sensitive (iPhone)
+      description: >-
+        Break through Focus modes (iOS "time-sensitive" interruption level).
+        Android alerts always go to a high-importance channel.
       default: true
       selector:
         boolean:
     critical:
       name: Critical alert
       description: >-
-        Play at full volume even in silent mode or Do Not Disturb (iOS critical
-        alert). The companion app must have critical alerts allowed in iOS
-        Settings > Notifications > Home Assistant.
+        iPhone: play at full volume even in silent mode or Do Not Disturb (iOS
+        critical alert; allow critical alerts in iOS Settings > Notifications >
+        Home Assistant). Android: post on the app's `alarm_stream` channel, which
+        plays the alarm sound on the alarm volume, also in silent mode.
       default: false
       selector:
         boolean:
+    cooldown:
+      name: Cooldown
+      description: >-
+        Minutes after an alert before that phone is alerted for that radar again. A
+        street from a police list ("Radar anunciado ...") is several overlapping
+        zones, and an average-speed section ("Radar de tramo ...") has a zone at
+        each end; each counts as one radar. Any other zone is its own radar. A
+        different radar, or another phone, is alerted at once.
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 120
+          unit_of_measurement: min
+          mode: box
+
+trigger_variables:
+  cooldown: !input cooldown
 
 triggers:
+  # Any change of a phone's tracker: it entered a radar zone, or a zone it is
+  # in came into force.
+  - trigger: state
+    entity_id: !input phones
+    id: tracker
+  # The apps' own zone events. iOS sends its event before the tracker update,
+  # and Android sends its event even when the fix is too coarse to update the
+  # tracker. Both apps lose events in other cases, so the events only add speed.
   - trigger: event
     event_type: ios.zone_entered
-
-conditions:
-  - condition: template
+    id: app
+  - trigger: event
+    event_type: android.zone_entered
+    id: app
+  # After a restart, a phone already inside a radar zone is not alerted.
+  - trigger: homeassistant
+    event: start
+    id: start
+  # Nor after a scene reload: `scene.reload`, a save in the scene editor and
+  # "reload all YAML" delete every scene made by `scene.create`, the markers too.
+  - trigger: event
+    event_type: scene_reloaded
+    id: start
+  # A marker is deleted once it is older than the cooldown and its phone has
+  # left that radar.
+  - trigger: template
+    id: cleanup
     value_template: >-
-      {{ state_attr(trigger.event.data.zone, 'icon') == 'mdi:camera-timer'
-         and (state_attr(trigger.event.data.zone, 'friendly_name') or '').startswith('Radar') }}
+      {%- macro key(zone) -%}
+        {%- set name = state_attr(zone, 'friendly_name') or '' -%}
+        {{- name if name.startswith(('Radar anunciado ', 'Radar de tramo ')) else zone -}}
+      {%- endmacro -%}
+      {%- set ns = namespace(stale=false) -%}
+      {%- for m in states.scene
+            if m.entity_id.startswith('scene.radares_anunciados_')
+            and now() - m.last_changed >= timedelta(minutes=cooldown | float(10)) -%}
+        {%- set ids = m.attributes.entity_id or [] -%}
+        {%- set tracker, radar = ids if ids | count == 2 else ['', ''] -%}
+        {%- set inside = namespace(found=false) -%}
+        {%- for zone in state_attr(tracker, 'in_zones') or [] -%}
+          {%- set inside.found = inside.found or key(zone) == key(radar) -%}
+        {%- endfor -%}
+        {%- set ns.stale = ns.stale or not inside.found -%}
+      {%- endfor -%}
+      {{ ns.stale }}
 
 variables:
+  phones: !input phones
   sound: !input sound
   time_sensitive: !input time_sensitive
   critical: !input critical
+  cooldown: !input cooldown
+  # For an app event, the selected phone that sent it: Android names its device
+  # registry identifier, iOS its device name.
+  sender: >-
+    {%- set ns = namespace(found='') -%}
+    {%- if trigger.id == 'app' -%}
+      {%- set data = trigger.event.data -%}
+      {%- for t in phones if not ns.found and device_id(t) -%}
+        {%- if ('mobile_app', data.get('device_id')) in (device_attr(device_id(t), 'identifiers') or [])
+              or (data.get('sourceDeviceName') is not none
+                  and device_attr(device_id(t), 'name') == data.get('sourceDeviceName')) -%}
+          {%- set ns.found = t -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endif -%}
+    {{ ns.found }}
+  # The radars to alert for, one entry per radar and phone. A radar alerts when
+  # it is in force and its phone has no marker for it, or just entered it and
+  # the marker is older than the cooldown. While a phone is inside a radar, or
+  # within the cooldown after leaving it, a scene named after both exists: the
+  # marker. It needs no helper.
+  #
+  # Only these name prefixes are one radar drawn as several zones. Other names
+  # repeat across unrelated cameras (OpenStreetMap's "Radar (límite 50)"), so
+  # each of those zones is its own radar.
+  radars: >-
+    {%- macro key(zone) -%}
+      {%- set name = state_attr(zone, 'friendly_name') or '' -%}
+      {{- name if name.startswith(('Radar anunciado ', 'Radar de tramo ')) else zone -}}
+    {%- endmacro -%}
+    {%- set checks = namespace(list=[]) -%}
+    {%- if trigger.id == 'tracker' and trigger.to_state -%}
+      {%- set checks.list = [[trigger.entity_id,
+            trigger.to_state.attributes.get('in_zones') or [],
+            (trigger.from_state.attributes.get('in_zones') or []) if trigger.from_state else []]] -%}
+    {%- elif trigger.id == 'app' and sender -%}
+      {%- set checks.list = [[sender, [trigger.event.data.get('zone')],
+            state_attr(sender, 'in_zones') or []]] -%}
+    {%- elif trigger.id == 'start' -%}
+      {%- for t in phones -%}
+        {%- set checks.list = checks.list + [[t, state_attr(t, 'in_zones') or [],
+              state_attr(t, 'in_zones') or []]] -%}
+      {%- endfor -%}
+    {%- endif -%}
+    {%- set ns = namespace(out=[]) -%}
+    {%- for tracker, now_in, was_in in checks.list if device_id(tracker) -%}
+      {%- set seen = namespace(before=[], keys=[]) -%}
+      {%- for zone in was_in -%}
+        {%- set seen.before = seen.before + [key(zone)] -%}
+      {%- endfor -%}
+      {%- for zone in now_in
+            if is_state_attr(zone, 'icon', 'mdi:camera-timer')
+            and (state_attr(zone, 'friendly_name') or '').startswith('Radar') -%}
+        {%- set k = key(zone) -%}
+        {%- set marker = 'radares_anunciados_' ~ ((device_id(tracker) ~ ' ' ~ k) | slugify) -%}
+        {%- set m = states['scene.' ~ marker] -%}
+        {%- set gained = k not in seen.before -%}
+        {%- if k not in seen.keys
+              and (m is none
+                   or (gained and now() - m.last_changed >= timedelta(minutes=cooldown | float(10)))) -%}
+          {%- set ns.out = ns.out + [{'tracker': tracker, 'zone': zone, 'marker': marker,
+                                      'gained': gained}] -%}
+          {%- set seen.keys = seen.keys + [k] -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endfor -%}
+    {{ ns.out }}
+
+conditions:
+  - condition: template
+    value_template: "{{ trigger.id == 'cleanup' or radars | count > 0 }}"
 
 actions:
-  - action: "notify.mobile_app_{{ trigger.event.data.sourceDeviceID }}"
-    data:
-      title: "{{ state_attr(trigger.event.data.zone, 'friendly_name') }}"
-      message: Radar publicado cerca. Revisa tu velocidad.
-      data:
-        push:
-          sound: >-
-            {{ {'name': sound, 'critical': 1, 'volume': 1.0} if critical else sound }}
-          interruption-level: >-
-            {{ 'critical' if critical else ('time-sensitive' if time_sensitive else 'active') }}
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: cleanup
+        sequence:
+          - variables:
+              stale: >-
+                {%- macro key(zone) -%}
+                  {%- set name = state_attr(zone, 'friendly_name') or '' -%}
+                  {{- name if name.startswith(('Radar anunciado ', 'Radar de tramo ')) else zone -}}
+                {%- endmacro -%}
+                {%- set ns = namespace(stale=[]) -%}
+                {%- for m in states.scene
+                      if m.entity_id.startswith('scene.radares_anunciados_')
+                      and now() - m.last_changed >= timedelta(minutes=cooldown | float(10)) -%}
+                  {%- set ids = m.attributes.entity_id or [] -%}
+                  {%- set tracker, radar = ids if ids | count == 2 else ['', ''] -%}
+                  {%- set inside = namespace(found=false) -%}
+                  {%- for zone in state_attr(tracker, 'in_zones') or [] -%}
+                    {%- set inside.found = inside.found or key(zone) == key(radar) -%}
+                  {%- endfor -%}
+                  {%- if not inside.found -%}
+                    {%- set ns.stale = ns.stale + [m.entity_id] -%}
+                  {%- endif -%}
+                {%- endfor -%}
+                {{ ns.stale }}
+          - if:
+              - condition: template
+                value_template: "{{ stale | count > 0 }}"
+            then:
+              - action: scene.delete
+                target:
+                  entity_id: "{{ stale }}"
+                continue_on_error: true
+      - conditions:
+          - condition: trigger
+            id: start
+        sequence:
+          - repeat:
+              for_each: "{{ radars }}"
+              sequence:
+                - action: scene.create
+                  data:
+                    scene_id: "{{ repeat.item.marker }}"
+                    snapshot_entities: "{{ [repeat.item.tracker, repeat.item.zone] }}"
+    default:
+      # Runs are queued, so this check and the markers below happen one run at a
+      # time: the app event and the tracker update of one entry alert once.
+      - variables:
+          todo: >-
+            {%- set ns = namespace(out=[]) -%}
+            {%- for radar in radars -%}
+              {%- set m = states['scene.' ~ radar.marker] -%}
+              {%- if m is none
+                    or (radar.gained
+                        and now() - m.last_changed >= timedelta(minutes=cooldown | float(10))) -%}
+                {%- set ns.out = ns.out + [radar] -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {{ ns.out }}
+          device: "{{ device_id(radars[0].tracker) }}"
+          # The companion app's notify action is named after the device name it
+          # registered, which is the device registry's name for the phone.
+          notify: "notify.mobile_app_{{ device_attr(device, 'name') | slugify }}"
+          iphone: "{{ device_attr(device, 'manufacturer') == 'Apple' }}"
+      - condition: template
+        value_template: "{{ todo | count > 0 }}"
+      - repeat:
+          for_each: "{{ todo }}"
+          sequence:
+            - action: scene.create
+              data:
+                scene_id: "{{ repeat.item.marker }}"
+                snapshot_entities: "{{ [repeat.item.tracker, repeat.item.zone] }}"
+      - repeat:
+          for_each: "{{ todo }}"
+          sequence:
+            - if:
+                - condition: template
+                  value_template: "{{ iphone }}"
+              then:
+                - action: "{{ notify }}"
+                  data:
+                    title: "{{ state_attr(repeat.item.zone, 'friendly_name') }}"
+                    message: Radar publicado cerca. Revisa tu velocidad.
+                    data:
+                      push:
+                        sound: >-
+                          {{ {'name': sound, 'critical': 1, 'volume': 1.0} if critical else sound }}
+                        interruption-level: >-
+                          {{ 'critical' if critical
+                             else ('time-sensitive' if time_sensitive else 'active') }}
+              else:
+                - action: "{{ notify }}"
+                  data:
+                    title: "{{ state_attr(repeat.item.zone, 'friendly_name') }}"
+                    message: Radar publicado cerca. Revisa tu velocidad.
+                    data:
+                      # deliver now, as a heads-up notification
+                      ttl: 0
+                      priority: high
+                      channel: "{{ 'alarm_stream' if critical else 'Radares' }}"
+                      importance: high
 
+# One run at a time, so two triggers for one entry can't both alert. A run only
+# checks, marks and notifies, so the queue drains in about a second.
 mode: queued
-max: 10
+max: 50
+max_exceeded: silent
