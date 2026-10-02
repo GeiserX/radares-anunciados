@@ -212,8 +212,10 @@ def test_the_attribution_carries_the_date_of_the_files_last_update(monkeypatch):
     monkeypatch.setattr(net, "cached_get", lambda url, **kw: payloads[url])
     every = Context(day=date(2026, 10, 1), provinces=None, boxes=(), radius=Radius())
     monkeypatch.setattr(sct, "head", lambda url: {k.lower(): v for k, v in HEAD.items()})
-    radars = sct.SOURCE.fetch(every).radars
-    assert {r.attribution for r in radars} == {sct.ATTRIBUTION + ", actualizado 2026-09-17"}
+    result = sct.SOURCE.fetch(every)
+    assert {r.attribution for r in result.radars} == {sct.ATTRIBUTION + ", actualizado 2026-09-17"}
+    assert result.updated == "2026-09-17"
     # no date to be had: the radars still come, credited without it
     monkeypatch.setattr(sct, "head", lambda url: {})
-    assert {r.attribution for r in sct.SOURCE.fetch(every).radars} == {sct.ATTRIBUTION}
+    result = sct.SOURCE.fetch(every)
+    assert {r.attribution for r in result.radars} == {sct.ATTRIBUTION} and result.updated is None

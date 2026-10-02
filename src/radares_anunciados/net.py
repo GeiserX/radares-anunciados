@@ -9,12 +9,35 @@ import os
 import time
 import urllib.parse
 import urllib.request
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from pathlib import Path
 
 log = logging.getLogger(__name__)
 
 USER_AGENT = "radares-anunciados (+https://github.com/GeiserX/radares-anunciados)"
+
+# Set by ``fail_fast``: every request gets one try and at most this many seconds.
+_cap: ContextVar[int | None] = ContextVar("timeout_cap", default=None)
+
+
+@contextmanager
+def fail_fast(seconds: int | None) -> Iterator[None]:
+    """Within the block, one try per request and a timeout of at most ``seconds``
+    (None: no change). A source that answers only Spanish addresses runs in it on a
+    runner outside Spain, where it would time out three times per request."""
+    token = _cap.set(seconds)
+    try:
+        yield
+    finally:
+        _cap.reset(token)
+
+
+def timeout_s(default: int) -> int:
+    """``default``, or the ``fail_fast`` cap when that is lower."""
+    cap = _cap.get()
+    return default if cap is None else min(default, cap)
 
 
 def get(
@@ -25,6 +48,8 @@ def get(
     tries: int = 3,
 ) -> bytes:
     body = urllib.parse.urlencode(data).encode() if data is not None else None
+    if _cap.get() is not None:
+        timeout, tries = timeout_s(timeout), 1
     for attempt in range(1, tries + 1):
         request = urllib.request.Request(
             url, data=body, headers={"User-Agent": USER_AGENT, **(headers or {})}

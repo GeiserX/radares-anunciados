@@ -15,8 +15,8 @@ Most of these radars are DGT booths that the DGT file lists too (7 of 8 on
 waste the phone's regions, so a radar on the same road within half a km of one
 in the DGT file is left to the DGT source.
 
-No reuse licence is published: the navarra.es legal notice reserves the
-content's intellectual property to the Government of Navarra.
+The Government of Navarra publishes no reuse licence for it; it is reused
+under Ley 37/2007 on the reuse of public-sector information (LICENSE-DATA.md).
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ from .. import net
 from ..geo import utm_to_wgs84
 from ..model import Radar, SourceResult
 from . import dgt
-from .base import Context, Source
+from .base import PUBLIC_SECTOR_REUSE, Context, Source
 
 log = logging.getLogger(__name__)
 
@@ -40,10 +40,7 @@ VIEWER = "https://visorcontroltrafico.navarra.es/gn.visortrafico.web.internet/"
 API = VIEWER + "api/openits/elements/radars"
 LEGAL_URL = "https://www.navarra.es/es/aviso-legal"
 ATTRIBUTION = "Gobierno de Navarra, Visor de Tráfico"
-LICENCE = (
-    "no reuse licence published; the navarra.es legal notice reserves the content's "
-    f"intellectual property to the Government of Navarra ({LEGAL_URL})"
-)
+LICENCE = f"{PUBLIC_SECTOR_REUSE}. Legal notice: {LEGAL_URL}"
 PROVINCE = "31"
 UTM_ZONE = 30
 # What the viewer sends (its config.json); the body is the viewer's own.
@@ -153,7 +150,7 @@ def post_api(timeout: int = 60) -> bytes:
     request = urllib.request.Request(
         API, data=json.dumps(API_BODY).encode(), headers=API_HEADERS, method="POST"
     )
-    with urllib.request.urlopen(request, timeout=timeout) as response:
+    with urllib.request.urlopen(request, timeout=net.timeout_s(timeout)) as response:
         return response.read()
 
 

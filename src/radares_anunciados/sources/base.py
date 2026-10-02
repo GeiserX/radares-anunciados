@@ -18,6 +18,11 @@ from ..model import SourceResult
 from ..provinces import Box
 from ..speed import Radius
 
+# The terms of a public body that publishes no licence of its own (LICENSE-DATA.md).
+PUBLIC_SECTOR_REUSE = (
+    "no licence of its own; reused under Ley 37/2007 on the reuse of public-sector information"
+)
+
 
 @dataclass(frozen=True)
 class Context:
@@ -29,6 +34,8 @@ class Context:
     radius: Radius  # use radius.street_m(limit) for the circles along an announced street
     max_age_s: int = 86_400  # the source's own cache age, from its Source entry
     stretch_zones: bool = False  # RADARES_STRETCH_ZONES=on: stretch sources give zones too
+    # RADARES_SPANISH_IP_TIMEOUT: a source with spanish_ip runs under net.fail_fast(this)
+    spanish_ip_timeout_s: int | None = None
 
 
 @dataclass(frozen=True)

@@ -41,7 +41,7 @@ from .. import net
 from ..model import Radar, SourceResult
 from ..streetnames import expand, same_words, split
 from ..streets import Announced, WeeklyList, fold, place, place_words
-from .base import Context, Source
+from .base import PUBLIC_SECTOR_REUSE, Context, Source
 
 log = logging.getLogger(__name__)
 
@@ -618,9 +618,9 @@ SOURCE = Source(
         "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es); geometría © OpenStreetMap"
     ),
     licence=(
-        "Ayuntamiento de León: no reuse licence published; its portal terms reserve "
-        "reproduction except for personal and private use. iLeón: CC BY-NC 4.0. "
-        "Geometry: ODbL 1.0"
+        f"Ayuntamiento de León's list: {PUBLIC_SECTOR_REUSE}. iLeón, where the list is "
+        "read when the council's post is missing: its articles are CC BY-NC 4.0; the "
+        "feed takes the list's facts, not the text. Geometry: ODbL 1.0"
     ),
     spanish_ip=True,
     max_age_s=6 * 3600,

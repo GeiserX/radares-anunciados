@@ -1,10 +1,11 @@
 import logging
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
-from radares_anunciados.model import SourceResult
+from radares_anunciados.model import Radar, SourceResult, Stretch
 from radares_anunciados.sources import Context, Source, dgt_freshness
 from radares_anunciados.speed import Radius
 
@@ -67,10 +68,18 @@ def test_nothing_known_before_any_check():
 def test_watch_checks_before_each_fetch_and_never_fails_it(monkeypatch):
     asked = []
     monkeypatch.setattr(dgt_freshness, "head", lambda url: asked.append(url) or HEADERS)
-    result = SourceResult()
+    radar = Radar("dgt-1", "dgt", "fixed", "A-7 km 1", 37.0, -1.0, 500, attribution="DGT")
+    stretch = Stretch("dgt-s", "dgt", "Tramo", "A-7", (37.0, -1.0), (37.1, -1.1), attribution="DGT")
+    result = SourceResult([radar], [stretch])
     source = dgt_freshness.watch(Source("dgt", lambda ctx: result, "a", "l"))
     ctx = Context(day=None, provinces=None, boxes=(), radius=Radius())
-    assert source.fetch(ctx) is result
+    # the reuse terms ask for the date of the last update: each record and status.json carry it
+    dated = SourceResult(
+        [replace(radar, attribution="DGT, actualizado 2025-12-18")],
+        [replace(stretch, attribution="DGT, actualizado 2025-12-18")],
+        updated="2025-12-18",
+    )
+    assert source.fetch(ctx) == dated
     assert asked == [dgt_freshness.dgt.URL]
     assert dgt_freshness.last_modified() == CHANGED
 
@@ -78,4 +87,14 @@ def test_watch_checks_before_each_fetch_and_never_fails_it(monkeypatch):
         raise OSError("timed out")
 
     monkeypatch.setattr(dgt_freshness, "head", down)
+    assert source.fetch(ctx) == dated  # the date of the latest check that got one
+
+
+def test_a_file_never_dated_is_credited_without_a_date(monkeypatch):
+    monkeypatch.setattr(dgt_freshness, "head", lambda url: {})
+    result = SourceResult(
+        [Radar("dgt-1", "dgt", "fixed", "A-7", 37.0, -1.0, 500, attribution="DGT")]
+    )
+    source = dgt_freshness.watch(Source("dgt", lambda ctx: result, "a", "l"))
+    ctx = Context(day=None, provinces=None, boxes=(), radius=Radius())
     assert source.fetch(ctx) is result

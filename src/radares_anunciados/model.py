@@ -103,3 +103,6 @@ class SourceResult:
     radars: list[Radar] = field(default_factory=list)
     stretches: list[Stretch] = field(default_factory=list)
     lists: list[WeeklyList] = field(default_factory=list)
+    # The day the publisher says the data last changed ("2025-12-18"), when it says
+    # one. Reuse terms ask for it (LICENSE-DATA.md); never guessed.
+    updated: str | None = None

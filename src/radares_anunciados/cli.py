@@ -88,12 +88,14 @@ def stretch_zones() -> bool:
 
 def context(day: date) -> Context:
     codes = selected_provinces()
+    spanish_ip_timeout = _env_int("RADARES_SPANISH_IP_TIMEOUT", 0)  # 0: no cap
     return Context(
         day=day,
         provinces=codes,
         boxes=osm_boxes(codes),
         radius=speed.Radius.from_env(),
         stretch_zones=stretch_zones(),
+        spanish_ip_timeout_s=spanish_ip_timeout if spanish_ip_timeout > 0 else None,
     )
 
 
@@ -166,6 +168,7 @@ def status(found: Collected, now: float) -> dict:
                 "stretches": len(o.result.stretches),
                 "in_feed": in_feed.get(o.key, 0),
                 "data_time": _iso(o.fetched_at),
+                "updated": o.result.updated,
                 "error": o.error[:300],
                 "attribution": source.attribution,
                 "licence": source.licence,

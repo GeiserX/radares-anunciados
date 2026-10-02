@@ -381,7 +381,7 @@ def test_nothing_published_yet_is_an_empty_week(monkeypatch):
 def test_registered_for_leon_only():
     source = sources.REGISTRY["leon"]
     assert source.provinces == {"24"} and source.spanish_ip
-    assert "CC BY-NC 4.0" in source.licence and "no reuse licence" in source.licence
+    assert "CC BY-NC 4.0" in source.licence and "Ley 37/2007" in source.licence
     selected = sources.selected(None, frozenset({"24"}))
     assert [s.key for s in selected] == ["dgt", "osm", "dgt_invive", "leon"]
 

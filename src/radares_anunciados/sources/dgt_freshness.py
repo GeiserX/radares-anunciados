@@ -4,7 +4,8 @@ NAP says the file is updated hourly, but on 2026-10-01 its ``Last-Modified`` was
 18 Dec 2025, while DGT's own PDF of 3 Aug 2026 lists more fixed radars. The data
 in use can only be as fresh as the file, so each DGT fetch also asks for the
 file's ``Last-Modified`` (a HEAD request) and logs its age, with a warning once it
-is older than ``STALE_AFTER_S``. ``age_s`` is the value for ``/metrics``.
+is older than ``STALE_AFTER_S``. ``age_s`` is the value for ``/metrics``. The same
+date goes into each record's attribution, as the date of the last update.
 
 The PDF is not read: it has no coordinates and no open licence.
 """
@@ -94,12 +95,30 @@ def age_s(now: float | None = None) -> float | None:
     return max(0.0, (time.time() if now is None else now) - modified)
 
 
+def dated(result: SourceResult, modified: float | None) -> SourceResult:
+    """``result`` credited with the file's last update day, as the SCT and city
+    sources are: in each record's attribution and in ``updated``."""
+    if modified is None:
+        return result
+    day = time.strftime("%Y-%m-%d", time.gmtime(modified))
+    return replace(
+        result,
+        radars=[
+            replace(r, attribution=f"{r.attribution}, actualizado {day}") for r in result.radars
+        ],
+        stretches=[
+            replace(s, attribution=f"{s.attribution}, actualizado {day}") for s in result.stretches
+        ],
+        updated=day,
+    )
+
+
 def watch(source: Source) -> Source:
-    """``source`` with a freshness check before each fetch. The check never
-    fails the fetch."""
+    """``source`` with a freshness check before each fetch, its result dated with
+    the file's Last-Modified. The check never fails the fetch."""
 
     def fetch(ctx: Context) -> SourceResult:
         check()
-        return source.fetch(ctx)
+        return dated(source.fetch(ctx), last_modified())
 
     return replace(source, fetch=fetch)

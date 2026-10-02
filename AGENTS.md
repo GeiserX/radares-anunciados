@@ -14,15 +14,19 @@ Every radar in the feed keeps its source and that source's license, and the feed
 | `dgt` | DGT fixed and section radars, [NAP](https://nap.dgt.es/dataset/radares-fijos-dgt) DATEX II | Creative Commons Attribution (NAP, no version) |
 | `dgt_invive` | DGT mobile-radar stretches, [NAP](https://nap.dgt.es/es/dataset/tramos-invive); lines, zones opt-in (`RADARES_STRETCH_ZONES`) | same |
 | `osm` | [`highway=speed_camera`](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera) nodes; also the speed-limit lookup (`osm_limits.py`) | ODbL 1.0 |
-| `murcia` | Policía Local weekly list, through the press | no reuse terms published |
+| `murcia` | Policía Local weekly list, through the press | no licence of its own; reused under Ley 37/2007 |
 | `sct`, `sct_remolc` | Servei Català de Trànsit fixed, section and trailer radars | Llicència oberta d'ús d'informació – Catalunya |
-| `euskadi`, `navarra` | Basque and Navarra government fixed radars (Spanish IP only) | no reuse terms published |
-| `donostia`, `donostia_movil` | Donostia fixed radars and its daily mobile-radar streets | no reuse terms published |
+| `euskadi`, `navarra` | Basque and Navarra government fixed radars (Spanish IP only) | no licence of its own; reused under Ley 37/2007 |
+| `donostia`, `donostia_movil` | Donostia fixed radars and its daily mobile-radar streets | no licence of its own; reused under Ley 37/2007 |
 | `madrid`, `salamanca` | city open data, fixed and section radars | CC BY 4.0; GNU FDL |
-| `leon` | León's monthly mobile-radar post, iLeón as a fallback (Spanish IP only) | no reuse terms published; iLeón CC BY-NC 4.0 |
+| `leon` | León's monthly mobile-radar post, iLeón as a fallback (Spanish IP only) | no licence of its own; reused under Ley 37/2007; iLeón CC BY-NC 4.0, facts only |
 
 Cadence, publishers and the places that publish nothing usable: [`docs/sources.md`](docs/sources.md).
-Check a publisher's reuse terms before adding it, and record them in its `Source.licence`.
+Check a publisher's reuse terms before adding it, and record them in its `Source.licence`. A public
+body with no licence of its own gets `PUBLIC_SECTOR_REUSE` (`sources/base.py`); the conditions it
+brings are in [`LICENSE-DATA.md`](LICENSE-DATA.md#public-bodies-with-no-licence-of-their-own). Where a
+source gives the date of its last update, put it in each record's attribution and in
+`SourceResult.updated`.
 
 ## The legal line
 
@@ -52,7 +56,8 @@ interferes with a radar signal is out of scope, whoever asks for it.
 - `metrics.py`: `/metrics` and `/healthz` of `radares run`, standard library only ([`docs/alerting.md`](docs/alerting.md))
 - [`blueprints/radar_zone_alert.yaml`](blueprints/radar_zone_alert.yaml): the automation that sends the alert
 - [`.github/workflows/feed.yml`](.github/workflows/feed.yml): builds `feed.geojson`, `status.json` and the
-  map in [`site/`](site/) every 6 hours and publishes them to GitHub Pages. The data is ODbL
+  map in [`site/`](site/) every 6 hours and publishes them to GitHub Pages, through the steps in
+  [`.github/actions/build-feed`](.github/actions/build-feed/action.yml). The data is ODbL
   ([`LICENSE-DATA.md`](LICENSE-DATA.md)); a new source gets a row there in the same change (a test checks).
 - [`tests/fixtures/`](tests/fixtures/): real pages and responses, trimmed. Tests never touch the network.
 - [`docs/how-it-works.md`](docs/how-it-works.md) explains the design in full.
@@ -83,6 +88,10 @@ interferes with a radar signal is out of scope, whoever asks for it.
 - La Opinión's street list is `ul.ft-list--primary`. A plain `ft-list` on the same page holds headlines.
 - A street or district not found is skipped, never guessed. It is logged, exported as
   `radares_street_skipped` and named in the "Radares actualizados" notification.
+- `feed.yml` publishes from a self-hosted runner in Spain (job `publish`, `schedule` and
+  `workflow_dispatch` only); a pull request builds on `ubuntu-latest` (job `check`). Never let a
+  `pull_request` job reach the self-hosted runner: it would run the pull request's code there. A test
+  checks it.
 - One radar drawn as several circles is named `Radar anunciado …` (police list) or `Radar de tramo …`
   (section). The blueprint alerts once per such name; every other zone alerts on its own, because
   names like OSM's `Radar (límite 50)` repeat across different cameras.

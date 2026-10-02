@@ -114,3 +114,27 @@ def test_a_cached_copy_that_fails_the_check_is_asked_again(tmp_path, monkeypatch
     for _ in range(2):
         assert net.cached_get("https://x/p", {"data": "q"}, validate=net.overpass_answer) == GOOD
     assert len(calls) == 1  # the bad copy was replaced, the good one then served
+
+
+def test_fail_fast_gives_one_short_try(monkeypatch):
+    # A source that answers only Spanish addresses times out from abroad: three tries
+    # of 90 s per request, unless the run caps it (RADARES_SPANISH_IP_TIMEOUT).
+    asked = []
+
+    def urlopen(request, timeout):
+        asked.append(timeout)
+        raise TimeoutError("timed out")
+
+    monkeypatch.setattr(net.urllib.request, "urlopen", urlopen)
+    monkeypatch.setattr(net.time, "sleep", lambda s: None)
+    with net.fail_fast(20), pytest.raises(OSError):
+        net.get("https://x/spain-only")
+    assert asked == [20]
+    assert net.timeout_s(60) == 60  # the cap ends with the block
+    asked.clear()
+    with pytest.raises(OSError):
+        net.get("https://x/spain-only")
+    assert asked == [90, 90, 90]
+    with net.fail_fast(None), pytest.raises(OSError):
+        net.get("https://x/b", timeout=5)
+    assert asked[3:] == [5, 5, 5]

@@ -104,6 +104,7 @@ def test_madrid_fetch_goes_through_ckan(monkeypatch):
     monkeypatch.setattr(madrid.net, "cached_get", lambda url, **kw: answers[url])
     result = madrid.SOURCE.fetch(replace(CTX, provinces=frozenset({"28"})))
     assert len(result.radars) == 26
+    assert result.updated == "2026-07-31"  # for status.json, as in each attribution
     assert madrid.SOURCE.provinces == {"28"}
 
 
@@ -222,6 +223,7 @@ def test_salamanca_fetch_refuses_an_empty_layer(monkeypatch):
     assert len(result.radars) == 28 and len(result.stretches) == 4
     dates = {r.kind: r.attribution.rsplit(" ", 1)[1] for r in result.radars}
     assert dates == {"fixed": "2024-08-08", "section": "2025-01-22"}
+    assert result.updated == "2025-01-22"  # the newer layer, for status.json
     answers[SA_TRAMO] = b'{"type":"FeatureCollection","features":[]}'
     with pytest.raises(ValueError, match="no radar"):
         salamanca.SOURCE.fetch(CTX)

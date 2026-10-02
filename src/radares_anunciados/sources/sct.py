@@ -214,7 +214,7 @@ def _fetch(ctx: Context, url: str, parse: Callable[[str], list[Radar]]) -> Sourc
         radars = [replace(r, attribution=f"{r.attribution}, actualizado {updated}") for r in radars]
     if ctx.provinces is not None:
         radars = [r for r in radars if r.province in ctx.provinces]
-    return SourceResult(radars=radars)
+    return SourceResult(radars=radars, updated=updated)
 
 
 def fetch_fixed(ctx: Context) -> SourceResult:

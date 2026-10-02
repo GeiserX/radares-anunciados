@@ -196,7 +196,7 @@ def test_the_last_good_result_round_trips_every_field():
         1.5, 3.0, 100, "MADRID", "30", "u", "at",
     )  # fmt: skip
     week = WeeklyList("murcia", MONDAY, MONDAY, [cli.Announced("Calle", None)], [])
-    result = SourceResult([radar], [stretch], [week])
+    result = SourceResult([radar], [stretch], [week], updated="2026-09-17")
     store.save_result("x", "fp", result, now=1.0)
     assert store.load_result("x", "fp") == (result, 1.0)
     assert store.load_result("x", "other settings") is None

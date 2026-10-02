@@ -99,7 +99,8 @@ function sourcesTable(status) {
     if (s.error) tr.title = s.error;
     body.append(tr);
     const terms = s.attribution.includes(s.licence) ? "" : ` (${s.licence})`;
-    credits.append(el("li", `${s.source}: ${s.attribution}${terms}`));
+    const updated = s.updated ? `, actualizado ${s.updated}` : "";
+    credits.append(el("li", `${s.source}: ${s.attribution}${updated}${terms}`));
   }
 }
 

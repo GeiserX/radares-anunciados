@@ -32,19 +32,23 @@ Then import the [alert blueprint](blueprints/radar_zone_alert.yaml). Full steps 
 
 ## Open feed
 
-Every 6 hours a GitHub Actions run builds the feed for all of Spain from every source and publishes it
-on GitHub Pages, at [geiserx.github.io/radares-anunciados](https://geiserx.github.io/radares-anunciados/):
+Every 6 hours a GitHub Actions run on a self-hosted runner in Spain builds the feed for all of Spain from
+every source, including those that answer only Spanish addresses, and publishes it on GitHub Pages, at
+[geiserx.github.io/radares-anunciados](https://geiserx.github.io/radares-anunciados/):
 
 - [`feed.geojson`](https://geiserx.github.io/radares-anunciados/feed.geojson): every radar as a point and every
   watched stretch as a line, each with its source, attribution, limit and link
 - [`status.json`](https://geiserx.github.io/radares-anunciados/status.json): per source, `ok`, `stale` (this run
-  failed, its last good copy is used) or `missing`, with record counts and the time of its data
+  failed, its last good copy is used) or `missing`, with record counts, the time of its data and the
+  source's own last update date when it gives one
 - a map of the feed
 
 The feed includes OpenStreetMap data, so the database is offered under
 [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) with each source's attribution: see
-[LICENSE-DATA.md](LICENSE-DATA.md). The run happens outside Spain, so a source that answers only Spanish
-addresses shows as `missing` there. [How it works](docs/how-it-works.md#the-published-feed) has the details.
+[LICENSE-DATA.md](LICENSE-DATA.md). Public bodies that publish no licence of their own are reused under
+[Ley 37/2007](https://www.boe.es/buscar/act.php?id=BOE-A-2007-19814) on the reuse of public-sector
+information: source cited, date of last update given, content not altered.
+[How it works](docs/how-it-works.md#the-published-feed) has the details.
 
 ## Documentation
 
@@ -60,7 +64,7 @@ addresses shows as `missing` there. [How it works](docs/how-it-works.md#the-publ
 | [DGT NAP](https://nap.dgt.es/dataset/radares-fijos-dgt): fixed radars, sections and mobile-radar stretches | Creative Commons Attribution |
 | [Servei Català de Trànsit](https://transit.gencat.cat/ca/seguretat_viaria/cinemometres-fixos-trams-mobils/): fixed, section and trailer radars | Llicència oberta d'ús d'informació – Catalunya |
 | [Madrid](https://datos.madrid.es/dataset/300049-0-radares-fijos-moviles) and [Salamanca](https://opendata.aytosalamanca.es/datosabiertos/catalogo/dataset/radares-fijos) open data | CC BY 4.0; GNU FDL |
-| Basque and Navarra governments, Donostia, Murcia and León councils | no reuse terms published |
+| Basque and Navarra governments, Donostia, Murcia and León councils | no licence of their own; reused under [Ley 37/2007](LICENSE-DATA.md#public-bodies-with-no-licence-of-their-own) |
 | [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors: cameras, speed limits, street geometry | ODbL 1.0 |
 
 The full table, with cadence and which sources need a Spanish IP, is in [docs/sources.md](docs/sources.md).

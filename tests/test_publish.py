@@ -9,6 +9,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
+import yaml
 
 from radares_anunciados import cli, net, sources, store
 from radares_anunciados.model import Radar, SourceResult, Stretch
@@ -42,7 +43,12 @@ def radar(source, n=0, **kw):
 def test_status_says_which_sources_are_fresh_stale_or_missing(monkeypatch):
     stretch = Stretch("ok-s", "ok", "Tramo", "A-7", (37.0, -1.0), (37.1, -1.1))
     registry = {
-        "ok": fake("ok", iter([SourceResult([radar("ok"), radar("ok", 1)], [stretch])] * 2)),
+        "ok": fake(
+            "ok",
+            iter(
+                [SourceResult([radar("ok"), radar("ok", 1)], [stretch], updated="2026-09-17")] * 2
+            ),
+        ),
         "stale": fake("stale", iter([SourceResult([radar("stale", 5)]), OSError("HTTP 403")])),
         "missing": fake("missing", iter([OSError("TLS handshake")] * 2), spanish_ip=True),
     }
@@ -60,6 +66,7 @@ def test_status_says_which_sources_are_fresh_stale_or_missing(monkeypatch):
         "stretches": 1,
         "in_feed": 3,
         "data_time": None,
+        "updated": "2026-09-17",
         "error": "",
         "attribution": "ok people",
         "licence": "ok licence",
@@ -79,6 +86,7 @@ def test_status_says_which_sources_are_fresh_stale_or_missing(monkeypatch):
         "stretches": 0,
         "in_feed": 0,
         "data_time": None,
+        "updated": None,
         "error": "",
         "attribution": "missing people",
         "licence": "missing licence",
@@ -226,3 +234,70 @@ def test_the_data_license_credits_every_registered_source():
     text = (ROOT / "LICENSE-DATA.md").read_text("utf-8")
     for key in sources.REGISTRY:
         assert f"| `{key}` |" in text, f"LICENSE-DATA.md has no row for the {key} source"
+
+
+def test_every_source_row_in_the_data_license_names_its_attribution_and_terms():
+    rows = {}
+    for line in (ROOT / "LICENSE-DATA.md").read_text("utf-8").splitlines():
+        if m := re.match(r"\| `(\w+)` \|", line):
+            rows[m.group(1)] = [c.strip() for c in line.strip().strip("|").split("|")]
+    for key in sources.REGISTRY:
+        cells = rows.get(key)
+        assert cells is not None, f"LICENSE-DATA.md has no row for the {key} source"
+        # | Source | What it gives | Attribution | Terms |
+        assert len(cells) == 4, f"the {key} row has {len(cells)} cells, not 4"
+        assert cells[2], f"the {key} row names no attribution"
+        assert cells[3], f"the {key} row names no terms"
+
+
+def feed_jobs() -> dict:
+    return yaml.safe_load((ROOT / ".github" / "workflows" / "feed.yml").read_text("utf-8"))["jobs"]
+
+
+def test_no_pull_request_code_runs_on_the_self_hosted_runner():
+    """The publishing job runs on a self-hosted runner in Spain, so it may run only on
+    events a fork cannot trigger. The pull request build stays on a GitHub-hosted runner."""
+    jobs = feed_jobs()
+    trusted = "github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'"
+    hosted = [k for k, job in jobs.items() if "self-hosted" in str(job["runs-on"])]
+    assert hosted == ["publish"]
+    assert jobs["publish"]["if"] == trusted
+    assert jobs["check"]["if"] == "github.event_name == 'pull_request'"
+    assert jobs["check"]["runs-on"] == "ubuntu-latest"
+    # the runner is not wiped between runs: the downloads of the last run must go first
+    steps = [step.get("name") for step in jobs["publish"]["steps"]]
+    assert steps.index("Clear the cache folder") < steps.index("Restore the last good results")
+
+
+def test_the_pull_request_build_gives_up_fast_on_spanish_only_sources(monkeypatch):
+    jobs = feed_jobs()
+    assert int(jobs["check"]["env"]["RADARES_SPANISH_IP_TIMEOUT"]) <= 30
+    assert "RADARES_SPANISH_IP_TIMEOUT" not in str(jobs["publish"])
+
+    seen = {}
+
+    def fetch(key):
+        def run(ctx):
+            seen[key] = net.timeout_s(90)
+            raise OSError("timed out")
+
+        return run
+
+    monkeypatch.setattr(
+        sources,
+        "REGISTRY",
+        {
+            "spain": Source("spain", fetch("spain"), "a", "l", spanish_ip=True),
+            "abroad": Source("abroad", fetch("abroad"), "a", "l"),
+        },
+    )
+    monkeypatch.setenv("RADARES_SPANISH_IP_TIMEOUT", "20")
+    rows = cli.status(cli.collect(date(2026, 9, 28), save_history=False), now=1_790_000_000.0)
+    assert seen == {"spain": 20, "abroad": 90}
+    assert {r["source"]: r["status"] for r in rows["sources"]} == {
+        "spain": "missing",
+        "abroad": "missing",
+    }
+    monkeypatch.delenv("RADARES_SPANISH_IP_TIMEOUT")
+    cli.collect(date(2026, 9, 28), save_history=False)
+    assert seen == {"spain": 90, "abroad": 90}
