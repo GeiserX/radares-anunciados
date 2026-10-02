@@ -9,7 +9,7 @@ from Spain to use it. Anywhere else that source shows as down and keeps its last
 |---|---|---|---|---|---|
 | `dgt` | Fixed and average-speed section radars on the roads DGT polices: position, road, km, direction. Each fetch also reads the file's `Last-Modified` and warns once it is 30 days old | Dirección General de Tráfico, [NAP dataset radares-fijos-dgt](https://nap.dgt.es/dataset/radares-fijos-dgt), DATEX II | Creative Commons Attribution, as the NAP page states it with no version; recorded as CC BY 4.0 | downloaded daily; the file last changed on 18 Dec 2025 | no |
 | `dgt_invive` | About 1,330 stretches of conventional road where DGT runs mobile radars, in 43 provinces (none in Catalonia or the Basque Country): road, km range, both ends. A line in the feed; zones along the road only with `RADARES_STRETCH_ZONES=on` and a province list | Dirección General de Tráfico, [NAP dataset tramos-invive](https://nap.dgt.es/es/dataset/tramos-invive), DATEX II | Creative Commons Attribution, as the NAP page states it with no version; terms of use https://www.dgt.es/contenido/aviso-legal/. Road geometry: ODbL 1.0 | NAP updates it every 4 months; downloaded daily; road geometry from OpenStreetMap cached 90 days | no |
-| `osm` | Speed cameras mapped as [`highway=speed_camera`](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera), with limit and direction when tagged. The [enforcement relations](https://wiki.openstreetmap.org/wiki/Relation:enforcement) around them add a limit and a direction where the camera has none, and the average-speed sections: both ends and a line between them. A camera or section end within 150 m of an official radar is dropped as a copy, and so is the line of a section with both ends dropped | OpenStreetMap contributors | ODbL 1.0 | daily | no |
+| `osm` | Speed cameras mapped as [`highway=speed_camera`](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera), with limit and direction when tagged. The [enforcement relations](https://wiki.openstreetmap.org/wiki/Relation:enforcement) around them add a limit and a direction where the camera has none, and the average-speed sections: both ends and a line between them. The relations come in a second query; when it fails, the cameras still come, without what the relations add. A camera within 150 m of an official radar is dropped as a copy. A section goes whole, line and both ends, when one end is within 1 km of an end of a published section or within 150 m of a published radar | OpenStreetMap contributors | ODbL 1.0 | daily | no |
 | `osm_notes` | Open [notes](https://wiki.openstreetmap.org/wiki/Notes) in which someone reports a speed camera, usually one nobody has mapped yet: position, date, text and link. Unconfirmed: in the feed and on the map only, never a zone. Off unless `RADARES_SOURCES` names it; the published feed does | OpenStreetMap contributors | ODbL 1.0 | each published feed run; a closed note leaves with the next download | no |
 | (limit lookup) | The `maxspeed` of the road under each radar whose source gives no limit, which sets the radius. Not a radar source | OpenStreetMap contributors | ODbL 1.0, added to the attribution of each radar it sets | each position asked again after 30 days; the old answer stays if that fails | no |
 | `murcia` | Murcia's Policía Local weekly mobile-radar list: street and district, placed on the map from OpenStreetMap | Ayuntamiento de Murcia, as La Opinión de Murcia prints it (Murcia Actualidad as a fallback) | no reuse terms published. Geometry: ODbL 1.0 | weekly | no |
@@ -39,15 +39,19 @@ and Andorra. Where only the Catalan boxes reach, a note must also fall inside Ca
 the French Pyrenees. Along the borders with Portugal, and with France west of Catalonia, the boxes are
 all the project has, so a note just across the border stays in; none was there on 2 Oct 2026. The
 source also drops notes about red-light cameras, cameras that are gone, radar stations and antennas,
-speed displays, "RADAR key" toilets, and anything a radar detector found. On 2 Oct 2026 it kept 36
-notes, all in Spain. It dropped 16 in Andorra, 1 in France and 3 red-light cameras in Girona.
+speed displays, "RADAR key" toilets, and anything a radar detector found. It drops a note that names
+or links a commercial radar app or its community (Comunidad Radar at lincegps.com, Radarbot, Waze,
+Coyote and a few more listed in the module): that is the app's data, which the project does not use.
+On 2 Oct 2026 it kept 35 notes, all in Spain. It dropped 16 in Andorra, 1 in France, 3 red-light
+cameras in Girona and 1 that cites lincegps.com.
 
 The OSMF [API usage policy](https://operations.osmfoundation.org/policies/api/) says: "The editing API
 is provided in order to edit the map data, not for read-only purposes or projects. Clients may be
-blocked without notice if they are affecting the service level for others". The API is the only place
-that serves notes besides the daily [notes dump](https://planet.openstreetmap.org/notes/), which weighs
-409 MB. So there is one reader for the whole project: `osm_notes` is off by default, and only the
-published feed turns it on, with `RADARES_SOURCES: default,osm_notes` in
+blocked without notice if they are affecting the service level for others or causing data
+corruption." The API is the only place that serves notes besides the daily
+[notes dump](https://planet.openstreetmap.org/notes/), which weighs 409 MB. So there is one reader for
+the whole project: `osm_notes` is off by default, and only the published feed turns it on, with
+`RADARES_SOURCES: default,osm_notes` in
 [`feed.yml`](../.github/workflows/feed.yml). That is one request of about 230 KB per run, four a day,
 with the project's User-Agent. Private installs do not read notes: they would gain nothing, because
 notes never become zones. A failed request keeps the last good result.
@@ -65,11 +69,14 @@ notes never become zones. A failed request keeps the last good result.
   town, no position.
 - With `RADARES_SOURCES=navarra` and no `dgt`, the Navarra radars DGT lists get no zone.
 - Speed limits from the limit lookup make the feed carry ODbL data even for a DGT-only setup.
-- OpenStreetMap maps most average-speed sections with no road or km, so their zones are named
-  `Radar de tramo (OSM <relation id>)`. A unique name keeps the blueprint alerting for each section.
-- The 150 m rule misses some OpenStreetMap sections that an authority also publishes, because the two
-  put the ends in different places. On 2 Oct 2026, 70 of the 305 sections had both ends within 150 m
-  of a published radar and were dropped; 32 more had both ends within 1 km and stayed.
+- OpenStreetMap maps most average-speed sections with no km, so their zones are named after the road
+  of the section's ways and the relation id, such as `Radar de tramo A-7 (OSM 10026551)`, or the id
+  alone when no way has a road. The blueprint alerts once per name, and the A-7 alone has 8 mapped
+  sections: a name without the id would leave the next one silent.
+- A mapped section near a published one is the same section with its ends placed elsewhere: up to
+  536 m apart on the A-7 at Lorca. So a section with one end within 1 km of a published section end
+  goes whole. On 2 Oct 2026 that left 200 of the 305 mapped sections. The cost: a mapped section that
+  starts where a published one ends, and that no authority publishes, goes too.
 
 ## Checked, nothing usable
 

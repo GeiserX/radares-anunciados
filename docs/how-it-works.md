@@ -22,8 +22,9 @@ one exception is opt-in: with `RADARES_STRETCH_ZONES=on` and a province list, DG
 stretches get circles along the road.
 
 An OpenStreetMap camera within 150 m of a radar an authority publishes (the DGT, the Servei Català de
-Trànsit, a city) is the same camera mapped twice, so it's dropped. OpenStreetMap's average-speed
-sections follow the same rule end by end, and a section whose two ends are dropped loses its line too.
+Trànsit, a city) is the same camera mapped twice, so it's dropped. An OpenStreetMap average-speed
+section goes whole, line and both ends, when one end is within 1 km of an end of a published section
+(the two rarely put an end at the same spot) or within 150 m of a published camera.
 
 An open OpenStreetMap note that reports a camera is a `reported` point: unconfirmed, on the map in its
 own colour, never a zone. It is left out of the merge altogether: it drops nothing and nothing drops it.
