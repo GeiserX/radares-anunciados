@@ -226,6 +226,72 @@
      }
     ]
    }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     1.4821646,
+     42.44678
+    ]
+   },
+   "properties": {
+    "id": 4628291,
+    "date_created": "2025-02-15 16:54:59 UTC",
+    "status": "open",
+    "comments": [
+     {
+      "date": "2025-02-15 16:54:59 UTC",
+      "action": "opened",
+      "text": "Radar de tram en sentit ascendent.\nLimitació: 90 km/h, entre PQ 10.422 i 9.394"
+     }
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     1.6852936,
+     42.5599025
+    ]
+   },
+   "properties": {
+    "id": 4628190,
+    "date_created": "2025-02-15 16:07:53 UTC",
+    "status": "open",
+    "comments": [
+     {
+      "date": "2025-02-15 16:07:53 UTC",
+      "action": "opened",
+      "text": "Radar fix en ambdós sentits, CG-2 Pk 20.575, Limitació: 50 km/h"
+     }
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     1.6938774,
+     42.7867224
+    ]
+   },
+   "properties": {
+    "id": 4701825,
+    "date_created": "2025-04-08 16:15:09 UTC",
+    "status": "open",
+    "comments": [
+     {
+      "date": "2025-04-08 16:15:09 UTC",
+      "action": "opened",
+      "text": "Présence d'un radar qui flash dans les deux sens à 80 km/h.\n\n#OsmAnd"
+     }
+    ]
+   }
   }
  ]
 }

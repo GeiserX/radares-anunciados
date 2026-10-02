@@ -33,11 +33,14 @@ note next to a published radar stays as it is. `status.json` counts these points
 radars.
 
 The source asks OpenStreetMap's notes API for every open note in the world that mentions "radar",
-225 notes on 2 Oct 2026, and keeps the ones inside the province boxes. The boxes reach a little into
-Portugal, France and Andorra, as they do for `osm`. It drops notes about red-light cameras, cameras that
-are gone, radar stations and antennas, speed displays, "RADAR key" toilets, and anything a radar
-detector found. On 2 Oct 2026 it kept 53 notes, 36 in Spain, 16 in Andorra and 1 in France, and dropped
-3 red-light cameras in Girona.
+225 notes on 2 Oct 2026, and keeps the ones in Spain. The province boxes reach into Portugal, France
+and Andorra. Where only the Catalan boxes reach, a note must also fall inside Catalonia's outline
+([`catalonia_shapes.py`](../src/radares_anunciados/sources/catalonia_shapes.py)), which drops Andorra and
+the French Pyrenees. Along the borders with Portugal, and with France west of Catalonia, the boxes are
+all the project has, so a note just across the border stays in; none was there on 2 Oct 2026. The
+source also drops notes about red-light cameras, cameras that are gone, radar stations and antennas,
+speed displays, "RADAR key" toilets, and anything a radar detector found. On 2 Oct 2026 it kept 36
+notes, all in Spain. It dropped 16 in Andorra, 1 in France and 3 red-light cameras in Girona.
 
 The OSMF [API usage policy](https://operations.osmfoundation.org/policies/api/) says: "The editing API
 is provided in order to edit the map data, not for read-only purposes or projects. Clients may be
@@ -46,8 +49,8 @@ that serves notes besides the daily [notes dump](https://planet.openstreetmap.or
 409 MB. So there is one reader for the whole project: `osm_notes` is off by default, and only the
 published feed turns it on, with `RADARES_SOURCES: default,osm_notes` in
 [`feed.yml`](../.github/workflows/feed.yml). That is one request of about 230 KB per run, four a day,
-with the project's User-Agent. A private install gains nothing from notes, because they never become
-zones. A failed request keeps the last good result.
+with the project's User-Agent. Private installs do not read notes: they would gain nothing, because
+notes never become zones. A failed request keeps the last good result.
 
 ## Gaps we know about
 

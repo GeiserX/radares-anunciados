@@ -20,7 +20,9 @@ SPAIN = tuple(provinces.boxes(None))
 def test_notes_give_open_speed_camera_reports_in_spain():
     notes = osm_notes.parse(PAYLOAD, SPAIN)
     # dropped: three red-light cameras in Girona, two notes in other countries
-    # (a camera in Brazil, a toilet in England), a radar detector, a closed note
+    # (a camera in Brazil, a toilet in England), a radar detector, a closed note,
+    # and three inside Lleida's box but outside Spain: two in Andorra (4628291 is
+    # 1.3 km from the border) and one in France
     assert [n.id for n in notes] == ["osm-note-5162275", "osm-note-5144466", "osm-note-5144458"]
     first = notes[0]
     assert (first.kind, first.source, first.radius_m) == (REPORTED, "osm_notes", 0)
@@ -30,6 +32,23 @@ def test_notes_give_open_speed_camera_reports_in_spain():
     assert (round(first.lat, 4), round(first.lon, 4)) == (38.0905, -0.7313)
     long_text = notes[1].name
     assert len(long_text) == osm_notes.MAX_TEXT and long_text.endswith("…")
+
+
+@pytest.mark.parametrize(
+    ("place", "point", "spain"),
+    [
+        ("Andorra la Vella", (42.5063, 1.5218), False),
+        ("Sant Julià de Lòria, Andorra", (42.4468, 1.4822), False),
+        ("Ariège, France", (42.7867, 1.6939), False),
+        ("La Seu d'Urgell", (42.3580, 1.4610), True),
+        ("Llívia, the enclave in France", (42.4640, 1.9810), True),
+        ("Roses, on the coast", (42.2663, 3.1661), True),
+        ("Benasque, Huesca: no shape there, the box decides", (42.6040, 0.5240), True),
+        ("Lisboa", (38.7223, -9.1393), False),
+    ],
+)
+def test_notes_are_kept_inside_spain_where_the_catalan_boxes_overreach(place, point, spain):
+    assert osm_notes.in_spain(*point) is spain, place
 
 
 @pytest.mark.parametrize(

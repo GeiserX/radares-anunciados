@@ -12,7 +12,8 @@ editing API, whose usage policy rules out read-only projects, so the published
 feed is the one reader (``RADARES_SOURCES=default,osm_notes``). One request per
 run: an open-note search for "radar" over the whole world (225 notes, 232 KB,
 on 2 Oct 2026). The notes API refuses a box over 25 square degrees, so Spain
-alone would take 7. The province boxes then keep Spain's, and ``about_speed``
+alone would take 7. The province boxes then keep Spain's, ``in_spain`` drops
+Andorra's and France's that the Catalan boxes take in, and ``about_speed``
 drops notes about red-light cameras and other "radars".
 
 Data (c) OpenStreetMap contributors, ODbL 1.0.
@@ -28,7 +29,8 @@ from datetime import date
 
 from .. import net
 from ..model import REPORTED, Radar, SourceResult
-from ..provinces import Box
+from ..provinces import PROVINCES, Box
+from . import catalonia_shapes
 from .base import Context, Source
 
 log = logging.getLogger(__name__)
@@ -52,6 +54,20 @@ _OTHER = re.compile(
     r"|p[eé]dagogique|\bkey\b|toilet|weed\s+radar|detector",
     re.IGNORECASE,
 )
+
+
+# The boxes of the Catalan provinces take in Andorra and a strip of France.
+_CATALAN_BOXES = {PROVINCES[code][1] for code in catalonia_shapes.RINGS}
+
+
+def in_spain(lat: float, lon: float) -> bool:
+    """Inside a province box and, where only Catalan boxes reach, inside
+    Catalonia's outline. Elsewhere the boxes are all there is: a note just across
+    the border with Portugal, or with France west of Catalonia, stays in."""
+    boxes = [b for _, b in PROVINCES.values() if b[0] <= lat <= b[2] and b[1] <= lon <= b[3]]
+    if not boxes:
+        return False
+    return not all(b in _CATALAN_BOXES for b in boxes) or catalonia_shapes.inside(lat, lon)
 
 
 def about_speed(text: str) -> bool:
@@ -96,7 +112,7 @@ def _note(feature: dict, boxes: list[Box] | tuple[Box, ...]) -> Radar | None:
     opened = next((c for c in p.get("comments", []) if c.get("action") == "opened"), None)
     if p.get("status") != "open" or opened is None or not about_speed(opened["text"]):
         return None
-    if not any(s <= lat <= n and w <= lon <= e for s, w, n, e in boxes):
+    if not any(s <= lat <= n and w <= lon <= e for s, w, n, e in boxes) or not in_spain(lat, lon):
         return None
     return Radar(
         id=f"osm-note-{int(p['id'])}",
