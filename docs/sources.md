@@ -1,7 +1,7 @@
 # Sources
 
 Every radar in the feed keeps the source it came from and that source's attribution. `RADARES_SOURCES`
-picks sources by key (default: all of them), and a source that covers none of the selected provinces is
+picks sources by key (default: all of them but `osm_notes`; `default,osm_notes` adds it), and a source that covers none of the selected provinces is
 skipped. A source marked "yes" under Spanish IP answers only to requests from a Spanish address. Run the service
 from Spain to use it. Anywhere else that source shows as down and keeps its last good result.
 
@@ -10,7 +10,7 @@ from Spain to use it. Anywhere else that source shows as down and keeps its last
 | `dgt` | Fixed and average-speed section radars on the roads DGT polices: position, road, km, direction. Each fetch also reads the file's `Last-Modified` and warns once it is 30 days old | Dirección General de Tráfico, [NAP dataset radares-fijos-dgt](https://nap.dgt.es/dataset/radares-fijos-dgt), DATEX II | Creative Commons Attribution, as the NAP page states it with no version; recorded as CC BY 4.0 | downloaded daily; the file last changed on 18 Dec 2025 | no |
 | `dgt_invive` | About 1,330 stretches of conventional road where DGT runs mobile radars, in 43 provinces (none in Catalonia or the Basque Country): road, km range, both ends. A line in the feed; zones along the road only with `RADARES_STRETCH_ZONES=on` and a province list | Dirección General de Tráfico, [NAP dataset tramos-invive](https://nap.dgt.es/es/dataset/tramos-invive), DATEX II | Creative Commons Attribution, as the NAP page states it with no version; terms of use https://www.dgt.es/contenido/aviso-legal/. Road geometry: ODbL 1.0 | NAP updates it every 4 months; downloaded daily; road geometry from OpenStreetMap cached 90 days | no |
 | `osm` | Speed cameras mapped as [`highway=speed_camera`](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera), with limit and direction when tagged. The [enforcement relations](https://wiki.openstreetmap.org/wiki/Relation:enforcement) around them add a limit and a direction where the camera has none, and the average-speed sections: both ends and a line between them. A camera or section end within 150 m of an official radar is dropped as a copy, and so is the line of a section with both ends dropped | OpenStreetMap contributors | ODbL 1.0 | daily | no |
-| `osm_notes` | Open [notes](https://wiki.openstreetmap.org/wiki/Notes) in which someone reports a speed camera, usually one nobody has mapped yet: position, date, text and link. Unconfirmed: in the feed and on the map only, never a zone | OpenStreetMap contributors | ODbL 1.0 | one request a day; a closed note leaves with the next download | no |
+| `osm_notes` | Open [notes](https://wiki.openstreetmap.org/wiki/Notes) in which someone reports a speed camera, usually one nobody has mapped yet: position, date, text and link. Unconfirmed: in the feed and on the map only, never a zone. Off unless `RADARES_SOURCES` names it; the published feed does | OpenStreetMap contributors | ODbL 1.0 | each published feed run; a closed note leaves with the next download | no |
 | (limit lookup) | The `maxspeed` of the road under each radar whose source gives no limit, which sets the radius. Not a radar source | OpenStreetMap contributors | ODbL 1.0, added to the attribution of each radar it sets | each position asked again after 30 days; the old answer stays if that fails | no |
 | `murcia` | Murcia's Policía Local weekly mobile-radar list: street and district, placed on the map from OpenStreetMap | Ayuntamiento de Murcia, as La Opinión de Murcia prints it (Murcia Actualidad as a fallback) | no reuse terms published. Geometry: ODbL 1.0 | weekly | no |
 | `sct` | Fixed radars and the cameras of section radars in Catalonia (provinces 08, 17, 25, 43): road, km, speed limit; no direction | Servei Català de Trànsit, [radars.txt](https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars.txt) | Llicència oberta d'ús d'informació – Catalunya; the attribution carries the file's last update date | republished irregularly (last on 17 Sep 2026); downloaded daily | no |
@@ -39,11 +39,15 @@ are gone, radar stations and antennas, speed displays, "RADAR key" toilets, and 
 detector found. On 2 Oct 2026 it kept 53 notes, 36 in Spain, 16 in Andorra and 1 in France, and dropped
 3 red-light cameras in Girona.
 
-The OSMF [API usage policy](https://operations.osmfoundation.org/policies/api/) says the editing API is
-"not for read-only purposes or projects". The API is the only place that serves notes besides the daily
-[notes dump](https://planet.openstreetmap.org/notes/), which weighs 409 MB. So the source keeps its use
-small: one request of about 230 KB with the project's User-Agent, cached for a day in a container. The
-published feed keeps no downloads between runs, so it asks once per run, four times a day.
+The OSMF [API usage policy](https://operations.osmfoundation.org/policies/api/) says: "The editing API
+is provided in order to edit the map data, not for read-only purposes or projects. Clients may be
+blocked without notice if they are affecting the service level for others". The API is the only place
+that serves notes besides the daily [notes dump](https://planet.openstreetmap.org/notes/), which weighs
+409 MB. So there is one reader for the whole project: `osm_notes` is off by default, and only the
+published feed turns it on, with `RADARES_SOURCES: default,osm_notes` in
+[`feed.yml`](../.github/workflows/feed.yml). That is one request of about 230 KB per run, four a day,
+with the project's User-Agent. A private install gains nothing from notes, because they never become
+zones. A failed request keeps the last good result.
 
 ## Gaps we know about
 

@@ -2,7 +2,8 @@
 
 Configuration comes from the environment so the same image runs anywhere:
 
-  RADARES_SOURCES        which sources to use (default: every registered one)
+  RADARES_SOURCES        which sources to use (default: every registered one but
+                         osm_notes); "default,osm_notes" adds it to the default ones
   RADARES_PROVINCES      INE province codes, e.g. 30 (Murcia, the default), or all;
                          RADARES_DGT_PROVINCES is the old name and still works
   RADARES_OSM_BBOX       south,west,north,east, or all (default: the provinces' boxes)

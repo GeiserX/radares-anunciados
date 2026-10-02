@@ -15,7 +15,7 @@ Radares Anunciados is a Docker service that gathers the speed radars announced i
 - One GeoJSON feed with every announced radar, each point tagged with its source and license
 - The mobile-radar lists that councils publish: Murcia (weekly), León (monthly, every day) and Donostia (daily)
 - Fixed, section and mobile-stretch radars from the DGT, the Servei Català de Trànsit, the Basque and Navarra governments, and the cities of Madrid, Salamanca and Donostia
-- Speed cameras and average-speed sections mapped in [OpenStreetMap](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera), and the open OpenStreetMap notes that report a new one, shown on the map as unconfirmed and never turned into zones
+- Speed cameras and average-speed sections mapped in [OpenStreetMap](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dspeed_camera), and, on the published map, the open OpenStreetMap notes that report a new one, shown as unconfirmed and never turned into zones
 - Home Assistant zones kept in sync with the radars around you, for alerts through the companion app
 - Warns from published positions only; it never senses or jams a radar signal
 

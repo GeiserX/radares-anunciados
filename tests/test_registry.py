@@ -60,31 +60,13 @@ def test_every_source_is_registered_with_its_terms():
 
 def test_selected_sources():
     keys = lambda found: [s.key for s in found]  # noqa: E731
-    assert keys(sources.selected(None, frozenset({"30"}))) == [
-        "dgt",
-        "osm",
-        "osm_notes",
-        "murcia",
-        "dgt_invive",
-    ]
+    assert keys(sources.selected(None, frozenset({"30"}))) == ["dgt", "osm", "murcia", "dgt_invive"]
     assert keys(sources.selected(["osm", "dgt"], None)) == ["dgt", "osm"]
     # a city list outside the selected provinces is not fetched
-    assert keys(sources.selected(None, frozenset({"28"}))) == [
-        "dgt",
-        "osm",
-        "osm_notes",
-        "dgt_invive",
-        "madrid",
-    ]
+    assert keys(sources.selected(None, frozenset({"28"}))) == ["dgt", "osm", "dgt_invive", "madrid"]
     # DGT runs no mobile-radar stretches in Catalonia
-    assert keys(sources.selected(None, frozenset({"08"}))) == [
-        "dgt",
-        "osm",
-        "osm_notes",
-        "sct",
-        "sct_remolc",
-    ]
-    assert keys(sources.selected(None, None)) == list(sources.REGISTRY)
+    assert keys(sources.selected(None, frozenset({"08"}))) == ["dgt", "osm", "sct", "sct_remolc"]
+    assert keys(sources.selected(None, None)) == [k for k in sources.REGISTRY if k != "osm_notes"]
     with pytest.raises(ValueError, match="nope"):
         sources.selected(["dgt", "nope"], None)
 
@@ -357,6 +339,29 @@ def test_collect_turns_last_weeks_street_dormant_and_back(monkeypatch):
     week["radars"] = announced(date(2026, 10, 5))
     found = cli.collect(date(2026, 10, 5)).radars
     assert len(found) == 2 and all(r.active for r in found)
+
+
+def test_osm_notes_is_read_only_when_named(monkeypatch):
+    """Notes give no zone, so an install gains nothing from them, and every install
+    asking OSM's editing API each day is the load its usage policy warns about."""
+    selected = lambda raw: [s.key for s in sources.selected(raw, None)]  # noqa: E731
+    assert "osm_notes" not in selected(None)
+    assert selected(["osm_notes"]) == ["osm_notes"]
+    assert selected(["default", "osm_notes"]) == list(sources.REGISTRY)
+    assert selected(["default"]) == selected(None)
+    # through the environment, as a run reads it
+    notes = replace(fake_source("osm_notes", lambda: SourceResult()), default=False)
+    monkeypatch.setattr(
+        sources, "REGISTRY", {"dgt": fake_source("dgt", lambda: SourceResult()), "osm_notes": notes}
+    )
+    monkeypatch.setenv("RADARES_PROVINCES", "all")
+    monkeypatch.delenv("RADARES_SOURCES", raising=False)
+    assert [o.key for o in cli.collect(MONDAY, save_history=False).outcomes] == ["dgt"]
+    monkeypatch.setenv("RADARES_SOURCES", "default,osm_notes")
+    assert [o.key for o in cli.collect(MONDAY, save_history=False).outcomes] == ["dgt", "osm_notes"]
+    # the published feed is the one reader
+    workflow = (Path(__file__).parent.parent / ".github" / "workflows" / "feed.yml").read_text()
+    assert "RADARES_SOURCES: default,osm_notes" in workflow
 
 
 def test_a_remembered_street_gives_no_zone_once_its_source_or_province_is_deselected(monkeypatch):

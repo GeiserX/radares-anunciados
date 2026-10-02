@@ -7,10 +7,13 @@ authority published it and no mapper has checked it. So each one has kind
 but never a zone (``ha.zoned``), and it never drops or replaces another radar
 (``feed.merge``). A note closed on OpenStreetMap leaves with the next download.
 
-One request a day: an open-note search for "radar" over the whole world (225
-notes, 232 KB, on 2 Oct 2026). The notes API refuses a box over 25 square
-degrees, so Spain alone would take 7. The province boxes then keep Spain's, and
-``about_speed`` drops notes about red-light cameras and other "radars".
+Off by default (``Source.default``): notes are served by OpenStreetMap's
+editing API, whose usage policy rules out read-only projects, so the published
+feed is the one reader (``RADARES_SOURCES=default,osm_notes``). One request per
+run: an open-note search for "radar" over the whole world (225 notes, 232 KB,
+on 2 Oct 2026). The notes API refuses a box over 25 square degrees, so Spain
+alone would take 7. The province boxes then keep Spain's, and ``about_speed``
+drops notes about red-light cameras and other "radars".
 
 Data (c) OpenStreetMap contributors, ODbL 1.0.
 """
@@ -108,4 +111,7 @@ SOURCE = Source(
     licence="ODbL 1.0",
     max_age_s=86_400,
     official=False,
+    # Notes never become zones, so an install gains nothing from them, and the
+    # notes API is OSM's editing API: only the published feed reads them.
+    default=False,
 )
