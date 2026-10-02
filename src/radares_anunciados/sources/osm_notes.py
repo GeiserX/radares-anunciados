@@ -21,6 +21,7 @@ Data (c) OpenStreetMap contributors, ODbL 1.0.
 from __future__ import annotations
 
 import json
+import logging
 import re
 import urllib.parse
 from datetime import date
@@ -29,6 +30,8 @@ from .. import net
 from ..model import REPORTED, Radar, SourceResult
 from ..provinces import Box
 from .base import Context, Source
+
+log = logging.getLogger(__name__)
 
 URL = "https://api.openstreetmap.org/api/0.6/notes/search.json?" + urllib.parse.urlencode(
     {"q": "radar", "closed": "0", "limit": "10000"}  # closed=0: open notes only
@@ -72,31 +75,41 @@ def _trim(text: str) -> str:
 
 
 def parse(payload: bytes, boxes: list[Box] | tuple[Box, ...]) -> list[Radar]:
-    """The open notes inside ``boxes`` whose opening text reports a speed camera."""
+    """The open notes inside ``boxes`` whose opening text reports a speed camera.
+    A note the API answers in another shape is skipped and logged: one odd note
+    must not hold back the others, nor keep a closed one in the feed."""
     radars = []
     for feature in json.loads(payload)["features"]:
-        p = feature.get("properties", {})
-        lon, lat = feature["geometry"]["coordinates"]
-        opened = next((c for c in p.get("comments", []) if c.get("action") == "opened"), None)
-        if p.get("status") != "open" or opened is None or not about_speed(opened["text"]):
+        try:
+            note = _note(feature, boxes)
+        except (KeyError, TypeError, ValueError) as exc:
+            log.warning("OSM note skipped, not in the shape expected (%r): %s", exc, feature)
             continue
-        if not any(s <= lat <= n and w <= lon <= e for s, w, n, e in boxes):
-            continue
-        radars.append(
-            Radar(
-                id=f"osm-note-{p['id']}",
-                source="osm_notes",
-                kind=REPORTED,
-                name=_trim(opened["text"]),
-                lat=lat,
-                lon=lon,
-                radius_m=0,
-                url=f"https://www.openstreetmap.org/note/{p['id']}",
-                attribution=ATTRIBUTION,
-                reported=date.fromisoformat(p["date_created"][:10]),
-            )
-        )
+        if note is not None:
+            radars.append(note)
     return radars
+
+
+def _note(feature: dict, boxes: list[Box] | tuple[Box, ...]) -> Radar | None:
+    p = feature["properties"]
+    lon, lat = (float(x) for x in feature["geometry"]["coordinates"])
+    opened = next((c for c in p.get("comments", []) if c.get("action") == "opened"), None)
+    if p.get("status") != "open" or opened is None or not about_speed(opened["text"]):
+        return None
+    if not any(s <= lat <= n and w <= lon <= e for s, w, n, e in boxes):
+        return None
+    return Radar(
+        id=f"osm-note-{int(p['id'])}",
+        source="osm_notes",
+        kind=REPORTED,
+        name=_trim(opened["text"]),
+        lat=lat,
+        lon=lon,
+        radius_m=0,
+        url=f"https://www.openstreetmap.org/note/{int(p['id'])}",
+        attribution=ATTRIBUTION,
+        reported=date.fromisoformat(p["date_created"][:10]),
+    )
 
 
 def fetch(ctx: Context) -> SourceResult:

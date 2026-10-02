@@ -86,3 +86,16 @@ def test_a_report_keeps_its_date_in_the_last_good_result():
     result = SourceResult(radars=osm_notes.parse(PAYLOAD, SPAIN))
     again = store.result_from_json(json.loads(json.dumps(store.result_to_json(result))))
     assert again == result and again.radars[0].reported == date(2026, 2, 10)
+
+
+def test_a_note_in_another_shape_is_skipped_and_the_rest_kept(caplog):
+    data = json.loads(PAYLOAD)
+    broken = json.loads(json.dumps(data["features"][0]))
+    del broken["geometry"]
+    odd_date = json.loads(json.dumps(data["features"][1]))
+    odd_date["properties"]["date_created"] = "yesterday"
+    data["features"] += [broken, odd_date]
+    data["features"] = data["features"][2:]  # the two originals only in their broken copies
+    notes = osm_notes.parse(json.dumps(data).encode(), SPAIN)
+    assert [n.id for n in notes] == ["osm-note-5144458"]
+    assert caplog.text.count("OSM note skipped") == 2
