@@ -87,6 +87,10 @@ notes never become zones. A failed request keeps the last good result.
 - A fixed camera that fines a car or two a day, never more than 7 days in a row and on under half the
   quarter's days, looks like a mobile radar to `barcelona_multas`. Carrer de Mallorca 351 (41 days) does.
   A mapped camera 23 m away keeps it out of the feed; an unmapped one would get a zone.
+- The 150 m rule needs the camera sources to have answered. While one with no last good result fails
+  (an Overpass 504 on a first run), the fines spots in its provinces wait for a later run, and the log
+  says so. A source left out of `RADARES_SOURCES` holds nothing back: with `osm` left out, a spot next
+  to a mapped camera gets a zone.
 - A Madrid place that `madrid_multas` cannot place is logged only. Unlike a police list's street, it is
   not exported in `/metrics` nor named in the notification.
 

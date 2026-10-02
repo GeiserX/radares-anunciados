@@ -94,7 +94,8 @@ interferes with a radar signal is out of scope, whoever asks for it.
 - A place where fines show a mobile radar is `mobile_recurring`, named without counts so its zone stays
   when a new period arrives. `feed.merge` drops it within 150 m of a camera of any other source and it
   never drops a camera; with no limit it is sized for 50 km/h; `ha.select` keeps it after fixed radars
-  and before stretch circles.
+  and before stretch circles. While a selected source marked `cameras=True` has no result at all
+  (failed, no last good copy), `feed.merge` holds back the spots in its provinces and logs it.
 - La Opinión's street list is `ul.ft-list--primary`. A plain `ft-list` on the same page holds headlines.
 - A street or district not found is skipped, never guessed. It is logged, exported as
   `radares_street_skipped` and named in the "Radares actualizados" notification.

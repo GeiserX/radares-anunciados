@@ -4,12 +4,15 @@ write it all as GeoJSON."""
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import replace
 from datetime import date, timedelta
 
 from .geo import distance_m
 from .model import REPORTED, Radar, Stretch
 from .sources import REGISTRY
+
+log = logging.getLogger(__name__)
 
 # A mapped camera (OSM) this close to a radar an authority publishes is the same
 # camera mapped twice.
@@ -42,7 +45,7 @@ def _mapped_source(key: str) -> bool:
     return source is not None and not source.official
 
 
-def merge(radars: list[Radar], day: date) -> list[Radar]:
+def merge(radars: list[Radar], day: date, missing: frozenset[str] = frozenset()) -> list[Radar]:
     """Radars in force on ``day`` and dormant ones, active first, then by id,
     without duplicates.
 
@@ -56,11 +59,30 @@ def merge(radars: list[Radar], day: date) -> list[Radar]:
 
     A report nobody published (``REPORTED``) is kept as it is and takes no spot:
     it never drops or replaces another radar, and nothing drops it.
+
+    ``missing``: the selected sources with no result at all this run (failed, and
+    no last good result). While a camera source among them covers a fines spot's
+    province, the spot is held back: the camera that would drop it is unknown.
     """
     wanted = (r for r in radars if not r.active or r.active_on(day))
     ordered = sorted(wanted, key=lambda r: (not r.active, r.id))
     official = [r for r in ordered if _official(r)]
     cameras = [r for r in ordered if r.kind in CAMERAS]
+    blind = [REGISTRY[k] for k in sorted(missing) if k in REGISTRY and REGISTRY[k].cameras]
+    held = [
+        r
+        for r in ordered
+        if r.kind == "mobile_recurring"
+        and any(s.provinces is None or r.province in s.provinces for s in blind)
+    ]
+    if held:
+        log.warning(
+            "%d fines spot(s) held back this run: %s gave no cameras yet, and one may stand "
+            "beside a spot",
+            len(held),
+            ", ".join(s.key for s in blind),
+        )
+    ordered = [r for r in ordered if all(r is not h for h in held)]
     kept: list[Radar] = []
     spots: set[tuple[float, float]] = set()
     for r in ordered:

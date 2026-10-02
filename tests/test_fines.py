@@ -495,3 +495,143 @@ def test_over_the_cap_a_fines_spot_comes_after_fixed_radars_and_before_stretches
         kept, left_out = ha.select(radars, cap, home)
         assert kept == want, cap
         assert left_out == len(radars) - cap
+
+
+# ---- a camera source with no result yet ---------------------------------------
+
+
+def _source(key, fetch, **kw):
+    from radares_anunciados.sources import Source
+
+    return Source(key, fetch, key, "licence", **kw)
+
+
+@pytest.mark.parametrize(
+    ("missing", "held"),
+    [
+        (frozenset({"osm"}), True),  # cameras anywhere: no fines spot this run
+        (frozenset({"madrid"}), True),  # Madrid's cameras: the Madrid spot waits
+        (frozenset({"euskadi"}), False),  # Basque cameras: nothing near Madrid
+        (frozenset({"osm_notes"}), False),  # all of Spain, but no cameras: only reports
+        (frozenset(), False),
+    ],
+)
+def test_a_fines_spot_waits_while_a_camera_source_has_no_result(missing, held, caplog):
+    spot = replace(_radar("madrid_multas", "mobile_recurring", 40.4), province="28")
+    other = replace(_radar("madrid", "fixed", 41.4), province="28")
+    with caplog.at_level("WARNING"):
+        kept = feed.merge([spot, other], DAY, missing)
+    assert (spot not in kept) is held and other in kept
+    assert ("fines spot(s) held back" in caplog.text) is held
+
+
+def test_collect_holds_fines_spots_until_the_camera_source_first_answers(monkeypatch, caplog):
+    from radares_anunciados import cli, sources
+    from radares_anunciados.model import SourceResult
+
+    monkeypatch.setenv("RADARES_PROVINCES", "all")
+    camera_up = {"now": False}
+
+    def cameras(ctx):
+        if not camera_up["now"]:
+            raise OSError("Overpass 504")
+        return SourceResult([replace(_radar("cams", "fixed", 45.0), province="28")])
+
+    spot = replace(_radar("fines", "mobile_recurring", 40.4), province="28")
+    registry = {
+        "cams": _source("cams", cameras, cameras=True, official=False),
+        "fines": _source("fines", lambda ctx: SourceResult([spot])),
+    }
+    monkeypatch.setattr(sources, "REGISTRY", registry)
+    monkeypatch.setattr(feed, "REGISTRY", registry)
+    with caplog.at_level("WARNING"):
+        first = cli.collect(DAY, save_history=False)
+    assert [r.id for r in first.radars] == []
+    assert "1 fines spot(s) held back this run: cams gave no cameras yet" in caplog.text
+    camera_up["now"] = True
+    assert len(cli.collect(DAY, save_history=False).radars) == 2
+    # failed again, but its last good result stands: the spot stays
+    camera_up["now"] = False
+    assert spot.id in {r.id for r in cli.collect(DAY, save_history=False).radars}
+    # a camera source left out of RADARES_SOURCES holds nothing back
+    monkeypatch.setenv("RADARES_SOURCES", "fines")
+    assert [r.id for r in cli.collect(DAY, save_history=False).radars] == [spot.id]
+
+
+def test_the_sources_that_publish_cameras_are_marked():
+    from radares_anunciados import sources
+
+    marked = sorted(k for k, s in sources.REGISTRY.items() if s.cameras)
+    assert marked == [
+        "dgt",
+        "donostia",
+        "euskadi",
+        "madrid",
+        "navarra",
+        "osm",
+        "salamanca",
+        "sct",
+        "sct_remolc",
+    ]
+
+
+# ---- boundaries the second review found unpinned ----------------------------------
+
+
+def _short_days(start, n, gap=1):
+    """``n`` days of one-hour sessions, ``gap`` days apart."""
+    from datetime import timedelta
+
+    return [Day(start + timedelta(days=i * gap), 5, 10.0, 11.0) for i in range(n)]
+
+
+def test_barcelona_eight_days_in_a_row_is_a_camera_seven_is_not():
+    assert barcelona_multas.camera_like(_short_days(date(2025, 10, 1), 8), 92) == (
+        "fines on 8 days in a row"
+    )
+    assert barcelona_multas.camera_like(_short_days(date(2025, 10, 1), 7), 92) == ""
+
+
+def test_barcelona_more_than_half_the_quarter_is_a_camera():
+    # every other day: never two in a row, an hour each
+    assert barcelona_multas.camera_like(_short_days(date(2025, 10, 1), 47, gap=2), 92) == (
+        "fines on 47 of 92 days"
+    )
+    assert barcelona_multas.camera_like(_short_days(date(2025, 10, 1), 46, gap=2), 92) == ""
+
+
+def _record(street, number, lat):
+    return {"street": street, "key": [street], "number": number, "lat": lat, "lon": -3.7}
+
+
+def test_madrid_merges_places_of_one_street_within_200_m_only():
+    window = madrid_multas.months(fixture(PACKAGE))[-2:]
+    places = {p: (2, Counter({"50": 2})) for p in ("N010 X", "N020 X", "N030 X", "N012 Y")}
+    records = {
+        "N010 X": _record("Calle X", 10, 40.4),
+        "N020 X": _record("Calle X", 20, 40.4017),  # 189 m from 10: one spot
+        "N030 X": _record("Calle X", 30, 40.40395),  # 250 m from 20: another spot
+        "N012 Y": _record("Avenida Y", 12, 40.40009),  # another street, 10 m from 10
+    }
+    in_months = {p: {0, 1} for p in places}
+    radars, skipped = madrid_multas.to_radars(window, places, records, in_months)
+    assert skipped == []
+    assert sorted(r.name for r in radars) == [
+        "Radar móvil frecuente Avenida Y 12",
+        "Radar móvil frecuente Calle X 10",
+        "Radar móvil frecuente Calle X 30",
+    ]
+
+
+def test_madrid_needs_one_word_written_in_full():
+    assert madrid_multas.same_street("J VALCARCEL", "calle", "josefa valcarcel") is True
+    assert madrid_multas.same_street("J V", "calle", "josefa valcarcel") is False
+
+
+def test_madrid_prefers_the_plain_number_and_its_portal():
+    street = madrid_multas.Street("calle", "x", "Calle X")
+    here, far = (40.4, -3.7), (40.403, -3.7)  # 333 m apart
+    plain_first = {("calle", "x", 10): [("", "GARAJE", here), ("A", "PORTAL", far)]}
+    assert madrid_multas.locate("N010 X", [street], plain_first) == (street, here)
+    portal_first = {("calle", "x", 10): [("", "PORTAL", here), ("", "GARAJE", far)]}
+    assert madrid_multas.locate("N010 X", [street], portal_first) == (street, here)
