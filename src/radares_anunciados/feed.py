@@ -15,6 +15,9 @@ from .sources import REGISTRY
 # camera mapped twice.
 DUPLICATE_M = 150
 
+# A mapped section end this close to an end of a published section is that end.
+SECTION_COPY_M = 1000
+
 # Kinds that stand for one camera at one place. A street from a police list
 # (mobile_announced) and a circle of a DGT mobile-radar stretch (mobile_stretch)
 # are no camera, so a mapped camera near one is no copy of it.
@@ -71,18 +74,33 @@ def merge(radars: list[Radar], day: date) -> list[Radar]:
     return kept
 
 
-def merge_stretches(stretches: list[Stretch], radars: list[Radar]) -> list[Stretch]:
-    """``stretches`` without the copies: a mapped stretch (an OSM section) whose two
-    ends are each within ``DUPLICATE_M`` of an official camera is a section an
-    authority publishes, mapped twice; ``merge`` drops its two ends the same way."""
+def drop_copied_sections(
+    radars: list[Radar], stretches: list[Stretch]
+) -> tuple[list[Radar], list[Stretch]]:
+    """Mapped sections (OSM) that copy one an authority publishes, gone whole:
+    the line and both ends, the radars ``<line id>-from`` and ``-to``.
+
+    A mapped section is a copy when one of its ends is within ``SECTION_COPY_M``
+    of an end of a published section, or within ``DUPLICATE_M`` of any published
+    camera (``merge`` would drop that end and leave half a section). A section's
+    two sources rarely put its ends at the same spot: on 2 Oct 2026 the same
+    sections had ends 150 m to 1 km apart, and a driver got an alert from each."""
     official = [r for r in radars if _official(r)]
+    section_ends = [r for r in official if r.kind == "section"]
 
     def copied(point: tuple[float, float]) -> bool:
-        return any(distance_m(point, (o.lat, o.lon)) <= DUPLICATE_M for o in official)
+        return any(distance_m(point, (o.lat, o.lon)) <= DUPLICATE_M for o in official) or any(
+            distance_m(point, (o.lat, o.lon)) <= SECTION_COPY_M for o in section_ends
+        )
 
-    return [
-        s for s in stretches if not (_mapped_source(s.source) and copied(s.start) and copied(s.end))
-    ]
+    gone = {
+        s.id for s in stretches if _mapped_source(s.source) and (copied(s.start) or copied(s.end))
+    }
+    ends = {f"{i}-{which}" for i in gone for which in ("from", "to")}
+    return (
+        [r for r in radars if not (_mapped(r) and r.id in ends)],
+        [s for s in stretches if s.id not in gone],
+    )
 
 
 def remember(

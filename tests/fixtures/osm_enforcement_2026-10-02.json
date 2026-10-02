@@ -2,10 +2,22 @@
  "version": 0.6,
  "generator": "Overpass API 0.7.62.11 87bfad18",
  "osm3s": {
-  "timestamp_osm_base": "2026-10-02T08:59:46Z",
+  "timestamp_osm_base": "2026-10-02T10:36:20Z",
   "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
  },
  "elements": [
+  {
+   "type": "node",
+   "id": 29095584,
+   "lat": 37.6727399,
+   "lon": -1.7078123,
+   "tags": {
+    "direction": "21",
+    "highway": "speed_camera",
+    "maxspeed": "80",
+    "note": "F100 XABI A-7 Km 593.28 Lorca DIR Valencia CL"
+   }
+  },
   {
    "type": "node",
    "id": 36406772,
@@ -44,9 +56,42 @@
   },
   {
    "type": "node",
+   "id": 613184507,
+   "lat": 40.9513927,
+   "lon": -5.6818383
+  },
+  {
+   "type": "node",
    "id": 615705016,
    "lat": 36.5205952,
    "lon": -6.2293916
+  },
+  {
+   "type": "node",
+   "id": 857694972,
+   "lat": 42.2734919,
+   "lon": 2.954575
+  },
+  {
+   "type": "node",
+   "id": 857747710,
+   "lat": 42.2729656,
+   "lon": 2.9550906,
+   "tags": {
+    "highway": "traffic_signals",
+    "traffic_signals:direction": "forward"
+   }
+  },
+  {
+   "type": "node",
+   "id": 992001427,
+   "lat": 41.0018299,
+   "lon": -5.6146605,
+   "tags": {
+    "highway": "speed_camera",
+    "maxspeed": "120",
+    "note": "F120 A300 A-62 Km 233.6 Salamanca DIR Burgos CL"
+   }
   },
   {
    "type": "node",
@@ -69,6 +114,30 @@
     "maxspeed": "90",
     "note": "F090 A300 CV-91 Km 19.1 Rojales DIR Orihuela CLAV"
    }
+  },
+  {
+   "type": "node",
+   "id": 992004964,
+   "lat": 37.6832799,
+   "lon": -1.7108528,
+   "tags": {
+    "direction": "170",
+    "highway": "speed_camera",
+    "maxspeed": "80",
+    "note": "F100 A300 A-7 Km 594.45 Lorca DIR Cádiz CL"
+   }
+  },
+  {
+   "type": "node",
+   "id": 992681601,
+   "lat": 41.0001734,
+   "lon": -5.6244137
+  },
+  {
+   "type": "node",
+   "id": 1225611669,
+   "lat": 37.683277,
+   "lon": -1.7108038
   },
   {
    "type": "node",
@@ -130,6 +199,35 @@
   },
   {
    "type": "node",
+   "id": 6218566440,
+   "lat": 40.9515228,
+   "lon": -5.6815676,
+   "tags": {
+    "direction": "0",
+    "highway": "speed_camera",
+    "maxspeed": "50"
+   }
+  },
+  {
+   "type": "node",
+   "id": 6715936404,
+   "lat": 41.0003867,
+   "lon": -5.6245016
+  },
+  {
+   "type": "node",
+   "id": 6715936405,
+   "lat": 41.0027993,
+   "lon": -5.6117773
+  },
+  {
+   "type": "node",
+   "id": 6787661204,
+   "lat": 37.6844495,
+   "lon": -1.7106051
+  },
+  {
+   "type": "node",
    "id": 7024118307,
    "lat": 40.4680659,
    "lon": -3.4275484
@@ -156,6 +254,41 @@
     "direction": "245",
     "highway": "speed_camera",
     "maxspeed": "70"
+   }
+  },
+  {
+   "type": "node",
+   "id": 7847018893,
+   "lat": 37.671224,
+   "lon": -1.7096476
+  },
+  {
+   "type": "node",
+   "id": 7847018894,
+   "lat": 37.6712248,
+   "lon": -1.7096699,
+   "tags": {
+    "direction": "180",
+    "highway": "speed_camera",
+    "maxspeed": "80"
+   }
+  },
+  {
+   "type": "node",
+   "id": 7847018895,
+   "lat": 37.6727414,
+   "lon": -1.7078178
+  },
+  {
+   "type": "node",
+   "id": 7847018896,
+   "lat": 37.6844527,
+   "lon": -1.7105629,
+   "tags": {
+    "direction": "1",
+    "highway": "speed_camera",
+    "maxspeed": "80",
+    "note": "F100 A300 A-7 Km 594.45 Lorca DIR Cádiz CL"
    }
   },
   {
@@ -208,6 +341,12 @@
    "id": 10061401568,
    "lat": 37.9639118,
    "lon": -0.7023684
+  },
+  {
+   "type": "node",
+   "id": 10178388575,
+   "lat": 40.9527145,
+   "lon": -5.6806048
   },
   {
    "type": "node",
@@ -312,6 +451,634 @@
    "tags": {
     "highway": "speed_camera",
     "maxspeed": "40"
+   }
+  },
+  {
+   "type": "node",
+   "id": 14214352419,
+   "lat": 42.2732214,
+   "lon": 2.9548006,
+   "tags": {
+    "highway": "speed_camera",
+    "maxspeed": "50"
+   }
+  },
+  {
+   "type": "way",
+   "id": 10558562,
+   "tags": {
+    "hazmat": "designated",
+    "highway": "motorway",
+    "int_ref": "E 01",
+    "lanes": "2",
+    "maxspeed": "90",
+    "name": "Autoestrada do Atlántico",
+    "name:es": "Autopista del Atlántico",
+    "name:gl": "Autoestrada do Atlántico",
+    "oneway": "yes",
+    "ref": "AP-9F",
+    "source": "PNOA",
+    "source:date": "2006",
+    "surface": "asphalt",
+    "toll": "no"
+   }
+  },
+  {
+   "type": "way",
+   "id": 10558603,
+   "tags": {
+    "hazmat": "designated",
+    "highway": "motorway",
+    "int_ref": "E 01",
+    "lanes": "2",
+    "layer": "-1",
+    "maxspeed": "90",
+    "name": "Autoestrada do Atlántico",
+    "name:es": "Autopista del Atlántico",
+    "name:gl": "Autoestrada do Atlántico",
+    "oneway": "yes",
+    "ref": "AP-9F",
+    "surface": "asphalt",
+    "toll": "no",
+    "tunnel": "yes"
+   }
+  },
+  {
+   "type": "way",
+   "id": 68668245,
+   "tags": {
+    "hazmat": "designated",
+    "highway": "motorway",
+    "lanes": "2",
+    "lit": "yes",
+    "maxspeed": "120",
+    "name": "Cuarto Cinturón de Zaragoza",
+    "oneway": "yes",
+    "ref": "Z-40",
+    "source": "bing",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 70961400,
+   "tags": {
+    "alt_name": "Paseo de Extremadura",
+    "construction": "motorway",
+    "highway": "construction",
+    "lanes": "4",
+    "lit": "yes",
+    "maxspeed": "70",
+    "name": "Autovía del Suroeste",
+    "name:etymology:wikidata": "Q2744396",
+    "oneway": "yes",
+    "opening_date": "2026-02-07",
+    "operator": "Administración central",
+    "ref": "A-5",
+    "source": "https://tinyurl.com/4mujmpfm",
+    "source:name": "local knowledge",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 70962818,
+   "tags": {
+    "alt_name": "Paseo de Extremadura",
+    "construction": "motorway",
+    "highway": "construction",
+    "lanes": "4",
+    "lit": "yes",
+    "maxheight:signed": "no",
+    "maxspeed": "70",
+    "name": "Autovía del Suroeste",
+    "name:etymology:wikidata": "Q2744396",
+    "oneway": "yes",
+    "operator": "Administración central",
+    "ref": "A-5",
+    "source": "https://masinteresmadrid.com/las-obras-de-soterramiento-de-la-a-5-reabren-los-accesos-a-los-tuneles-de-avenida-de-portugal-y-m-30-sentido-madrid",
+    "source:name": "local knowledge",
+    "surface": "asphalt",
+    "turn:lanes": "through|through|through|slight_right"
+   }
+  },
+  {
+   "type": "way",
+   "id": 71579045,
+   "tags": {
+    "bridge": "viaduct",
+    "destination:lanes": "Teruel;Valencia|Teruel;Valencia|Madrid|Zaragoza;Madrid",
+    "hazmat": "designated",
+    "highway": "motorway",
+    "lanes": "4",
+    "layer": "1",
+    "maxspeed": "120",
+    "name": "Cuarto Cinturón de Zaragoza",
+    "oneway": "yes",
+    "ref": "Z-40",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 74098057,
+   "tags": {
+    "alt_name": "Paseo de Extremadura",
+    "bridge": "yes",
+    "construction": "motorway",
+    "highway": "construction",
+    "lanes": "4",
+    "layer": "1",
+    "lit": "yes",
+    "maxspeed": "70",
+    "name": "Autovía del Suroeste",
+    "name:etymology:wikidata": "Q2744396",
+    "oneway": "yes",
+    "opening_date": "2026-02-07",
+    "operator": "Administración central",
+    "ref": "A-5",
+    "source": "https://tinyurl.com/4mujmpfm",
+    "source:name": "local knowledge",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 74098059,
+   "tags": {
+    "alt_name": "Paseo de Extremadura",
+    "construction": "motorway",
+    "highway": "construction",
+    "lanes": "4",
+    "lit": "yes",
+    "maxspeed": "70",
+    "name": "Autovía del Suroeste",
+    "name:etymology:wikidata": "Q2744396",
+    "oneway": "yes",
+    "opening_date": "2026-02-07",
+    "operator": "Administración central",
+    "ref": "A-5",
+    "source": "https://tinyurl.com/4mujmpfm",
+    "source:name": "local knowledge",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 80424111,
+   "tags": {
+    "alt_name": "Túnel de Lorca",
+    "hazmat": "designated",
+    "highway": "motorway",
+    "int_ref": "E 15",
+    "lanes": "2",
+    "layer": "-1",
+    "maxspeed": "80",
+    "name": "Autovía del Mediterráneo",
+    "oneway": "yes",
+    "ref": "A-7",
+    "surface": "asphalt",
+    "tunnel": "yes"
+   }
+  },
+  {
+   "type": "way",
+   "id": 80424194,
+   "tags": {
+    "alt_name": "Túnel de Lorca",
+    "hazmat": "designated",
+    "highway": "motorway",
+    "int_ref": "E 15",
+    "lanes": "2",
+    "layer": "-1",
+    "maxspeed": "80",
+    "name": "Autovía del Mediterráneo",
+    "oneway": "yes",
+    "ref": "A-7",
+    "surface": "asphalt",
+    "tunnel": "yes"
+   }
+  },
+  {
+   "type": "way",
+   "id": 106544263,
+   "tags": {
+    "bridge": "yes",
+    "hazmat": "designated",
+    "highway": "motorway",
+    "int_ref": "E 15",
+    "lanes": "2",
+    "layer": "1",
+    "maxspeed": "80",
+    "name": "Autovía del Mediterráneo",
+    "oneway": "yes",
+    "ref": "A-7",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 106544274,
+   "tags": {
+    "hazmat": "designated",
+    "highway": "motorway",
+    "int_ref": "E 15",
+    "lanes": "2",
+    "maxspeed": "80",
+    "name": "Autovía del Mediterráneo",
+    "oneway": "yes",
+    "ref": "A-7",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 106544286,
+   "tags": {
+    "bridge": "yes",
+    "hazmat": "designated",
+    "highway": "motorway",
+    "int_ref": "E 15",
+    "lanes": "2",
+    "layer": "1",
+    "maxspeed": "80",
+    "name": "Autovía del Mediterráneo",
+    "oneway": "yes",
+    "ref": "A-7",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 172213294,
+   "tags": {
+    "hazmat": "designated",
+    "highway": "motorway",
+    "int_ref": "E 15",
+    "lanes": "2",
+    "maxspeed": "80",
+    "name": "Autovía del Mediterráneo",
+    "oneway": "yes",
+    "ref": "A-7",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 255187313,
+   "tags": {
+    "hazmat": "designated",
+    "highway": "motorway",
+    "maxspeed": "90",
+    "name": "Acceso a Cádiz por el Puente de la Constitución de 1812",
+    "oneway": "yes",
+    "ref": "CA-35",
+    "start_date": "2015-09-24",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 255187318,
+   "tags": {
+    "bridge": "viaduct",
+    "bridge:name": "Viaducto del Río San Pedro",
+    "hazmat": "designated",
+    "highway": "motorway",
+    "lanes": "2",
+    "layer": "1",
+    "length": "796",
+    "maxspeed": "100",
+    "name": "Acceso a Cádiz por el Puente de la Constitución de 1812",
+    "oneway": "yes",
+    "ref": "CA-35",
+    "start_date": "2015-09-24",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 339201201,
+   "tags": {
+    "bridge": "viaduct",
+    "bridge:name": "Puente de la Constitución de 1812",
+    "bridge:name:de": "Brücke der Verfassung von 1812",
+    "bridge:name:es": "Puente de la Constitución de 1812",
+    "hazmat": "designated",
+    "highway": "motorway",
+    "lanes": "2",
+    "layer": "1",
+    "length": "3095",
+    "maxspeed": "100",
+    "name": "Acceso a Cádiz por el Puente de la Constitución de 1812",
+    "oneway": "yes",
+    "ref": "CA-35",
+    "start_date": "2015-09-24",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 416557432,
+   "tags": {
+    "hazmat": "designated",
+    "highway": "motorway",
+    "lanes": "4",
+    "maxspeed": "120",
+    "name": "Cuarto Cinturón de Zaragoza",
+    "oneway": "yes",
+    "ref": "Z-40",
+    "source": "survey",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 840971099,
+   "tags": {
+    "hazmat": "designated",
+    "highway": "motorway",
+    "int_ref": "E 15",
+    "lanes": "2",
+    "maxspeed": "80",
+    "name": "Autovía del Mediterráneo",
+    "oneway": "yes",
+    "ref": "A-7",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 840971100,
+   "tags": {
+    "hazmat": "designated",
+    "highway": "motorway",
+    "int_ref": "E 15",
+    "lanes": "2",
+    "maxspeed": "80",
+    "name": "Autovía del Mediterráneo",
+    "oneway": "yes",
+    "ref": "A-7",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 907151349,
+   "tags": {
+    "alt_name": "Paseo de Extremadura",
+    "highway": "motorway",
+    "lanes": "4",
+    "lit": "yes",
+    "maxspeed": "70",
+    "name": "Autovía del Suroeste",
+    "name:etymology:wikidata": "Q2744396",
+    "oneway": "yes",
+    "operator": "Administración central",
+    "ref": "A-5",
+    "ref:colour": "blue",
+    "source:name": "local knowledge",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 907151350,
+   "tags": {
+    "alt_name": "Paseo de Extremadura",
+    "highway": "motorway",
+    "lanes": "4",
+    "lit": "yes",
+    "maxspeed": "70",
+    "name": "Autovía del Suroeste",
+    "name:etymology:wikidata": "Q2744396",
+    "oneway": "yes",
+    "operator": "Administración central",
+    "ref": "A-5",
+    "ref:colour": "blue",
+    "source:name": "local knowledge",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 912705742,
+   "tags": {
+    "bridge": "viaduct",
+    "bridge:name": "Puente de la Constitución de 1812",
+    "bridge:name:de": "Brücke der Verfassung von 1812",
+    "bridge:name:es": "Puente de la Constitución de 1812",
+    "hazmat": "designated",
+    "highway": "motorway",
+    "lanes": "3",
+    "layer": "1",
+    "length": "3095",
+    "maxspeed": "100",
+    "name": "Acceso a Cádiz por el Puente de la Constitución de 1812",
+    "oneway": "yes",
+    "ref": "CA-35",
+    "start_date": "2015-09-24",
+    "surface": "asphalt",
+    "turn:lanes": "through|through|merge_to_left"
+   }
+  },
+  {
+   "type": "way",
+   "id": 1213940859,
+   "tags": {
+    "hazmat": "designated",
+    "highway": "motorway",
+    "int_ref": "E 01",
+    "lanes": "2",
+    "maxspeed": "90",
+    "name": "Autoestrada do Atlántico",
+    "name:es": "Autopista del Atlántico",
+    "name:gl": "Autoestrada do Atlántico",
+    "oneway": "yes",
+    "ref": "AP-9F",
+    "surface": "asphalt",
+    "toll": "no"
+   }
+  },
+  {
+   "type": "way",
+   "id": 1214100219,
+   "tags": {
+    "alt_name": "Paseo de Extremadura",
+    "highway": "motorway",
+    "lanes": "4",
+    "lit": "yes",
+    "maxspeed": "70",
+    "name": "Autovía del Suroeste",
+    "name:etymology:wikidata": "Q2744396",
+    "oneway": "yes",
+    "operator": "Administración central",
+    "ref": "A-5",
+    "source:name": "local knowledge",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 1235478906,
+   "tags": {
+    "hazmat": "designated",
+    "highway": "motorway",
+    "lanes": "2",
+    "maxspeed": "80",
+    "name": "Acceso a Cádiz por el Puente de la Constitución de 1812",
+    "oneway": "yes",
+    "ref": "CA-35",
+    "start_date": "2015-09-24",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 1235478908,
+   "tags": {
+    "highway": "motorway_link",
+    "lanes": "1",
+    "oneway": "yes",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 1235478909,
+   "tags": {
+    "highway": "motorway",
+    "lanes": "2",
+    "name": "Acceso a Cádiz por el Puente de la Constitución de 1812",
+    "oneway": "yes",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 1235478922,
+   "tags": {
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "100",
+    "name": "Acceso a Cádiz por el Puente de la Constitución de 1812",
+    "oneway": "yes",
+    "surface": "asphalt",
+    "turn:lanes": "through|through|merge_to_left"
+   }
+  },
+  {
+   "type": "way",
+   "id": 1245080232,
+   "tags": {
+    "hazmat": "designated",
+    "highway": "motorway",
+    "lanes": "3",
+    "maxspeed": "120",
+    "name": "Cuarto Cinturón de Zaragoza",
+    "oneway": "yes",
+    "ref": "Z-40",
+    "source": "survey",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 1320781089,
+   "tags": {
+    "hazmat": "designated",
+    "highway": "motorway",
+    "lanes": "2",
+    "lit": "yes",
+    "maxspeed": "120",
+    "name": "Cuarto Cinturón de Zaragoza",
+    "oneway": "yes",
+    "ref": "Z-40",
+    "source": "bing",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 1327929433,
+   "tags": {
+    "alt_name": "Paseo de Extremadura",
+    "construction": "motorway",
+    "highway": "construction",
+    "lanes": "4",
+    "lit": "yes",
+    "maxspeed": "70",
+    "name": "Autovía del Suroeste",
+    "name:etymology:wikidata": "Q2744396",
+    "oneway": "yes",
+    "opening_date": "2026-02-07",
+    "operator": "Administración central",
+    "ref": "A-5",
+    "ref:colour": "blue",
+    "source": "https://tinyurl.com/4mujmpfm",
+    "source:name": "local knowledge",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 1389124707,
+   "tags": {
+    "bridge": "viaduct",
+    "bridge:name": "Viaducto del Río San Pedro",
+    "hazmat": "designated",
+    "highway": "motorway",
+    "lanes": "2",
+    "layer": "1",
+    "length": "796",
+    "maxspeed": "80",
+    "name": "Acceso a Cádiz por el Puente de la Constitución de 1812",
+    "oneway": "yes",
+    "ref": "CA-35",
+    "start_date": "2015-09-24",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 1428941005,
+   "tags": {
+    "alt_name": "Paseo de Extremadura",
+    "construction": "motorway",
+    "highway": "construction",
+    "lanes": "4",
+    "lit": "yes",
+    "maxspeed": "70",
+    "name": "Autovía del Suroeste",
+    "name:etymology:wikidata": "Q2744396",
+    "oneway": "yes",
+    "operator": "Administración central",
+    "ref": "A-5",
+    "source": "https://masinteresmadrid.com/las-obras-de-soterramiento-de-la-a-5-reabren-los-accesos-a-los-tuneles-de-avenida-de-portugal-y-m-30-sentido-madrid",
+    "source:name": "local knowledge",
+    "surface": "asphalt"
+   }
+  },
+  {
+   "type": "way",
+   "id": 1428941008,
+   "tags": {
+    "alt_name": "Paseo de Extremadura",
+    "construction": "motorway",
+    "highway": "construction",
+    "lanes": "4",
+    "lit": "yes",
+    "maxspeed": "70",
+    "name": "Autovía del Suroeste",
+    "name:etymology:wikidata": "Q2744396",
+    "oneway": "yes",
+    "opening_date": "2026-02-07",
+    "operator": "Administración central",
+    "ref": "A-5",
+    "ref:colour": "blue",
+    "source": "https://tinyurl.com/4mujmpfm",
+    "source:name": "local knowledge",
+    "surface": "asphalt"
    }
   },
   {
@@ -504,6 +1271,114 @@
   },
   {
    "type": "relation",
+   "id": 9928269,
+   "members": [
+    {
+     "type": "node",
+     "ref": 992681601,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 992001427,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 6715936405,
+     "role": "to"
+    }
+   ],
+   "tags": {
+    "enforcement": "maxspeed",
+    "maxspeed": "120",
+    "type": "enforcement"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 9928271,
+   "members": [
+    {
+     "type": "node",
+     "ref": 6715936404,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 992001427,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 6715936405,
+     "role": "to"
+    }
+   ],
+   "tags": {
+    "enforcement": "maxspeed",
+    "maxspeed": "120",
+    "type": "enforcement"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 10026551,
+   "members": [
+    {
+     "type": "node",
+     "ref": 29095584,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 7847018896,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 7847018895,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 6787661204,
+     "role": "to"
+    },
+    {
+     "type": "way",
+     "ref": 840971099,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 80424194,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 172213294,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 106544286,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 840971100,
+     "role": "section"
+    }
+   ],
+   "tags": {
+    "enforcement": "average_speed",
+    "maxspeed": "80",
+    "type": "enforcement"
+   }
+  },
+  {
+   "type": "relation",
    "id": 10358149,
    "members": [
     {
@@ -525,6 +1400,78 @@
    "tags": {
     "enforcement": "maxspeed",
     "maxspeed": "80",
+    "type": "enforcement"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 11547740,
+   "members": [
+    {
+     "type": "node",
+     "ref": 992004964,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 7847018894,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 1225611669,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 7847018893,
+     "role": "to"
+    },
+    {
+     "type": "way",
+     "ref": 106544263,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 106544274,
+     "role": "section"
+    },
+    {
+     "type": "way",
+     "ref": 80424111,
+     "role": "section"
+    }
+   ],
+   "tags": {
+    "enforcement": "average_speed",
+    "maxspeed": "80",
+    "type": "enforcement"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 14878832,
+   "members": [
+    {
+     "type": "node",
+     "ref": 10178388575,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 6218566440,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 613184507,
+     "role": "to"
+    }
+   ],
+   "tags": {
+    "enforcement": "maxspeed",
+    "maxspeed": "30",
     "type": "enforcement"
    }
   },
@@ -750,6 +1697,32 @@
    "tags": {
     "enforcement": "maxspeed",
     "maxspeed": "40",
+    "type": "enforcement"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 21440002,
+   "members": [
+    {
+     "type": "node",
+     "ref": 857747710,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 14214352419,
+     "role": "device"
+    },
+    {
+     "type": "node",
+     "ref": 857694972,
+     "role": "to"
+    }
+   ],
+   "tags": {
+    "enforcement": "average_speed",
+    "maxspeed": "50",
     "type": "enforcement"
    }
   }
