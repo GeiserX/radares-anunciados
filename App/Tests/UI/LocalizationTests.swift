@@ -13,7 +13,7 @@ final class LocalizationTests: XCTestCase {
         let en = try XCTUnwrap(Bundle(path: path))
         let keys = [
             "Pausar hoy",
-            "Sin «Avisos» la app no se despierta ni usa el GPS. «Pausar hoy» ignora los despertares hasta mañana (en autobús o tren); abrir la app y «Probar aviso» siguen funcionando.",
+            "Sin «Avisos» la app no se despierta ni usa el GPS. «Pausar hoy» ignora los despertares hasta mañana (en autobús o tren); «Probar aviso» sigue funcionando.",
             "Radar móvil habitual",
             "Radar fijo",
             "Ajustes",

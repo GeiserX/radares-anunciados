@@ -112,7 +112,7 @@ unit. Live Activities in CarPlay use the small activity family ([WWDC25 216](htt
 | # | Test | Expectation | Result |
 |---|---|---|---|
 | E1 | "Probar aviso" in the foreground | The sentence, the card, the notification once the card is dismissed; one `alert` row with three sink outcomes | pending |
-| E2 | App opened before the drive (Always) | `driveStarted(reason: foreground)`, `activityStarted`, the card on the Lock Screen and on the CarPlay Dashboard | pending |
+| E2 | App left on screen when setting off (Always) | `driveStarted(reason: wakeup(…))` while the app is in the foreground, then `activityStarted`; the card on the Lock Screen and on the CarPlay Dashboard | pending |
 | E3 | A week of Settings > Battery | The app's share stays under a navigation app's for the same driving minutes; Estado's 7-day drive minutes match the real drives | pending |
 | E4 | Settings > Privacy > Analytics after a week | No jetsam report naming the app | pending |
 | E5 | `maxGapSeconds` in every `driveEnded` row of the week | Under 10 s while moving; a larger gap is a row to explain (suspension, throttling) | pending |

@@ -142,7 +142,7 @@ private struct CarStep: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Image(systemName: "car.fill").font(.system(size: 56)).foregroundStyle(.tint)
-                Text("Con iOS 26 la tarjeta del radar aparece en la pantalla de CarPlay y en la pantalla bloqueada. iOS solo deja que la tarjeta empiece con la app abierta: si la quieres en el coche, abre la app antes de salir. Si no, el aviso llega igual por voz y como notificación.")
+                Text("Con iOS 26 la tarjeta del radar aparece en la pantalla de CarPlay y en la pantalla bloqueada. iOS solo deja que la tarjeta empiece mientras la app está en pantalla: si la quieres en el coche, deja la app abierta al salir y aparecerá en cuanto note que conduces. Si no, el aviso llega igual por voz y como notificación.")
                 Button("Probar") { tried = start() }
                     .buttonStyle(.borderedProminent)
                 switch tried {

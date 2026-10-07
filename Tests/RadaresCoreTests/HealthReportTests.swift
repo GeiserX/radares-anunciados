@@ -207,9 +207,9 @@ final class HealthReportTests: XCTestCase {
         i.lastActivityStarted = t0.addingTimeInterval(-90_000)
         let r = row(HealthTitles.activity, i)
         XCTAssertEqual(r.status, .warn, "the last drive had no card")
-        XCTAssertEqual(r.detail, "Pantalla del coche no iniciada en el último viaje: abre la app antes de salir")
-        XCTAssertNil(r.action, "the only fix is opening the app before the drive; there is nothing to configure")
-        XCTAssertEqual(row(HealthTitles.activity, i, locale: Fixtures.en).detail, "Car screen not started on the last drive: open the app before you set off")
+        XCTAssertEqual(r.detail, "Pantalla del coche no iniciada en el último viaje: deja la app en pantalla al salir")
+        XCTAssertNil(r.action, "the only fix is leaving the app on screen at the start of the drive; there is nothing to configure")
+        XCTAssertEqual(row(HealthTitles.activity, i, locale: Fixtures.en).detail, "Car screen not started on the last drive: leave the app on screen when you set off")
     }
 
     func testMotion() {

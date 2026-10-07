@@ -54,8 +54,8 @@ public actor LocationCoordinator {
 
     /// UserDefaults: the user granted Always and wants warnings; the session is re-taken at every launch while set.
     public static let wantsAlwaysKey = "wantsAlways"
-    /// UserDefaults: "Pausar hoy" (design 3.5): until this date no wake-up starts a probe. Opening the app and
-    /// "Probar aviso" still start a drive, the user asked for those.
+    /// UserDefaults: "Pausar hoy" (design 3.5): until this date no wake-up starts a probe and opening the app starts
+    /// nothing either; "Probar aviso" still starts a drive, the user asked for that one.
     public static let pausedUntilKey = "pausedUntil"
     private static let fenceCenterKey = "fence.center"
     /// While paused and not stationary, the walking check runs at most this often.

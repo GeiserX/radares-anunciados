@@ -13,7 +13,7 @@ Radares Anunciados is an iPhone app that warns a driver before the speed radars 
 - Only radars ahead and in your direction of travel; a radar for the other carriageway is shown, not spoken.
 - Mobile-radar and average-speed stretches with the remaining distance, and "Fin de tramo" at the end.
 - A card on the CarPlay Dashboard and the Lock Screen (Live Activity), and a Time Sensitive notification when no card runs.
-- Starts on its own when you drive. Open the app before you set off if you want the card on the car screen.
+- Starts on its own when you drive. Leave the app on screen when you set off if you want the card in the car.
 - Works offline: the radar list is on the phone, refreshed every 6 hours, with a copy bundled for the first drive.
 - An Estado screen that checks every link of the chain, and a "Probar aviso" button that runs a test warning through it.
 - No account, no server, no ads, no tracking. Spanish and English.

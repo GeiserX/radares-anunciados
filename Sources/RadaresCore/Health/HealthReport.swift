@@ -215,10 +215,10 @@ private func activityRow(_ i: HealthInputs, _ l: HealthText) -> HealthItem {
     if !i.activitiesEnabled {
         return HealthItem(status: .fail, title: t, detail: l("Actividades en directo desactivadas", "Live Activities off"), action: .openSettings)
     }
-    // The card can only begin for a drive that starts with the app open (design 4.2): a drive that began from a
-    // background wake-up had voice and the notification, not the card. The row says so; the fix is opening the app.
+    // The card can only begin while the app is on screen (design 4.2): a drive that began with the app in the
+    // background had voice and the notification, not the card. The row says so; the fix is leaving the app open.
     if let drive = i.lastDriveStarted, i.lastActivityStarted == nil || i.lastActivityStarted! < drive {
-        return HealthItem(status: .warn, title: t, detail: l("Pantalla del coche no iniciada en el último viaje: abre la app antes de salir", "Car screen not started on the last drive: open the app before you set off"))
+        return HealthItem(status: .warn, title: t, detail: l("Pantalla del coche no iniciada en el último viaje: deja la app en pantalla al salir", "Car screen not started on the last drive: leave the app on screen when you set off"))
     }
     return HealthItem(status: .ok, title: t, detail: l("Pantalla del coche lista", "Car screen ready"))
 }

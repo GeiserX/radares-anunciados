@@ -5,17 +5,17 @@ Radares Anunciados v1 is not a CarPlay app. The design is in [DESIGN.md](DESIGN.
 - **Voice** through the car's audio (`AVAudioSession` mode `.voicePrompt`), which works on any iOS version and through any Focus.
 - **The Live Activity** on the CarPlay Dashboard, iOS 26 and later. CarPlay draws the activity's small family (`.supplementalActivityFamilies([.small])`): kind symbol, title, distance in large digits and the limit badge, with no buttons, because Live Activities in CarPlay are non-interactive. When the Dashboard is not on screen, CarPlay shows a Live Activity alert as a notification at the bottom of the display (WWDC25 session 216, https://developer.apple.com/videos/play/wwdc2025/216/).
 
-The Live Activity has one hard limit. An app cannot start it from a background wake-up such as a location event. Apple's DTS: "It is not possible to programmatically initiate a Live Activity from a background execution context, such as a CLLocationManager wakeup, using local APIs." (https://developer.apple.com/forums/thread/818467). The app ships no other starter for the card, so the card begins only for a drive that starts while the app is open. The voice and the Time Sensitive notification do not depend on this: they come from the background wake-ups on every drive.
+The Live Activity has one hard limit. An app cannot start it from a background wake-up such as a location event. Apple's DTS: "It is not possible to programmatically initiate a Live Activity from a background execution context, such as a CLLocationManager wakeup, using local APIs." (https://developer.apple.com/forums/thread/818467). The app ships no other starter for the card, so the card begins only for a drive that starts while the app is on screen: under Always, the wake-up's probe turns into the drive and the app, still in the foreground, requests the card; under While Using, opening the app starts the drive at once. The voice and the Time Sensitive notification do not depend on this: they come from the background wake-ups on every drive.
 
 ## Español
 
-Si quieres la tarjeta en la pantalla del coche, abre la app antes de salir. Si no la abres, la app sigue avisando por voz y con la notificación cuando iOS la despierta al empezar a conducir, pero la tarjeta no aparece en el coche en ese viaje. Estado lo indica con "Pantalla del coche no iniciada en el último viaje: abre la app antes de salir".
+Si quieres la tarjeta en la pantalla del coche, deja la app abierta en pantalla al salir: aparece en cuanto la app nota que conduces. Si bloqueas el iPhone antes, la app sigue avisando por voz y con la notificación cuando iOS la despierta al empezar a conducir, pero la tarjeta no aparece en el coche en ese viaje. Estado lo indica con "Pantalla del coche no iniciada en el último viaje: deja la app en pantalla al salir".
 
 Con el permiso de ubicación "Mientras se usa" y sin "Siempre", abrir la app es además la única forma de empezar el viaje.
 
 ## English
 
-If you want the card on the car screen, open the app before you set off. If you do not, the app still warns by voice and with the notification when iOS wakes it at the start of a drive, but the card does not appear in the car for that drive. Estado says so ("Pantalla del coche no iniciada en el último viaje: abre la app antes de salir", Spanish for "Car screen not started on the last drive: open the app before you set off").
+If you want the card on the car screen, leave the app open on screen when you set off: it appears as soon as the app notices you are driving. If you lock the iPhone first, the app still warns by voice and with the notification when iOS wakes it at the start of a drive, but the card does not appear in the car for that drive. Estado says so ("Pantalla del coche no iniciada en el último viaje: deja la app en pantalla al salir", Spanish for "Car screen not started on the last drive: leave the app on screen when you set off").
 
 With "While Using" location permission and no "Always", opening the app is also the only way a drive can start.
 

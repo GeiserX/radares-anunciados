@@ -1,22 +1,22 @@
 {
   "sourceLanguage" : "es",
   "strings" : {
-    "Con iOS 26 la tarjeta del radar aparece en la pantalla de CarPlay y en la pantalla bloqueada. iOS solo deja que la tarjeta empiece con la app abierta: si la quieres en el coche, abre la app antes de salir. Si no, el aviso llega igual por voz y como notificación." : {
+    "Con iOS 26 la tarjeta del radar aparece en la pantalla de CarPlay y en la pantalla bloqueada. iOS solo deja que la tarjeta empiece mientras la app está en pantalla: si la quieres en el coche, deja la app abierta al salir y aparecerá en cuanto note que conduces. Si no, el aviso llega igual por voz y como notificación." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "With iOS 26 the radar card shows on the CarPlay screen and on the Lock Screen. iOS only lets the card start while the app is open: if you want it in the car, open the app before you set off. If not, the warning still arrives by voice and as a notification."
+            "value" : "With iOS 26 the radar card shows on the CarPlay screen and on the Lock Screen. iOS only lets the card start while the app is on screen: if you want it in the car, leave the app open when you set off and it appears as soon as the app notices you are driving. If not, the warning still arrives by voice and as a notification."
           }
         }
       }
     },
-    "Sin «Avisos» la app no se despierta ni usa el GPS. «Pausar hoy» ignora los despertares hasta mañana (en autobús o tren); abrir la app y «Probar aviso» siguen funcionando." : {
+    "Sin «Avisos» la app no se despierta ni usa el GPS. «Pausar hoy» ignora los despertares hasta mañana (en autobús o tren); «Probar aviso» sigue funcionando." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "With Warnings off the app never wakes up or uses GPS. Pause today ignores wake-ups until tomorrow (on a bus or a train); opening the app and Probar aviso (Test warning) still work."
+            "value" : "With Warnings off the app never wakes up or uses GPS. Pause today ignores wake-ups until tomorrow (on a bus or a train); Probar aviso (Test warning) still works."
           }
         }
       }
