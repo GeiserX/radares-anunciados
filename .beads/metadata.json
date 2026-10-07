@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "radares",
+  "project_id": "e5894a10-a62a-4bf9-acf8-af8a9c0b022a"
+}
