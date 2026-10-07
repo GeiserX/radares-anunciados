@@ -59,4 +59,4 @@ Your location never leaves the phone; the only network request is the download o
 
 ## License
 
-[GPL-3.0-or-later](LICENSE), with an additional permission for App Store distribution (see [NOTICE](NOTICE)).
+[GPL-3.0-or-later](LICENSE). An additional permission for App Store distribution is proposed in [NOTICE](NOTICE).

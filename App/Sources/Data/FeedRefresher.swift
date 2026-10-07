@@ -62,16 +62,23 @@ public final class FeedRefresher {
             await self.refreshIfNeeded(trigger: .background)
             await self.postHealthNoticeIfRed()
         }
+        // Both paths run on the main actor; whichever comes first completes the task, exactly once.
+        var completed = false
+        func complete(expired: Bool) {
+            guard !completed else { return }
+            completed = true
+            AppLog.shared.post(.bgTaskRan(expired: expired))
+            task.setTaskCompleted(success: !expired)
+        }
         task.expirationHandler = {
-            work.cancel()
-            AppLog.shared.post(.bgTaskRan(expired: true))
-            task.setTaskCompleted(success: false)
+            MainActor.assumeIsolated {
+                work.cancel()
+                complete(expired: true)
+            }
         }
         Task { @MainActor in
             await work.value
-            guard !work.isCancelled else { return }
-            AppLog.shared.post(.bgTaskRan(expired: false))
-            task.setTaskCompleted(success: true)
+            complete(expired: false)
         }
     }
 

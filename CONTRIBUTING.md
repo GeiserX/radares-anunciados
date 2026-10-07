@@ -22,8 +22,8 @@ Tests run offline against fixtures, never against the live feed. Every new rule 
 - Conventional commits (`fix:`, `feat:`, `docs:`). The title says why the change is needed, not a list of what changed.
 - One topic per pull request. Keep unrelated clean-ups out.
 - User-facing text is Spanish first, with correct accents, and an English translation in `App/Sources/Localizable.xcstrings`.
-- Every file you add carries `SPDX-License-Identifier: GPL-3.0-or-later`.
+- Every source file, script and manifest you add carries `SPDX-License-Identifier: GPL-3.0-or-later`.
 
 ## Licence of your contribution
 
-The code is GPL-3.0-or-later with an additional permission under section 7 that allows distribution through Apple's App Store and TestFlight (see [NOTICE](NOTICE)). By opening a pull request you agree that your contribution is licensed under the same terms, including that additional permission. Without it the app could not be published on the App Store.
+The code is GPL-3.0-or-later. [NOTICE](NOTICE) proposes an additional permission under section 7 that would allow distribution through Apple's App Store and TestFlight; it is not in effect until the maintainer adopts it. By opening a pull request you agree that your contribution is licensed under GPL-3.0-or-later and, once adopted, under that additional permission too. Without it the app could not be published on the App Store.

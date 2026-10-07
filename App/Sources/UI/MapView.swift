@@ -11,9 +11,9 @@ import SwiftUI
 
 struct MapView: View {
     @Environment(AppModel.self) private var model
-    @State private var position: MapCameraPosition = Self.around(Self.lastKnown ?? Self.madrid)
-    @State private var center = Self.lastKnown ?? Self.madrid
-    @State private var me = Self.lastKnown
+    @State private var position: MapCameraPosition = Self.around(AppModel.lastKnown ?? Self.madrid)
+    @State private var center = AppModel.lastKnown ?? Self.madrid
+    @State private var me = AppModel.lastKnown
 
     var body: some View {
         VStack(spacing: 0) {
@@ -40,7 +40,7 @@ struct MapView: View {
             }
             .onMapCameraChange(frequency: .onEnd) { context in
                 center = Coordinate(context.region.center)
-                me = CLLocationManager().location.map { Coordinate($0.coordinate) }
+                me = AppModel.lastKnown
             }
             .safeAreaInset(edge: .bottom) {
                 if let nearest {
@@ -55,10 +55,6 @@ struct MapView: View {
     }
 
     private static let madrid = Coordinate(latitude: 40.4168, longitude: -3.7038)
-
-    private static var lastKnown: Coordinate? {
-        CLLocationManager().location.map { Coordinate($0.coordinate) }
-    }
 
     /// The map opens on the radius the radars are shown for, not on street level.
     private static func around(_ point: Coordinate) -> MapCameraPosition {

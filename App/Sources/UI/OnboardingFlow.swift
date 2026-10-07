@@ -201,6 +201,7 @@ final class Permissions: NSObject, CLLocationManagerDelegate {
     /// session; opening onboarding again never flips the "Avisos" switch on its own.
     @ObservationIgnored private var requested = false
     @ObservationIgnored private var askedAlways = false
+    @ObservationIgnored private var tookSession = false
 
     override init() {
         super.init()
@@ -245,7 +246,10 @@ final class Permissions: NSObject, CLLocationManagerDelegate {
                 askedAlways = true
                 self.manager.requestAlwaysAuthorization()
             }
-            // Take the session now, in the foreground (design 3.2): Always, or the While-Using degraded mode.
+            // Take the session once, now, in the foreground (design 3.2): Always, or the While-Using degraded mode.
+            // Later authorization changes never turn "Avisos" back on by themselves.
+            guard !tookSession else { return }
+            tookSession = true
             UserDefaults.standard.set(true, forKey: SettingsKey.warningsEnabled)
             Task { await LocationCoordinator.shared.setWarningsEnabled(true) }
         }

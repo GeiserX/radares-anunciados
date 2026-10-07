@@ -27,7 +27,7 @@ enum SelfTest {
 
     static func run(now: Date = Date()) async -> Outcome {
         let logger = Logger(subsystem: "io.github.geiserx.radares", category: "selftest")
-        let location = CLLocationManager().location
+        let location = AppModel.locationManager.location
         let here = location.map { Coordinate($0.coordinate) } ?? Coordinate(latitude: 40.4168, longitude: -3.7038)
         let heading: Double = if let location, location.course >= 0, location.speed >= Thresholds.courseMinSpeedMps {
             location.course

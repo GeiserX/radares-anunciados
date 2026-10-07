@@ -31,6 +31,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          # Nothing after this needs git credentials: the repo is public, and the CI lookup uses GH_TOKEN.
+          persist-credentials: false
 
       - name: Check the tag is on main and CI passed there
         env:
@@ -44,7 +46,7 @@ jobs:
           conclusion=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --branch main \
             --commit "$GITHUB_SHA" --json conclusion --jq '.[0].conclusion // "none"')
           if [ "$conclusion" != success ]; then
-            echo "::error::CI on main for $GITHUB_SHA is '$conclusion', not success"
+            echo "::error::CI on main for $GITHUB_SHA is '$conclusion', not success; if it was still running, re-run this workflow once it is green"
             exit 1
           fi
 

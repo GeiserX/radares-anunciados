@@ -23,8 +23,6 @@ enum SettingsKey {
     static let onboardingDone = "onboardingDone"
     static let voiceEnabled = "voiceEnabled"
     static let warningsEnabled = "warningsEnabled"
-    /// Seconds since 1970 until which the driver paused warnings ("Pausar hoy"); 0 when not paused.
-    static let pausedUntil = "pausedUntil"
 }
 
 @MainActor
@@ -45,6 +43,14 @@ final class AppModel {
     var selectedTab = Tab.estado
 
     enum Tab: Hashable { case estado, mapa, ajustes }
+
+    /// One retained manager for reading the last known position (map, nearest radar, self-test); it never
+    /// starts a location service.
+    static let locationManager = CLLocationManager()
+
+    static var lastKnown: Coordinate? {
+        locationManager.location.map { Coordinate($0.coordinate) }
+    }
 
     private var startedTestDrive = false
     private let logger = Logger(subsystem: "io.github.geiserx.radares", category: "ui")

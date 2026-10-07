@@ -1,7 +1,7 @@
 // Lane: app
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// Ajustes (design 4.4): voice on/off, the "Avisos" master switch, "Pausar hoy", the feed and "Actualizar ahora",
+// Ajustes (design 4.4): voice on/off, the "Avisos" master switch, the feed and "Actualizar ahora",
 // the log export, the alert history, the sources and the about lines.
 
 import RadaresCore
@@ -11,7 +11,6 @@ struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @AppStorage(SettingsKey.voiceEnabled) private var voiceEnabled = true
     @AppStorage(SettingsKey.warningsEnabled) private var warningsEnabled = true
-    @AppStorage(SettingsKey.pausedUntil) private var pausedUntil: Double = 0
 
     var body: some View {
         Form {
@@ -24,10 +23,8 @@ struct SettingsView: View {
                     .onChange(of: voiceEnabled) { _, on in
                         AlertDispatcher.shared.voiceEnabled = on
                     }
-                Toggle("Pausar hoy", isOn: pausedToday)
-                    .disabled(!warningsEnabled)
             } footer: {
-                Text("Sin «Avisos» la app no se despierta ni usa el GPS. «Pausar hoy» deja de avisar hasta medianoche, por ejemplo si vas en autobús.")
+                Text("Sin «Avisos» la app no se despierta ni usa el GPS.")
             }
 
             Section("Datos") {
@@ -69,24 +66,6 @@ struct SettingsView: View {
             }
         }
         .navigationTitle("Ajustes")
-    }
-
-    private var pausedToday: Binding<Bool> {
-        Binding {
-            pausedUntil > Date().timeIntervalSince1970
-        } set: { on in
-            pausedUntil = on ? Self.endOfToday().timeIntervalSince1970 : 0
-            if on {
-                Task { await LocationCoordinator.shared.stopDrive() }
-            }
-        }
-    }
-
-    /// Midnight in Spain, the day the feed's announced radars use.
-    static func endOfToday(now: Date = Date()) -> Date {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Europe/Madrid") ?? .current
-        return calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) ?? now.addingTimeInterval(86_400)
     }
 
     static var version: String {

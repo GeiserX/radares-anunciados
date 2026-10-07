@@ -541,16 +541,6 @@
         }
       }
     },
-    "Pausar hoy" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pause today"
-          }
-        }
-      }
-    },
     "Permitir Movimiento" : {
       "localizations" : {
         "en" : {
@@ -741,12 +731,12 @@
         }
       }
     },
-    "Sin «Avisos» la app no se despierta ni usa el GPS. «Pausar hoy» deja de avisar hasta medianoche, por ejemplo si vas en autobús." : {
+    "Sin «Avisos» la app no se despierta ni usa el GPS." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "With Warnings off the app never wakes up or uses GPS. Pause today stops warning until midnight, for example when you are on a bus."
+            "value" : "With Warnings off the app never wakes up or uses GPS."
           }
         }
       }

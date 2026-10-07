@@ -12,6 +12,7 @@ struct SourcesView: View {
 
     private struct Source: Identifiable {
         let id: String
+        let name: String
         let attribution: String
         let url: URL?
         let count: Int
@@ -19,16 +20,19 @@ struct SourcesView: View {
 
     private var sources: [Source] {
         guard let store = model.store else { return [] }
-        let groups = Dictionary(grouping: store.all, by: \.source)
-        return groups.map { source, radars in
-            Source(
-                id: source,
-                attribution: radars.first?.attribution ?? "",
+        // One row per distinct (source, attribution): a source whose radars carry different strings shows them all.
+        let groups = Dictionary(grouping: store.all) { "\($0.source)\n\($0.attribution)" }
+        return groups.values.compactMap { radars -> Source? in
+            guard let first = radars.first else { return nil }
+            return Source(
+                id: "\(first.source)\n\(first.attribution)",
+                name: first.source,
+                attribution: first.attribution,
                 url: radars.compactMap(\.url).first,
                 count: radars.count
             )
         }
-        .sorted { $0.count > $1.count }
+        .sorted { ($0.count, $1.id) > ($1.count, $0.id) }
     }
 
     var body: some View {
@@ -37,7 +41,7 @@ struct SourcesView: View {
                 ForEach(sources) { source in
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text(source.id).font(.headline)
+                            Text(source.name).font(.headline)
                             Spacer()
                             Text(source.count.formatted()).monospacedDigit().foregroundStyle(.secondary)
                         }
