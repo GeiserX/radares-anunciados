@@ -114,11 +114,6 @@ public struct HealthInputs: Sendable, Codable, Hashable {
     public var notificationAuthorization: NotificationAuthorization
     public var timeSensitiveSetting: NotificationSetting
 
-    // Pantalla del coche
-    public var activitiesEnabled: Bool
-    public var lastActivityStarted: Date?
-    public var lastDriveStarted: Date?
-
     // Movimiento
     public var motionAuthorization: MotionAuthorization
 
@@ -156,9 +151,6 @@ public struct HealthInputs: Sendable, Codable, Hashable {
         lowPowerMode: Bool = false,
         notificationAuthorization: NotificationAuthorization = .notDetermined,
         timeSensitiveSetting: NotificationSetting = .notSupported,
-        activitiesEnabled: Bool = false,
-        lastActivityStarted: Date? = nil,
-        lastDriveStarted: Date? = nil,
         motionAuthorization: MotionAuthorization = .notDetermined,
         lastSpeechSetActiveError: String? = nil,
         spanishVoiceAvailable: Bool = true,
@@ -188,9 +180,6 @@ public struct HealthInputs: Sendable, Codable, Hashable {
         self.lowPowerMode = lowPowerMode
         self.notificationAuthorization = notificationAuthorization
         self.timeSensitiveSetting = timeSensitiveSetting
-        self.activitiesEnabled = activitiesEnabled
-        self.lastActivityStarted = lastActivityStarted
-        self.lastDriveStarted = lastDriveStarted
         self.motionAuthorization = motionAuthorization
         self.lastSpeechSetActiveError = lastSpeechSetActiveError
         self.spanishVoiceAvailable = spanishVoiceAvailable

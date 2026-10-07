@@ -342,7 +342,7 @@ public final class AlertEngine {
         }
         let armed = candidates.filter { !$0.isLine && passes.state(of: $0.id, now: t) == .armed }
         // The card keeps the radar it already shows while that one stays armed: with several radars ahead at once
-        // (a city), the nearest one flips every few fixes and every flip would be a Live Activity update.
+        // (a city), the nearest one flips every few fixes and the card would flicker.
         if let radar = armed.first(where: { $0.id == current.next?.id }) ?? armed.first {
             let d = Geo.distance(fix.coordinate, radar.start)
             s.next = radar

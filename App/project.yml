@@ -14,8 +14,8 @@ options:
 settings:
   base:
     # Version and build number live only here. Bump CURRENT_PROJECT_VERSION for every TestFlight upload.
-    MARKETING_VERSION: 0.1.0
-    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 0.1.1
+    CURRENT_PROJECT_VERSION: 2
     DEVELOPMENT_TEAM: 624WUVM8B4
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
@@ -43,15 +43,13 @@ targets:
       - path: Sources/Localizable.xcstrings
       - path: Sources/InfoPlist.xcstrings
       - path: Sources/Assets.xcassets
-      # the bundled feed snapshot, its date and the Live Activity tick (design 5.3, 4.2)
+      # the bundled feed snapshot, its date and the notification tick (design 5.3, 4.2)
       - path: Sources/Resources
         buildPhase: resources
       # location lane
       - path: Sources/Location
       # surfaces lane
       - path: Sources/Surfaces
-      # frozen
-      - path: Shared
     info:
       path: Sources/Info.plist
       properties:
@@ -74,7 +72,6 @@ targets:
         NSLocationAlwaysAndWhenInUseUsageDescription: "Para avisarte en el coche sin abrir la app: se despierta al moverse y solo usa el GPS mientras conduces. La ubicación nunca sale del teléfono."
         NSLocationAlwaysUsageDescription: "Para avisarte en el coche sin abrir la app: se despierta al moverse y solo usa el GPS mientras conduces. La ubicación nunca sale del teléfono."
         NSMotionUsageDescription: Para saber si vas en coche y no gastar batería cuando caminas.
-        NSSupportsLiveActivities: true
         BGTaskSchedulerPermittedIdentifiers:
           - io.github.geiserx.radares.refresh
     entitlements:
@@ -97,42 +94,9 @@ targets:
     dependencies:
       - package: RadaresCore
         product: RadaresCore
-      - target: RadaresWidgets
-        embed: true
 
-  # The Live Activity (Lock Screen, Dynamic Island, CarPlay Dashboard on iOS 26).
-  RadaresWidgets:
-    type: app-extension
-    platform: iOS
-    sources:
-      # surfaces lane
-      - path: Widgets
-      # frozen
-      - path: Shared
-    info:
-      path: Widgets/Info.plist
-      properties:
-        CFBundleDisplayName: Radares Anunciados
-        CFBundleDevelopmentRegion: es
-        CFBundleLocalizations: [es, en]
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        NSExtension:
-          NSExtensionPointIdentifier: com.apple.widgetkit-extension
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: io.github.geiserx.radares.activity
-        TARGETED_DEVICE_FAMILY: "1"
-        CODE_SIGN_STYLE: Automatic
-        SKIP_INSTALL: YES
-      configs:
-        Release:
-          CODE_SIGN_STYLE: Manual
-          CODE_SIGN_IDENTITY: Apple Distribution
-          PROVISIONING_PROFILE_SPECIFIER: Radares Activity App Store
-
-  # App-side unit tests: what runs without Core Location or ActivityKit (the fix rule, the persisted drive, the
-  # drive counters, the card cadence, the health merge). `xcodebuild test` on a simulator; CI runs it on every push.
+  # App-side unit tests: what runs without Core Location (the fix rule, the persisted drive, the drive counters,
+  # the notification rules, the health merge). `xcodebuild test` on a simulator; CI runs it on every push.
   RadaresAnunciadosTests:
     type: bundle.unit-test
     platform: iOS
@@ -153,7 +117,6 @@ schemes:
     build:
       targets:
         RadaresAnunciados: all
-        RadaresWidgets: all
         RadaresAnunciadosTests: [test]
     run:
       config: Debug

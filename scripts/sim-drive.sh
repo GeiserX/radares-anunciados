@@ -16,9 +16,6 @@
 #   --probe                do not pass -StartDriveForTest: let the significant-change delivery wake the idle app and
 #                          watch the probe decide (idle -> probing -> driving)
 #   --state-machine-only   pass -StateMachineOnlyForTest 1: no engine, no surfaces (while those lanes are stubs)
-#   --no-live-activity     pass -NoLiveActivity 1 and -ProvisionalNotifications 1: the Time Sensitive notification
-#                          instead of the activity (the Simulator cannot grant notifications; provisional
-#                          authorization needs no prompt and delivers at the Time Sensitive level)
 #   --before <m>           metres before the target the route starts (default 3000)
 #   --after <m>            metres past the target the route ends (default 1000)
 #   --settle <s>           extra seconds to wait after the route ends (default 15)
@@ -35,14 +32,13 @@ usage() { sed -n '4,25p' "$0"; exit 2; }
 [ $# -ge 4 ] || usage
 
 UDID=$1; TARGET=$2; KMH=$3; SIDE=$4; shift 4
-HEADING=""; APP=""; PROBE=0; SMO=0; NOLA=0; BEFORE=3000; AFTER=1000; SETTLE=15; EXPECT=""
+HEADING=""; APP=""; PROBE=0; SMO=0; BEFORE=3000; AFTER=1000; SETTLE=15; EXPECT=""
 while [ $# -gt 0 ]; do
   case $1 in
     --heading) HEADING=$2; shift 2 ;;
     --app) APP=$2; shift 2 ;;
     --probe) PROBE=1; shift ;;
     --state-machine-only) SMO=1; shift ;;
-    --no-live-activity) NOLA=1; shift ;;
     --before) BEFORE=$2; shift 2 ;;
     --after) AFTER=$2; shift 2 ;;
     --settle) SETTLE=$2; shift 2 ;;
@@ -162,9 +158,12 @@ fi
 # relaunch path has its own run in docs/VERIFY.md).
 xcrun simctl spawn "$UDID" defaults delete "$PREFS" drive.persisted >/dev/null 2>&1 || true
 
-ARGS=()
+# The Simulator cannot grant notifications; provisional authorization needs no prompt and delivers at the Time
+# Sensitive level, so the notification rows can be read. The flag goes into the app's defaults as well: a system
+# relaunch for a significant-change delivery carries no launch arguments.
+ARGS=(-ProvisionalNotifications 1)
+xcrun simctl spawn "$UDID" defaults write "$PREFS" ProvisionalNotifications -bool true
 [ "$PROBE" -eq 1 ] || ARGS+=(-StartDriveForTest 1)
-[ "$NOLA" -eq 1 ] && ARGS+=(-NoLiveActivity 1 -ProvisionalNotifications 1)
 START_EPOCH=$(date +%s)
 # Launch first, then place the car: a simulated position set before the launch makes the system launch the app in
 # the background for significant change, and that process would not see the launch arguments. The same can happen
@@ -187,7 +186,7 @@ echo
 echo "== events.jsonl: alert and state rows"
 ALERTS=0
 if [ -s "$EVENTS" ]; then
-  grep -E 'launch|sessionTaken|wakeup|probe|driveStarted|drivePaused|driveResumed|driveEnded|alert|passed|stretchEntered|stretchExited|monitorEvent|notificationPosted|speech|activityStarted|activityFailed' "$EVENTS" || echo "(no matching rows)"
+  grep -E 'launch|sessionTaken|wakeup|probe|driveStarted|drivePaused|driveResumed|driveEnded|alert|passed|stretchEntered|stretchExited|monitorEvent|notificationPosted|speech' "$EVENTS" || echo "(no matching rows)"
   # Rows of this run only: the file keeps earlier runs. An alert row is `"alert":{...}`; a stretch entry is its own row.
   ALERTS=$(awk -v since="$(date -u -r "$START_EPOCH" '+%Y-%m-%dT%H:%M:%S')" '$0 ~ /"t":"/ && substr($0, index($0, "\"t\":\"") + 5, 19) >= since && ($0 ~ /"alert":/ || $0 ~ /"stretchEntered":/)' "$EVENTS" | wc -l | tr -d ' ')
 else

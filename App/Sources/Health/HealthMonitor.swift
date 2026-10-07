@@ -1,10 +1,9 @@
 // Lane: app
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// Collects HealthInputs from Core Location, the session diagnostics, UserNotifications, ActivityKit, Core Motion,
+// Collects HealthInputs from Core Location, the session diagnostics, UserNotifications, Core Motion,
 // BGTaskScheduler, feed.meta.json and the log (design 6). The rules themselves are healthReport(_:) in the core.
 
-import ActivityKit
 import AVFAudio
 @preconcurrency import BackgroundTasks
 import CoreLocation
@@ -79,14 +78,11 @@ public final class HealthMonitor {
                 inputs.lastDriveEnded = entry.t
                 inputs.lastDriveMaxGapSeconds = maxGap
             case .driveStarted:
-                inputs.lastDriveStarted = entry.t
                 inputs.lastDriveHadLateAlert = false
             case let .alert(_, _, _, _, late, _, _, _, _, _) where late:
                 inputs.lastDriveHadLateAlert = true
             case .bgTaskRan:
                 inputs.lastBgTaskRan = entry.t
-            case .activityStarted:
-                inputs.lastActivityStarted = entry.t
             case let .speech(_, setActiveError, _, _):
                 inputs.lastSpeechSetActiveError = setActiveError
             case let .protectionVerified(ok):
@@ -122,8 +118,7 @@ public final class HealthMonitor {
         @unknown default: .disabled
         }
 
-        // Pantalla del coche, Voz.
-        inputs.activitiesEnabled = ActivityAuthorizationInfo().areActivitiesEnabled
+        // Voz.
         inputs.spanishVoiceAvailable = AVSpeechSynthesisVoice(language: "es-ES") != nil
 
         // Archivos: the logged read-back, else a read-back now.

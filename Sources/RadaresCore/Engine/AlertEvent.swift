@@ -3,8 +3,8 @@
 
 import Foundation
 
-/// `.full` = speech + Live Activity alert + Time Sensitive notification (when no activity runs).
-/// `.visual` = a card row only (opposite direction, pacing gap). A missed warning costs a fine, a wrong
+/// `.full` = speech + the Time Sensitive notification. `.visual` = the notification without the voice and the
+/// in-app card row (opposite direction, pacing gap). A missed warning costs a fine, a wrong
 /// "opposite" costs a glance, so contested direction data demotes to `.visual` and never hides.
 public enum Level: String, Sendable, Codable, Hashable {
     case full
@@ -16,7 +16,7 @@ public enum Level: String, Sendable, Codable, Hashable {
 public struct Phrase: Sendable, Codable, Hashable {
     /// The sentence for the speech synthesizer, e.g. "Radar fijo a 800 metros. Límite 90."
     public let spoken: String
-    /// Short line for the notification title and the Live Activity alert, e.g. "Radar fijo a 800 m".
+    /// Short line for the notification title, e.g. "Radar fijo a 800 m".
     public let title: String
     /// Second line, e.g. "A-2 km 202,3 · límite 90 km/h".
     public let body: String
@@ -28,7 +28,7 @@ public struct Phrase: Sendable, Codable, Hashable {
     }
 }
 
-/// The card's phase. Mirrors `DriveAttributes.Phase` in App/Shared (same cases, same raw values).
+/// The in-app card's phase.
 public enum DrivePhase: String, Sendable, Codable, Hashable {
     case watching
     case approaching
@@ -39,10 +39,9 @@ public enum DrivePhase: String, Sendable, Codable, Hashable {
     case degraded
 }
 
-/// The content every surface renders: the Live Activity, the in-app card and the CarPlay card.
-/// Mirrors the fields of `DriveAttributes.ContentState` (design 2.7) as a plain struct so the core
-/// can build it without ActivityKit. The surfaces lane copies it field by field into the ContentState.
-/// Display values are rounded here (metres and km/h as integers) so the card is small and stable.
+/// The in-app card (the Mapa tab's "next radar" view, design 4.4) and the notification's source of a
+/// `.visual` warning's text. Display values are rounded here (metres and km/h as integers) so the card is
+/// small and stable.
 public struct DriveContent: Sendable, Codable, Hashable {
     public var phase: DrivePhase
     /// SF Symbol name for the kind, e.g. "camera.fill".
@@ -101,7 +100,7 @@ public struct DriveContent: Sendable, Codable, Hashable {
     }
 }
 
-/// One thing the engine decided on a fix. The whole surface chain (speech, activity, notification, log)
+/// One thing the engine decided on a fix. The whole surface chain (speech, notification, log)
 /// reads these; the route vectors assert them. Codable so a vector file can hold the expected events.
 public struct AlertEvent: Sendable, Codable, Hashable {
     public enum Kind: Sendable, Codable, Hashable {

@@ -69,46 +69,48 @@ final class EventLogTests: XCTestCase {
         var data = try Data(contentsOf: url)
         data.append(Data("{\"event\":{\"fromTheFuture\":{}},\"t\":\"2027-01-01T00:00:00Z\"}\n".utf8))
         try data.write(to: url)
-        log.append(.activityStarted, at: t0.addingTimeInterval(5))
-        XCTAssertEqual(log.recent(10).map(\.event), [.sessionTaken, .activityStarted])
+        log.append(.bgTaskRan(expired: false), at: t0.addingTimeInterval(5))
+        XCTAssertEqual(log.recent(10).map(\.event), [.sessionTaken, .bgTaskRan(expired: false)])
         log.wipe()
         XCTAssertEqual(log.recent(10), [])
         XCTAssertNil(log.export())
         XCTAssertEqual(log.count, 0)
     }
 
-    /// Build 1 (TestFlight) wrote `intent` as a launch and a drive reason; those cases are gone. A device log that
-    /// carries such rows must still read, and a health report must still come out of what survives.
-    func testBuildOneIntentRowsAreSkippedAndTheReportStillBuilds() throws {
+    /// Build 1 (TestFlight) wrote `intent` as a launch and a drive reason, and `activityStarted` / `activityUpdated`
+    /// rows for the Live Activity; those cases are gone. A device log that carries such rows must still read, and
+    /// a health report must still come out of what survives.
+    func testBuildOneRowsAreSkippedAndTheReportStillBuilds() throws {
         var log = EventLog(url: url)
         log.append(.launch(reason: .unknown, state: .inactive), at: t0)
         var data = try Data(contentsOf: url)
         data.append(Data("""
         {"event":{"launch":{"reason":"intent","state":"inactive"}},"t":"2026-10-07T10:00:01Z"}
         {"event":{"driveStarted":{"reason":{"intent":{}}}},"t":"2026-10-07T10:00:02Z"}
+        {"event":{"activityStarted":{}},"t":"2026-10-07T10:00:03Z"}
+        {"event":{"activityUpdated":{"dropped":false}},"t":"2026-10-07T10:00:04Z"}
 
         """.utf8))
         try data.write(to: url)
-        log.append(.driveStarted(reason: .foreground), at: t0.addingTimeInterval(3))
-        log.append(.activityStarted, at: t0.addingTimeInterval(4))
+        log.append(.driveStarted(reason: .foreground), at: t0.addingTimeInterval(5))
+        log.append(.driveEnded(fixes: 10, maxGapSeconds: 1, alerts: 0, firstFixAfterWakeS: nil, firstWarnAfterWakeM: nil), at: t0.addingTimeInterval(6))
 
         let entries = log.recent(10)
-        XCTAssertEqual(entries.map(\.event), [.launch(reason: .unknown, state: .inactive), .driveStarted(reason: .foreground), .activityStarted], "the two build-1 rows are skipped, the rest is read")
-        XCTAssertEqual(EventLog(url: url).count, 5, "the skipped rows still count as lines on disk")
+        XCTAssertEqual(entries.map(\.event), [.launch(reason: .unknown, state: .inactive), .driveStarted(reason: .foreground), .driveEnded(fixes: 10, maxGapSeconds: 1, alerts: 0, firstFixAfterWakeS: nil, firstWarnAfterWakeM: nil)], "the four build-1 rows are skipped, the rest is read")
+        XCTAssertEqual(EventLog(url: url).count, 7, "the skipped rows still count as lines on disk")
 
         var drives = 0
-        var lastDriveStarted: Date?
-        var lastActivityStarted: Date?
+        var lastDriveEnded: Date?
         for e in entries {
             switch e.event {
-            case .driveStarted: drives += 1; lastDriveStarted = e.t
-            case .activityStarted: lastActivityStarted = e.t
+            case .driveStarted: drives += 1
+            case .driveEnded: lastDriveEnded = e.t
             default: break
             }
         }
-        let report = healthReport(HealthInputs(now: t0.addingTimeInterval(10), drives: drives, lastActivityStarted: lastActivityStarted, lastDriveStarted: lastDriveStarted))
-        XCTAssertEqual(report.count, 13)
-        XCTAssertEqual(report.first { $0.title == HealthTitles.activity }?.detail, "Actividades en directo desactivadas", "built from the surviving rows: the activity inputs default to off, the card row says so")
+        let report = healthReport(HealthInputs(now: t0.addingTimeInterval(10), drives: drives, lastDriveEnded: lastDriveEnded))
+        XCTAssertEqual(report.count, 12)
+        XCTAssertEqual(report.first { $0.title == HealthTitles.lastDrive }?.status, .ok, "built from the surviving rows")
     }
 
     func testMissingFolderIsCreated() {

@@ -8,17 +8,17 @@ same files. The iOS design with its reasons and sources is `docs/DESIGN.md`; thi
 Three drives. The route vectors replay them, the simulator script drives them, the real-car checklist repeats them.
 
 **120 km/h, A-2, fixed radar `dgt-CABINACINEMOMETRO_120001` at km 202.3, direction text "ZARAGOZA", limit unknown.**
-The car screen shows a small card `Radar fijo · 1,0 km`, stepping down at 1,000, 750, 500, 250 and 100 m. At about
-833 m the speakers say once, over the music, which ducks: *"Radar fijo a 800 metros, sentido Zaragoza."* The card
-reaches `100 m`, shows `Radar superado` for four seconds, then `Sin radares cerca`. Driving the other way past the
-same radar the app also warns: the feed gives a town name, not a bearing, so the sentence says the direction and the
-driver judges. Vectors `a2-120kmh-ne` and `a2-120kmh-sw`.
+The phone is locked in a pocket; the app was never opened today. At about 833 m the speakers say once, over the
+music, which ducks: *"Radar fijo a 800 metros, sentido Zaragoza."*, and a Time Sensitive notification `Radar fijo a
+800 m` / `A-2 km 202,3 · sentido Zaragoza` lights the Lock Screen at the same moment. Past the radar the
+notification is removed. Driving the other way past the same radar the app also warns: the feed gives a town name,
+not a bearing, so the sentence says the direction and the driver judges. Vectors `a2-120kmh-ne` and `a2-120kmh-sw`.
 
 **90 km/h, N-232, `dgt_invive` mobile-radar stretch `dgt_invive-Tramo_Invive_344`, km 20.81 to 30.91, direction `both`.**
-At 625 m from the nearer endpoint, heading into the stretch: *"Tramo de radar móvil, N-232, 10 kilómetros."* The
-card shows `Tramo radar móvil · N-232 · 8,5 km restantes` for the whole stretch, the remaining figure moving in 500 m
-steps. Within 300 m of the far end: *"Fin de tramo."* and the badge goes. Vectors `corridor-n232-from-west` and
-`corridor-n232-from-east`.
+At 625 m from the nearer endpoint, heading into the stretch: *"Tramo de radar móvil, N-232, 10 kilómetros."* and
+the notification `Tramo de radar móvil · 10 kilómetros` / `N-232`. The in-app card, when the app is open, shows the
+remaining distance for the whole stretch. Within 300 m of the far end: *"Fin de tramo."*. Vectors
+`corridor-n232-from-west` and `corridor-n232-from-east`.
 
 **50 km/h, a León street on the police weekly list, limit 50, `valid_from` = `valid_to` = today.** At 347 m:
 *"Radar móvil anunciado a 350 metros. Límite 50."* Tomorrow the same street is silent. Vectors `leon-50kmh-today`
@@ -81,8 +81,8 @@ stationary flag. The engine's clock is the fix timestamp.
 Course in use: the platform course when it is non-null and the fix's speed is at least 3 m/s; the platform course
 when it is non-null, the speed is null (marked invalid) and the car moved at least 3 m per second since the previous
 fix; otherwise the bearing from the most recent fix of the last 5 s that is at least 15 m behind this one (so from
-3 m/s up: fixes 2 m apart derive nothing); otherwise none. With no course nothing fires and the card shows the
-nearest radar as "cerca". Vectors `a2-no-course-2mps` (silent), `a2-no-course-6mps`, `a2-no-course-20mps` and
+3 m/s up: fixes 2 m apart derive nothing); otherwise none. With no course nothing fires and the in-app card shows
+the nearest radar as "cerca". Vectors `a2-no-course-2mps` (silent), `a2-no-course-6mps`, `a2-no-course-20mps` and
 `a2-speed-nil-course-10mps`.
 
 Speed for the warn distance: the median of the last three valid speeds (two values: their mean; none: 0).
@@ -107,12 +107,12 @@ A point fires on the first fix where all four hold:
 
 1 to 3 with 4 failing is a **visual** warning (shown as "sentido contrario", not spoken, no notification); 1 to 4 is
 **full**. **Late** when the first recorded distance was under `warn − 100 m`; late warnings still fire. Under 60 m
-and closing: fires as visual (card only, the sentence would end after the radar).
+and closing: fires as visual (the notification without the voice, the sentence would end after the radar).
 
 Passed: on a later fix, distance under 30 m, or three consecutive increases of at least 1 m after the minimum (a
 smaller step or a decrease resets the count) with the distance at least `max(3 m, accuracy)` above that minimum, so
-GPS wander while stopped before the radar is not a pass. The card shows "Radar superado" for 4 s. Vector
-`a2-stopped-jitter-200m`.
+GPS wander while stopped before the radar is not a pass. The in-app card shows "Radar superado" for 4 s and the
+radar's notification is removed. Vector `a2-stopped-jitter-200m`.
 
 Only points, corridors and sections fire. `reported`, inactive and expired entries are never candidates.
 
@@ -153,8 +153,8 @@ Vector `corridor-n232-mid-join`.
 Inside: remaining = straight-line gate distance minus the projection of the car onto it, captioned "aprox." by the
 surfaces, shown in 500 m steps; for an average-speed section also the average = path length since entry / elapsed
 time. No second voice prompt. The stretch is "fired" in the ledger from entry, so it is one pass. A point inside the
-stretch fires as any point does and owns the card while ahead and for its 4 s "Radar superado"; the stretch card
-returns afterwards. The ledger carries the stretch the car is inside (radar, entry gate, entry position, time and
+stretch fires as any point does and owns the in-app card while ahead and for its 4 s "Radar superado"; the stretch
+card returns afterwards. The ledger carries the stretch the car is inside (radar, entry gate, entry position, time and
 speed), written at entry and cleared at exit: a process restarted mid-stretch resumes it (a resumed drive only, never a new one) and still says
 *"Fin de tramo."* at the far gate, estimating the path before the restart as the straight distance from the entry
 position.
@@ -186,17 +186,19 @@ title-cased and appended when present. Spanish is the default; English only when
 Never spoken: `reported`, inactive, expired, in cooldown, behind, visual, passed, silent exits.
 
 Notification title `Radar fijo a 800 m`, body `A-2 km 202,3 · límite 90 km/h` (road and km when the feed has them,
-else the name; then the limit, then `sentido Zaragoza`).
+else the name; then the limit, then `sentido Zaragoza`). Every warning posts one, at the platform's time-sensitive
+level, with a short tick beside the voice (the default sound when the voice is off); a visual warning posts the same
+text without the voice, with `, sentido contrario` in the title and no sound for the opposite flow. One notification
+per radar pass and per stretch entry; the previous radar's is removed when the next fires or at pass. Nothing has to
+be opened or left on screen for it.
 
 ## 7. Card content
 
-Every surface renders the same content: `phase` (watching, approaching, alert, passed, insideStretch, paused,
-degraded), a kind symbol, title ("Radar fijo"), subtitle (road and km, or the name, or "cerca"), distance in metres,
-limit, speed in km/h, `opposite`, remaining metres and average km/h inside a stretch, a note (never "aprox.": that is
-the surfaces' caption on the remaining figure), and the time. The idle title is "Sin radares cerca" / "No radars
-nearby" by locale. Updates
-go out at milestones only: every phase change, the distance crossings 1,000 / 750 / 500 / 250 / 100 m while a radar
-is ahead, 500 m steps inside a stretch, else every 60 s. The voice carries the exact distance.
+The in-app card (the map screen, while the app is open) renders: `phase` (watching, approaching, alert, passed,
+insideStretch, paused, degraded), a kind symbol, title ("Radar fijo"), subtitle (road and km, or the name, or
+"cerca"), distance in metres, limit, speed in km/h, `opposite`, remaining metres and average km/h inside a stretch, a
+note (never "aprox.": that is the surfaces' caption on the remaining figure), and the time. The idle title is "Sin
+radares cerca" / "No radars nearby" by locale. It follows every fix; the voice carries the exact distance.
 
 ## 8. Driving detection and wake-ups
 
@@ -211,8 +213,8 @@ wake-ups. Log `firstFixAfterWakeS` and `firstWarnAfterWakeM` on every drive.
 Android mapping: `FusedLocationProviderClient` at 1 Hz inside a foreground service of type `location` while driving;
 the Geofencing API for the parked fence; the Activity Recognition Transition API `IN_VEHICLE` as the motion gate;
 WorkManager periodic 6 h for the feed; `TextToSpeech` with `USAGE_ASSISTANCE_NAVIGATION_GUIDANCE` and
-`AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK`; a high-importance channel for the alert; the ongoing drive notification
-updated at the milestones of section 7, never per fix. Android Auto only shows CALL, MESSAGE and NAVIGATION
+`AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK`; a high-importance channel for the alert notification, one per warning as in
+section 6. Android Auto only shows CALL, MESSAGE and NAVIGATION
 categories and Do Not Disturb while driving can hold notifications, so speech is the one guaranteed car surface.
 
 ## 9. Health
@@ -225,8 +227,8 @@ line, rotated at 2,000 lines by keeping the newest 1,000, exportable, wipeable. 
 600 m ahead through the real engine and the real sinks. A plain notification at most once per 24 h when the app is
 red and closed.
 
-The status screen has thirteen rows (location, Always session, background launches, parked fence, significant
-change, data, background refresh, notifications, car screen, motion, voice, files, last drive), each ok, amber or
+The status screen has twelve rows (location, Always session, background launches, parked fence, significant
+change, data, background refresh, notifications, motion, voice, files, last drive), each ok, amber or
 red by the rules in `Sources/RadaresCore/Health/HealthReport.swift`, with a positive and a negative test each.
 
 ## 10. The route vectors: how the Kotlin port runs them

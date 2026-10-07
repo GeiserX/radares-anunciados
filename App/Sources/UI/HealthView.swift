@@ -46,7 +46,7 @@ struct HealthView: View {
                     EmptyView()
                 }
             } footer: {
-                Text("Pone un radar fijo de prueba a 600 m delante y lo pasa por el mismo camino que un aviso real: voz, pantalla del coche y notificación.")
+                Text("Pone un radar fijo de prueba a 600 m delante y lo pasa por el mismo camino que un aviso real: voz y notificación.")
             }
         }
         .navigationTitle("Estado")

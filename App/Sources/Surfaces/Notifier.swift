@@ -1,8 +1,9 @@
 // Lane: surfaces
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// Time Sensitive local notifications, one on the Lock Screen at a time (design 4.3), the daily red-health notice,
-// and the UNUserNotificationCenterDelegate the app delegate installs at launch.
+// Time Sensitive local notifications, the visual surface of every warning (design 4.3): one on the Lock Screen at
+// a time, drawn by iOS on the phone and, once the CarPlay entitlement exists, on the car screen. Also the daily
+// red-health notice and the UNUserNotificationCenterDelegate the app delegate installs at launch.
 //
 // Authorization is asked by onboarding with `[.alert, .sound]` (the `.timeSensitive` option is deprecated; the
 // level comes from the entitlement). A driver with Driving Focus may not see these: speech is the surface that
@@ -20,6 +21,8 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     /// Every radar notification shares this thread, so removing "the previous one" survives a relaunch.
     public static let radarThread = "radar"
     public static let healthThread = "health"
+    /// The sound of the radar notification beside the voice: a 150 ms tick, so it does not stack with the sentence.
+    public nonisolated static let alertSoundName = "radar-tick.caf"
     private static let healthNoticeKey = "surfaces.healthNoticePostedAt"
 
     private let logger = Logger(subsystem: "io.github.geiserx.radares", category: "notifications")
@@ -29,10 +32,10 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     }
 
     /// Posts `phrase` as `<radarId>#<passSeq>` and removes the previous radar's delivered notification. Nil on success.
-    /// Never silent: the 150 ms tick the Live Activity alert already uses when the voice is on (speech can fail on
-    /// a cold background launch or during a call, and a lit screen with no sound is a missed warning), the default
-    /// sound when the driver turned the voice off.
-    public func post(_ phrase: Phrase, id: String) async -> (any Error)? {
+    /// Never silent for a radar ahead: the 150 ms tick when the voice is on (speech can fail on a cold background
+    /// launch or during a call, and a lit screen with no sound is a missed warning), the default sound when the
+    /// driver turned the voice off. `silent` is the opposite-carriageway row: shown, never sounded.
+    public func post(_ phrase: Phrase, id: String, silent: Bool = false) async -> (any Error)? {
         let center = UNUserNotificationCenter.current()
         let error: (any Error)?
         let status = await center.notificationSettings().authorizationStatus
@@ -45,7 +48,7 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
             content.interruptionLevel = .timeSensitive
             content.relevanceScore = 1
             content.threadIdentifier = Self.radarThread
-            content.sound = Self.sound(voiceEnabled: AlertDispatcher.shared.voiceEnabled)
+            content.sound = Self.sound(voiceEnabled: AlertDispatcher.shared.voiceEnabled, silent: silent)
             await removeRadarNotifications(except: id)
             do {
                 try await center.add(UNNotificationRequest(identifier: id, content: content, trigger: nil))
@@ -63,9 +66,11 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
         return error
     }
 
-    /// The radar notification's sound: the tick beside the voice, the default sound without it; never nil.
-    nonisolated static func sound(voiceEnabled: Bool) -> UNNotificationSound {
-        voiceEnabled ? UNNotificationSound(named: UNNotificationSoundName(DriveActivityController.alertSoundName)) : .default
+    /// The radar notification's sound: the tick beside the voice, the default sound without it; nil only for a
+    /// silent (opposite direction) row.
+    nonisolated static func sound(voiceEnabled: Bool, silent: Bool = false) -> UNNotificationSound? {
+        if silent { return nil }
+        return voiceEnabled ? UNNotificationSound(named: UNNotificationSoundName(alertSoundName)) : .default
     }
 
     /// Removes delivered radar notifications: every one but `keep` before the next radar is posted, or only those of

@@ -171,11 +171,10 @@ public actor LocationCoordinator {
             logger.info("persisted drive resumed")
         } else if saved == nil, launchedInBackground, !pausedToday {
             // Launched in the background for a location event while idle: probe, stream first (design 3.1, 3.3).
-            // (A Live Activity left by the previous process was ended at launch step 5: no drive, no card.)
             await beginProbe(wake: nil, at: launchedAt)
         }
         // `-StartDriveForTest 1` (scripts/sim-drive.sh) is the app lane's: it starts the drive when the scene
-        // becomes active, where the Live Activity can be requested too.
+        // becomes active.
     }
 
     /// The controls wait for the launch path, so a stop or a start cannot interleave with the resumed drive.
@@ -183,7 +182,7 @@ public actor LocationCoordinator {
         await bootstrapTask?.value
     }
 
-    /// The app lane calls this when a scene connects, so a user launch gets its reason (design 3.3, step 6).
+    /// The app lane calls this when a scene connects, so a user launch gets its reason (design 3.3, step 5).
     public func noteSceneConnected() {
         noteLaunchReason(.scene)
     }
@@ -337,11 +336,6 @@ public actor LocationCoordinator {
 
     public var snapshot: DriveSnapshot? {
         get async { await driveSession.snapshot }
-    }
-
-    /// The card for a Live Activity started while the drive is paused (design 3.1: 15 min stale, "En pausa").
-    public var pausedContent: DriveContent {
-        get async { await driveSession.pausedContent() }
     }
 
     /// The degraded While-Using mode (design 3.4): the only start iOS allows is from the foreground, so opening the
@@ -534,7 +528,6 @@ public actor LocationCoordinator {
         await driveSession.setPaused(since: fix.timestamp)
         // A termination while suspended still gets a wake-up: the fence sits at the stationary position.
         await rearmFence(at: fix.coordinate)
-        await driveSession.showPaused()
         AppLog.shared.post(.drivePaused)
     }
 
@@ -688,7 +681,7 @@ public actor LocationCoordinator {
         stateContinuation.yield(new)
     }
 
-    /// The first thing that arrives after launch names the launch (design 3.3, step 6). The app delegate logged
+    /// The first thing that arrives after launch names the launch (design 3.3, step 5). The app delegate logged
     /// `unknown` at launch; this appends the row with the reason, once per process.
     private func noteLaunchReason(_ reason: LaunchReason) {
         guard launchReason == .unknown else { return }

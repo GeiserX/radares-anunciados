@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // What the screens show, in one observable place: the loaded feed, the Estado rows, the recent alerts, and the
-// foreground hooks (refresh on open, the test drive launch argument, the Live Activity when a drive is running).
+// foreground hooks (refresh on open, the test drive launch argument).
 
 import CoreLocation
 import Observation
@@ -12,9 +12,8 @@ import UserNotifications
 import os
 
 /// Launch arguments for the simulator scripts (`scripts/sim-drive.sh`): `-StartDriveForTest 1` starts a test drive
-/// in the foreground so the Live Activity exists, `-NoLiveActivity 1` keeps the Live Activity off so the Time
-/// Sensitive notification is the visible surface, `-ProvisionalNotifications 1` takes provisional notification
-/// authorization (no prompt; the Simulator cannot grant notifications any other way) so that surface can post.
+/// from the foreground, `-ProvisionalNotifications 1` takes provisional notification authorization (no prompt; the
+/// Simulator cannot grant notifications any other way) so the Time Sensitive notification can post.
 /// `-InitialTab mapa` (or `ajustes`) opens on that tab, so a script can screenshot every tab without tapping, and
 /// `-RunSelfTest 1` presses "Probar aviso" once.
 enum LaunchFlags {
@@ -22,7 +21,6 @@ enum LaunchFlags {
     /// `-RunSelfTest 1` runs "Probar aviso" on the first foreground, as the button would.
     static var runSelfTest: Bool { UserDefaults.standard.bool(forKey: "RunSelfTest") }
     static var startDriveForTest: Bool { UserDefaults.standard.bool(forKey: "StartDriveForTest") }
-    static var noLiveActivity: Bool { UserDefaults.standard.bool(forKey: "NoLiveActivity") }
     static var provisionalNotifications: Bool { UserDefaults.standard.bool(forKey: "ProvisionalNotifications") }
 }
 
@@ -62,7 +60,6 @@ final class AppModel {
 
     private var startedTestDrive = false
     private var ranLaunchSelfTest = false
-    private var stateWatcher: Task<Void, Never>?
     private let logger = Logger(subsystem: "io.github.geiserx.radares", category: "ui")
 
     private init() {}
@@ -102,13 +99,11 @@ final class AppModel {
         await reload()
     }
 
-    /// Every time the scene becomes active: the foreground refresh (design 5.2), the test drive argument once, the
-    /// drive itself under While Using only (design 3.4: the foreground is the one start iOS allows there), and the
-    /// Live Activity for a drive that is already running (design 4.2, way 2).
+    /// Every time the scene becomes active: the foreground refresh (design 5.2), the test drive argument once, and
+    /// the drive itself under While Using only (design 3.4: the foreground is the one start iOS allows there).
     func didBecomeActive() async {
-        // A scene is up: this launch was the user's (design 3.3, step 6), unless an event already named it.
+        // A scene is up: this launch was the user's (design 3.3, step 5), unless an event already named it.
         await LocationCoordinator.shared.noteSceneConnected()
-        watchDriveState()
         await LocationCoordinator.shared.startForegroundDriveIfWanted()
         if LaunchFlags.provisionalNotifications,
            await UNUserNotificationCenter.current().notificationSettings().authorizationStatus == .notDetermined {
@@ -119,7 +114,6 @@ final class AppModel {
             logger.info("starting a test drive (-StartDriveForTest)")
             await LocationCoordinator.shared.startDrive(reason: .test)
         }
-        await ensureActivityIfDriving()
         await reload()
         if !ranLaunchSelfTest, LaunchFlags.runSelfTest {
             ranLaunchSelfTest = true
@@ -127,40 +121,6 @@ final class AppModel {
         }
         await FeedRefresher.shared.refreshIfNeeded(trigger: .foreground)
         await reload()
-    }
-
-    /// A drive that begins while the app is open (a wake-up's probe that was already running when the user opened
-    /// the app) gets its Live Activity from the foreground (design 4.2). The
-    /// coordinator's stream has one consumer: this one.
-    private func watchDriveState() {
-        guard stateWatcher == nil else { return }
-        stateWatcher = Task { [weak self] in
-            for await state in LocationCoordinator.shared.stateChanges {
-                guard state.isDriveOn, UIApplication.shared.applicationState == .active else { continue }
-                await self?.ensureActivityIfDriving()
-            }
-        }
-    }
-
-    func ensureActivityIfDriving() async {
-        guard !LaunchFlags.noLiveActivity, DriveActivityController.shared.current == nil else { return }
-        let state = await LocationCoordinator.shared.state
-        guard let content = Self.activityStartContent(for: state, paused: { await LocationCoordinator.shared.pausedContent }) else { return }
-        do {
-            try DriveActivityController.shared.start(content: await content())
-        } catch {
-            logger.error("Live Activity: \(error.localizedDescription, privacy: .public)")
-        }
-    }
-
-    /// The first card of a Live Activity started from the foreground: the idle card while driving, the paused card
-    /// (phase `.paused`, 15 min stale, "En pausa") while paused, since nothing updates the card until the car moves.
-    nonisolated static func activityStartContent(for state: DriveState, paused: @escaping @Sendable () async -> DriveContent) -> (@Sendable () async -> DriveContent)? {
-        switch state {
-        case .driving: { .watching(at: Date()) }
-        case .paused: paused
-        case .idle, .probing: nil
-        }
     }
 
     /// "Probar aviso".

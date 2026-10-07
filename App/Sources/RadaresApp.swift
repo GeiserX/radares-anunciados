@@ -20,7 +20,7 @@ struct RadaresApp: App {
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
             // Design 5.2: on every foreground, refresh if the feed is older than Thresholds.refreshForegroundHours;
-            // design 4.2: the Live Activity for a drive already running; the -StartDriveForTest argument.
+            // the -StartDriveForTest argument.
             Task { await AppModel.shared.didBecomeActive() }
         }
     }

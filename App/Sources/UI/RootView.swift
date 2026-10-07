@@ -1,7 +1,7 @@
 // Lane: app
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// Tabs: Estado (first), map, settings. Requests the Live Activity on appear while driving (design 4.2).
+// Tabs: Estado (first), map, settings.
 
 import SwiftUI
 
@@ -23,9 +23,6 @@ struct RootView: View {
         }
         .fullScreenCover(isPresented: $model.showOnboarding) {
             OnboardingFlow()
-        }
-        .onAppear {
-            Task { await model.ensureActivityIfDriving() }
         }
     }
 }
