@@ -72,7 +72,6 @@ public enum StretchExitReason: String, Sendable, Codable, Hashable {
 public struct SinkOutcome: Sendable, Codable, Hashable {
     public enum Sink: String, Sendable, Codable, Hashable {
         case speech
-        case activity
         case notification
     }
 
@@ -121,10 +120,6 @@ public enum LogEvent: Sendable, Codable, Hashable {
     case feedFailed(error: String)
     case bgTaskRan(expired: Bool)
     case notificationPosted(id: String, error: String?)
-    case activityStarted
-    case activityFailed(error: String)
-    /// `dropped` is true when the content read back after `update` is not the content sent (budgeted by the system).
-    case activityUpdated(dropped: Bool)
     case speech(route: String, setActiveError: String?, finished: Bool, launchContext: LaunchContext)
     case monitorEvent(identifier: String, state: String, flags: [String])
     case protectionVerified(ok: Bool)

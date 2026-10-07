@@ -1,8 +1,8 @@
 # Device verification
 
 Owned by the location lane. The design ([docs/DESIGN.md](DESIGN.md), sections 3, 4 and 10) makes claims that only a
-real iPhone can settle: when the parked fence wakes the app, whether a cold background launch can speak, what a Driving
-Focus lets through, how many Live Activity updates the system delivers, and how the card looks on a car screen.
+real iPhone can settle: when the parked fence wakes the app, whether a cold background launch can speak, and what a
+Driving Focus lets through.
 This file is the checklist. Each row has an expectation written before the drive and a result column filled in
 after it, with the log rows that prove it (Estado exports `events.jsonl`). A row whose result cannot be read from
 the log is not a pass.
@@ -67,59 +67,48 @@ v1.1 adds radar rings (design 11, risk 7).
 
 ### Driving Focus
 
-No Apple page says a Time Sensitive notification or a Live Activity alert passes a Driving Focus (design 4.3). The
-two rows are the measurement. Set up a Driving Focus that turns on automatically when connected to the car's
-Bluetooth, no allowed apps.
+No Apple page says a Time Sensitive notification passes a Driving Focus (design 4.3). The row is the measurement.
+Set up a Driving Focus that turns on automatically when connected to the car's Bluetooth, no allowed apps.
 
 | # | Test | Expectation | Result |
 |---|---|---|---|
-| F1 | **Time Sensitive notification through a Driving Focus** (no Live Activity running: start the drive from a cold wake, app closed) | Record whether the banner appears on the Lock Screen at the warn distance, and whether it waits until the Focus ends. The log row `notificationPosted(error: nil)` only proves the post | pending |
-| F2 | **Live Activity alert through a Driving Focus** (drive started with the app open, so the activity exists) | Record whether the `.full` alert lights the screen and expands the Dynamic Island, or whether only the content changes silently | pending |
-| F3 | Same two tests with the Focus's "Time Sensitive notifications" allowed, where the Focus offers the switch | Record the difference, if any | pending |
+| F1 | **Time Sensitive notification through a Driving Focus** (start the drive from a cold wake, app closed) | Record whether the banner appears on the Lock Screen at the warn distance, and whether it waits until the Focus ends. The log row `notificationPosted(error: nil)` only proves the post | pending |
+| F2 | Same test with the Focus's "Time Sensitive notifications" allowed, where the Focus offers the switch | Record the difference, if any | pending |
 
 Whatever F1 and F2 say, the voice is the surface that arrives: onboarding says so.
 
-### Live Activity
+### Notification
 
 | # | Test | Expectation | Result |
 |---|---|---|---|
-| L1 | **Cadence actually shown.** A 20 km drive past three radars, phone on the dashboard mount, Console.app streaming `liveactivitiesd` | Every milestone update (1,000 / 750 / 500 / 250 / 100 m, each phase change) is sent; `activityUpdated(dropped: false)` for each, or `dropped: true` rows plus `liveactivitiesd` budget lines. Record the ratio shown / sent here | pending |
-| L2 | Stale date | With the app killed mid-drive, the Lock Screen marks the card stale within 2 minutes (15 minutes while paused) | pending |
-| L3 | End | After `driveEnded`, the card lingers on the Lock Screen for 5 minutes and leaves CarPlay at once | pending |
-| L4 | 8-hour cap | A drive over 8 h loses the card; speech and notifications continue (`speech` rows after the card is gone) | pending |
+| N1 | **Cold wake, phone locked in a pocket, past one fixed radar** | The banner lights the Lock Screen at the warn distance with the sentence's title and body and the tick; `alert` row with `notification=ok`, `notificationPosted(error: nil)` | pending |
+| N2 | Pass | The banner leaves the Lock Screen within a few seconds of `passed` | pending |
+| N3 | Two radars inside 8 s | Two banners, the second without the voice (`.visual`); one `alert` row each | pending |
+| N4 | Opposite carriageway (an OSM radar with a bearing) | A silent banner "…, sentido contrario"; no sound, no voice | pending |
 
-### CarPlay (iOS 26)
+### CarPlay
 
-First with the iPhone on USB to a Mac running CarPlay Simulator (Additional Tools for Xcode), then on the real head
-unit. Live Activities in CarPlay use the small activity family ([WWDC25 216](https://developer.apple.com/videos/play/wwdc2025/216/);
-[CarPlay App Programming Guide](https://developer.apple.com/carplay/documentation/CarPlay-App-Programming-Guide.pdf),
-"Live Activities in CarPlay"); without it CarPlay shows the compact Dynamic Island views.
+Nothing reaches the car screen until Apple grants the driving-task entitlement (requested 2026-10-07,
+[CARPLAY.md](CARPLAY.md)); the voice reaches the car's speakers today. Once granted:
 
-| # | Size or mode | Expectation | Result |
+| # | Test | Expectation | Result |
 |---|---|---|---|
-| C1 | 240 x 78 pt | Kind symbol, "Radar fijo", distance in large digits, limit badge, nothing cut off | pending |
-| C2 | 240 x 100 pt | Same, with the subtitle line visible | pending |
-| C3 | 170 x 78 pt | Symbol, distance, limit; the title may drop | pending |
-| C4 | Smart Display Zoom 1920 x 720 | Legible at arm's length | pending |
-| C5 | Smart Display Zoom 900 x 1200 | Legible | pending |
-| C6 | Smart Display Zoom 800 x 480 | Legible | pending |
-| C7 | Night Mode | The red tint keeps the digits readable; no pure white block | pending |
-| C8 | Dashboard hidden (a map app full screen) | The `.full` alert appears as the notification at the bottom of the display (WWDC25 216) | pending |
-| C9 | Real head unit | Rows C1 to C8 repeated; note the car model and head unit software | pending |
+| C1 | CarPlay Simulator over USB, iOS 18.4 or later, app icon on the CarPlay Home Screen | The warning's notification appears on the car display at the warn distance | pending |
+| C2 | Real head unit | Same; note the car model and head unit software | pending |
 
 ### Everything else
 
 | # | Test | Expectation | Result |
 |---|---|---|---|
-| E1 | "Probar aviso" in the foreground | The sentence, the card, the notification once the card is dismissed; one `alert` row with three sink outcomes | pending |
-| E2 | App left on screen when setting off (Always) | `driveStarted(reason: wakeup(…))` while the app is in the foreground, then `activityStarted`; the card on the Lock Screen and on the CarPlay Dashboard | pending |
+| E1 | "Probar aviso" in the foreground | The sentence and the notification banner; one `alert` row with two sink outcomes | pending |
+| E2 | App opened mid-drive | The Mapa tab's card follows the engine ("Radar fijo · 650 m"); nothing else changes, no second notification | pending |
 | E3 | A week of Settings > Battery | The app's share stays under a navigation app's for the same driving minutes; Estado's 7-day drive minutes match the real drives | pending |
 | E4 | Settings > Privacy > Analytics after a week | No jetsam report naming the app | pending |
 | E5 | `maxGapSeconds` in every `driveEnded` row of the week | Under 10 s while moving; a larger gap is a row to explain (suspension, throttling) | pending |
 | E6 | While-Using only (deny Always), app opened before the drive | Opening the app starts the drive (`driveStarted(reason: foreground)`) and the blue pill shows; after `driveEnded` nothing wakes the app; Estado's Ubicación row says "Solo mientras se usa: abre la app antes de conducir, o concede Siempre" and the Sesión Siempre row "Permiso Siempre no concedido". Measurement, not a feature: how long an outstanding `CLBackgroundActivitySession` would keep the wake-ups alive if it were never invalidated | pending |
 
-The App Review recording (onboarding, Estado, "Probar aviso", a short drive past a radar with the Live Activity)
-comes from one of these drives.
+The App Review recording (onboarding, Estado, "Probar aviso", a short drive past a radar with the voice and the
+notification) comes from one of these drives.
 
 ## Simulator
 
@@ -131,9 +120,10 @@ significant-change delivery wakes the idle app and the probe decides), runs `sim
 intervals, then prints the alert and state rows of `events.jsonl` and the same rows from the unified log. Mute the
 Mac first: the app may speak. Run it on a build Mac, never on the laptop.
 
-What the Simulator proves: the state machine, the fix flow and the engine's decisions on a straight route. What it
-cannot prove: the radio, the scheduler, suspension, the region cushion and dwell, the audio route, the Live
-Activity budget, CarPlay (CarPlay Simulator connects to a real iPhone over USB, not to the iOS Simulator).
+What the Simulator proves: the state machine, the fix flow, the engine's decisions on a straight route and the
+notification post (`alert` rows with `notification=ok`, `notificationPosted` rows, under provisional authorization).
+What it cannot prove: the radio, the scheduler, suspension, the region cushion and dwell, the audio route, the Lock
+Screen banner itself, CarPlay (CarPlay Simulator connects to a real iPhone over USB, not to the iOS Simulator).
 
 Measured limits of the Simulator (Xcode 26.6, iOS 26.5, 2026-10-07):
 
@@ -158,11 +148,11 @@ Measured limits of the Simulator (Xcode 26.6, iOS 26.5, 2026-10-07):
 - `application.applicationState` is `.background` inside `didFinishLaunching` on every launch, a user's included;
   the background-wake rule is the location launch key (design 3.3), and a user launch is named by its scene.
 - The Lock Screen cannot be reached from a headless run: locking needs the Simulator app and an Accessibility grant
-  an ssh session cannot obtain. The milestone screenshots show the Live Activity in the Dynamic Island with the app
-  in the background (Settings opened over it) and the in-app card; the Lock Screen itself is a device row (L1).
+  an ssh session cannot obtain. The notification's evidence is the `alert` row (`notification=ok`) and the
+  `notificationPosted` row; the banner itself is a device row (N1).
 - Right after a route, the next launch gets a significant-change delivery for the last simulated position before
   the scene is up, so the probe, not `-StartDriveForTest`, starts that drive (`driveStarted(reason: wakeup(slc))`).
-  Both paths are the design's; the Live Activity still starts because the app watches the drive state while open.
+  Both paths are the design's; the notification posts either way.
 
 State-machine run (what `scripts/sim-drive.sh --probe --state-machine-only` plus a few `simctl location` commands
 show; the rows come from the unified log, subsystem `io.github.geiserx.radares`, and from `events.jsonl` once the

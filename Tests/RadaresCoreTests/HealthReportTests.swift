@@ -34,9 +34,6 @@ final class HealthReportTests: XCTestCase {
             lowPowerMode: false,
             notificationAuthorization: .authorized,
             timeSensitiveSetting: .enabled,
-            activitiesEnabled: true,
-            lastActivityStarted: t0.addingTimeInterval(-7000),
-            lastDriveStarted: t0.addingTimeInterval(-7100),
             motionAuthorization: .authorized,
             lastSpeechSetActiveError: nil,
             spanishVoiceAvailable: true,
@@ -55,7 +52,7 @@ final class HealthReportTests: XCTestCase {
         var i = healthy()
         i.locationAuthorization = .whenInUse
         let en = healthReport(i, locale: Fixtures.en)
-        XCTAssertEqual(en.map(\.title), ["Location", "Always session", "Background launches", "Parked fence", "Significant change", "Data", "Background refresh", "Notifications", "Car screen", "Motion", "Voice", "Files", "Last drive"])
+        XCTAssertEqual(en.map(\.title), ["Location", "Always session", "Background launches", "Parked fence", "Significant change", "Data", "Background refresh", "Notifications", "Motion", "Voice", "Files", "Last drive"])
         XCTAssertEqual(en[0].detail, "While Using only: open the app before you drive, or grant Always")
         XCTAssertEqual(en[5].detail, "4500 radars, 1 h ago")
         let spanishWords = ["hace", "Siempre", "Sin ", "Valla", "viajes", "Voz", "Datos", "Última"]
@@ -67,13 +64,13 @@ final class HealthReportTests: XCTestCase {
         XCTAssertEqual(HealthTitles.localized(HealthTitles.lastDrive, locale: Fixtures.es), HealthTitles.lastDrive)
     }
 
-    func testAHealthyPhoneIsAllGreenWithThirteenRows() {
+    func testAHealthyPhoneIsAllGreenWithTwelveRows() {
         let report = healthReport(healthy())
-        XCTAssertEqual(report.count, 13)
+        XCTAssertEqual(report.count, 12)
         XCTAssertEqual(report.filter { $0.status != .ok }.map(\.title), [])
         XCTAssertEqual(report.map(\.title), [
             HealthTitles.location, HealthTitles.session, HealthTitles.launches, HealthTitles.fence, HealthTitles.slc,
-            HealthTitles.feed, HealthTitles.refresh, HealthTitles.notifications, HealthTitles.activity, HealthTitles.motion,
+            HealthTitles.feed, HealthTitles.refresh, HealthTitles.notifications, HealthTitles.motion,
             HealthTitles.voice, HealthTitles.files, HealthTitles.lastDrive,
         ])
     }
@@ -196,20 +193,6 @@ final class HealthReportTests: XCTestCase {
         XCTAssertEqual(row(HealthTitles.notifications, i).status, .fail)
         i.notificationAuthorization = .provisional
         XCTAssertEqual(row(HealthTitles.notifications, i).status, .fail, "provisional is quiet delivery, not what the driver needs")
-    }
-
-    func testCarScreen() {
-        var i = healthy()
-        XCTAssertEqual(row(HealthTitles.activity, i).status, .ok)
-        i.activitiesEnabled = false
-        XCTAssertEqual(row(HealthTitles.activity, i).status, .fail)
-        i = healthy()
-        i.lastActivityStarted = t0.addingTimeInterval(-90_000)
-        let r = row(HealthTitles.activity, i)
-        XCTAssertEqual(r.status, .warn, "the last drive had no card")
-        XCTAssertEqual(r.detail, "Pantalla del coche no iniciada en el último viaje: deja la app en pantalla al salir")
-        XCTAssertNil(r.action, "the only fix is leaving the app on screen at the start of the drive; there is nothing to configure")
-        XCTAssertEqual(row(HealthTitles.activity, i, locale: Fixtures.en).detail, "Car screen not started on the last drive: leave the app on screen when you set off")
     }
 
     func testMotion() {

@@ -11,7 +11,7 @@ public func healthReport(_ i: HealthInputs, locale: Locale = Locale(identifier: 
     let l = HealthText(en: Phrasing.isEnglish(locale))
     return [
         locationRow(i, l), sessionRow(i, l), launchesRow(i, l), fenceRow(i, l), slcRow(i, l), feedRow(i, l), refreshRow(i, l),
-        notificationsRow(i, l), activityRow(i, l), motionRow(i, l), voiceRow(i, l), filesRow(i, l), lastDriveRow(i, l),
+        notificationsRow(i, l), motionRow(i, l), voiceRow(i, l), filesRow(i, l), lastDriveRow(i, l),
     ]
 }
 
@@ -24,7 +24,6 @@ public enum HealthTitles {
     public static let feed = "Datos"
     public static let refresh = "Actualización en segundo plano"
     public static let notifications = "Notificaciones"
-    public static let activity = "Pantalla del coche"
     public static let motion = "Movimiento"
     public static let voice = "Voz"
     public static let files = "Archivos"
@@ -42,7 +41,6 @@ public enum HealthTitles {
         case feed: return "Data"
         case refresh: return "Background refresh"
         case notifications: return "Notifications"
-        case activity: return "Car screen"
         case motion: return "Motion"
         case voice: return "Voice"
         case files: return "Files"
@@ -208,19 +206,6 @@ private func notificationsRow(_ i: HealthInputs, _ l: HealthText) -> HealthItem 
         return HealthItem(status: .warn, title: t, detail: l("Notificaciones urgentes desactivadas", "Time Sensitive notifications off"), action: .openSettings)
     }
     return HealthItem(status: .ok, title: t, detail: l("Autorizadas, urgentes permitidas", "Allowed, Time Sensitive on"))
-}
-
-private func activityRow(_ i: HealthInputs, _ l: HealthText) -> HealthItem {
-    let t = l.title(HealthTitles.activity)
-    if !i.activitiesEnabled {
-        return HealthItem(status: .fail, title: t, detail: l("Actividades en directo desactivadas", "Live Activities off"), action: .openSettings)
-    }
-    // The card can only begin while the app is on screen (design 4.2): a drive that began with the app in the
-    // background had voice and the notification, not the card. The row says so; the fix is leaving the app open.
-    if let drive = i.lastDriveStarted, i.lastActivityStarted == nil || i.lastActivityStarted! < drive {
-        return HealthItem(status: .warn, title: t, detail: l("Pantalla del coche no iniciada en el último viaje: deja la app en pantalla al salir", "Car screen not started on the last drive: leave the app on screen when you set off"))
-    }
-    return HealthItem(status: .ok, title: t, detail: l("Pantalla del coche lista", "Car screen ready"))
 }
 
 private func motionRow(_ i: HealthInputs, _ l: HealthText) -> HealthItem {

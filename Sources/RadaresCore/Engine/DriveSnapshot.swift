@@ -3,8 +3,8 @@
 
 import Foundation
 
-/// What the engine knows right now, for the in-app "next radar" card, the map and a Live Activity
-/// requested mid-drive (`RootView.onAppear` while driving). Read, never mutated, by the surfaces and app lanes.
+/// What the engine knows right now, for the in-app "next radar" card and the map. Read, never mutated, by the
+/// surfaces and app lanes.
 public struct DriveSnapshot: Sendable, Codable, Hashable {
     /// The stretch the car is inside, if any (design 2.5).
     public struct StretchState: Sendable, Codable, Hashable {
@@ -33,7 +33,7 @@ public struct DriveSnapshot: Sendable, Codable, Hashable {
         }
     }
 
-    /// A radar shown as "sentido contrario" or demoted by pacing: on the card, never spoken.
+    /// A radar shown as "sentido contrario" or demoted by pacing: on the card and in a silent notification, never spoken.
     public struct VisualRow: Sendable, Codable, Hashable {
         public var radar: Radar
         public var distanceMetres: Double

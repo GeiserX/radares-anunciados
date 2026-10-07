@@ -22,9 +22,7 @@ jobs:
     env:
       TEAM_ID: 624WUVM8B4
       APP_BUNDLE_ID: io.github.geiserx.radares
-      WIDGET_BUNDLE_ID: io.github.geiserx.radares.activity
       APP_PROFILE_NAME: Radares App Store
-      WIDGET_PROFILE_NAME: Radares Activity App Store
       SNAPSHOT_DATE_FILE: App/Sources/Resources/feed-snapshot.date
       SNAPSHOT_MAX_AGE_DAYS: 30
     steps:
@@ -86,11 +84,10 @@ jobs:
           DIST_CERTIFICATE_P12: ${{ secrets.DIST_CERTIFICATE_P12 }}
           DIST_CERTIFICATE_PASSWORD: ${{ secrets.DIST_CERTIFICATE_PASSWORD }}
           PROFILE_APP: ${{ secrets.PROFILE_APP }}
-          PROFILE_WIDGET: ${{ secrets.PROFILE_WIDGET }}
         run: |
           missing=0
           for name in APPSTORE_ISSUER_ID APPSTORE_KEY_ID APPSTORE_PRIVATE_KEY DIST_CERTIFICATE_P12 \
-                      DIST_CERTIFICATE_PASSWORD PROFILE_APP PROFILE_WIDGET; do
+                      DIST_CERTIFICATE_PASSWORD PROFILE_APP; do
             if [ -z "${!name}" ]; then echo "::error::Secret $name is not set"; missing=1; fi
           done
           exit $missing
@@ -116,19 +113,16 @@ jobs:
           security list-keychains -d user -s "$KEYCHAIN" $existing
           security find-identity -v -p codesigning "$KEYCHAIN"
 
-      - name: Install the provisioning profiles
+      - name: Install the provisioning profile
         env:
           PROFILE_APP: ${{ secrets.PROFILE_APP }}
-          PROFILE_WIDGET: ${{ secrets.PROFILE_WIDGET }}
         run: |
+          printf '%s' "$PROFILE_APP" | base64 --decode > "$RUNNER_TEMP/profile.mobileprovision"
+          uuid=$(security cms -D -i "$RUNNER_TEMP/profile.mobileprovision" | plutil -extract UUID raw -)
           for dir in "$HOME/Library/MobileDevice/Provisioning Profiles" \
                      "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
             mkdir -p "$dir"
-            for var in PROFILE_APP PROFILE_WIDGET; do
-              printf '%s' "${!var}" | base64 --decode > "$RUNNER_TEMP/profile.mobileprovision"
-              uuid=$(security cms -D -i "$RUNNER_TEMP/profile.mobileprovision" | plutil -extract UUID raw -)
-              cp "$RUNNER_TEMP/profile.mobileprovision" "$dir/$uuid.mobileprovision"
-            done
+            cp "$RUNNER_TEMP/profile.mobileprovision" "$dir/$uuid.mobileprovision"
           done
           rm -f "$RUNNER_TEMP/profile.mobileprovision"
 
@@ -171,7 +165,6 @@ jobs:
             <key>provisioningProfiles</key>
             <dict>
               <key>${APP_BUNDLE_ID}</key><string>${APP_PROFILE_NAME}</string>
-              <key>${WIDGET_BUNDLE_ID}</key><string>${WIDGET_PROFILE_NAME}</string>
             </dict>
             <key>uploadSymbols</key><true/>
           </dict>

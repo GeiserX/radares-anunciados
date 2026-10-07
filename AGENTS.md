@@ -2,9 +2,9 @@
 
 Radares Anunciados is an iPhone app that warns a driver before an announced speed radar in Spain. It reads the
 open feed that [radares-anunciados-ha](https://github.com/GeiserX/radares-anunciados-ha) publishes
-(`feed.geojson` and `status.json`), keeps the radars near the driver, and alerts with a spoken warning, a Time
-Sensitive notification and a Live Activity (shown in CarPlay on iOS 26). There is no server and no account: the
-app downloads the public feed and everything else happens on the phone. An Android app comes later.
+(`feed.geojson` and `status.json`), keeps the radars near the driver, and alerts with a spoken warning and a Time
+Sensitive notification; nothing to open, nothing to leave on screen. There is no server and no account: the app
+downloads the public feed and everything else happens on the phone. An Android app comes later.
 
 ## The legal line
 
@@ -16,8 +16,7 @@ Every radar shown keeps the source and attribution the feed gives it.
 
 ## Layout and build
 
-- Swift, with a Swift package for the core (feed parsing, distances, alert logic) and a SwiftUI app plus a
-  widget extension for the Live Activity.
+- Swift, with a Swift package for the core (feed parsing, distances, alert logic) and a SwiftUI app.
 - `App/project.yml` is the source of truth for the Xcode project. XcodeGen generates the `.xcodeproj`, which is
   never committed. Change `App/project.yml`, then run `xcodegen generate` in `App/`.
 - Package tests: `swift test` at the repo root. App tests: `xcodebuild test` against the generated project

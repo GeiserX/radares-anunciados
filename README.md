@@ -5,22 +5,22 @@
   <a href="LICENSE"><img src="https://img.shields.io/github/license/GeiserX/radares-anunciados?style=flat-square" alt="License"></a>
 </p>
 
-Radares Anunciados is an iPhone app that warns a driver before the speed radars announced in Spain: the DGT's fixed and section radars, its mobile-radar stretches, the weekly lists of local police and OpenStreetMap. It speaks the warning through the car's audio and shows it on CarPlay and the Lock Screen, with the phone locked in a pocket and the app not opened that day.
+Radares Anunciados is an iPhone app that warns a driver before the speed radars announced in Spain: the DGT's fixed and section radars, its mobile-radar stretches, the weekly lists of local police and OpenStreetMap. It speaks the warning through the car's audio and posts it as a Time Sensitive notification, with the phone locked in a pocket and the app not opened that day.
 
 ## Features
 
 - Spoken warning once per radar, at a distance that grows with speed (347 m at 50 km/h, 833 m at 120 km/h).
 - Only radars ahead and in your direction of travel; a radar for the other carriageway is shown, not spoken.
 - Mobile-radar and average-speed stretches with the remaining distance, and "Fin de tramo" at the end.
-- A card on the CarPlay Dashboard and the Lock Screen (Live Activity), and a Time Sensitive notification when no card runs.
-- Starts on its own when you drive. Leave the app on screen when you set off if you want the card in the car.
+- Every warning is also a Time Sensitive notification on the phone, drawn by iOS; nothing to open, nothing to leave on screen.
+- Starts on its own when you drive, like a notification app: iOS wakes it when the car moves.
 - Works offline: the radar list is on the phone, refreshed every 6 hours, with a copy bundled for the first drive.
 - An Estado screen that checks every link of the chain, and a "Probar aviso" button that runs a test warning through it.
 - No account, no server, no ads, no tracking. Spanish and English.
 
 ## Quick start
 
-A TestFlight beta is coming with the first build; the link will be here. The app needs an iPhone with iOS 18 or later; the CarPlay card needs iOS 26.
+A TestFlight beta is coming with the first build; the link will be here. The app needs an iPhone with iOS 18 or later.
 
 To build it yourself on a Mac with Xcode 26 and [XcodeGen](https://github.com/yonaskolb/XcodeGen):
 
@@ -30,14 +30,14 @@ swift test                                   # the RadaresCore package
 xcodegen generate --spec App/project.yml && open App/RadaresAnunciados.xcodeproj
 ```
 
-On first launch the app walks you through four screens: location (allow "Always" and Precise Location), notifications and Motion, the car screen, and Estado.
+On first launch the app walks you through three screens: location (allow "Always" and Precise Location), notifications and Motion, and Estado.
 
 ## How it works
 
 1. When the car starts moving, Apple's significant-change and region services wake the app; a GPS probe confirms you are driving.
 2. While you drive, one fix a second goes through the alert engine in `RadaresCore`, a Swift package with no platform code.
 3. A radar fires when it is ahead, you are closing on it, it is within 25 seconds of driving (300 m to 1 km), and its direction matches yours.
-4. The warning goes out by voice, on the Live Activity and as a notification, each one logged with its outcome.
+4. The warning goes out by voice and as a Time Sensitive notification, each one logged with its outcome.
 5. When you stop for good the app ends the drive, re-arms a 400 m fence around where you parked, and goes back to sleep without GPS.
 6. The radar list comes from the public feed of [radares-anunciados-ha](https://github.com/GeiserX/radares-anunciados-ha), checked and replaced atomically.
 
@@ -53,16 +53,16 @@ Your location never leaves the phone; the only network request is the download o
 
 `.github/workflows/release.yml` archives and uploads to TestFlight on a `vX.Y.Z` tag that matches `MARKETING_VERSION` in `App/project.yml`. Before tagging, bump `CURRENT_PROJECT_VERSION` (every upload needs a higher one) and refresh the bundled feed with `scripts/update-snapshot.sh` if it is older than 30 days. The workflow needs:
 
-- Seven repository secrets: `APPSTORE_ISSUER_ID`, `APPSTORE_KEY_ID`, `APPSTORE_PRIVATE_KEY` (an App Store Connect API key with App Manager access), `DIST_CERTIFICATE_P12` and `DIST_CERTIFICATE_PASSWORD` (the Apple Distribution certificate, base64), `PROFILE_APP` and `PROFILE_WIDGET` (the two provisioning profiles, base64).
-- Two App Store provisioning profiles named exactly `Radares App Store` (App ID `io.github.geiserx.radares`) and `Radares Activity App Store` (App ID `io.github.geiserx.radares.activity`).
-- The app's App ID must have the **Time Sensitive Notifications** capability enabled before its profile is generated: `App/project.yml` writes `com.apple.developer.usernotifications.time-sensitive` into the entitlements, and `xcodebuild archive` fails with "doesn't include the Time Sensitive Notifications capability" against a profile made without it. The widget's App ID needs no capability beyond App Groups. Regenerate and re-upload `PROFILE_APP` after enabling it, and again at every profile renewal.
+- Six repository secrets: `APPSTORE_ISSUER_ID`, `APPSTORE_KEY_ID`, `APPSTORE_PRIVATE_KEY` (an App Store Connect API key with App Manager access), `DIST_CERTIFICATE_P12` and `DIST_CERTIFICATE_PASSWORD` (the Apple Distribution certificate, base64), and `PROFILE_APP` (the provisioning profile, base64).
+- One App Store provisioning profile named exactly `Radares App Store` (App ID `io.github.geiserx.radares`).
+- The App ID must have the **Time Sensitive Notifications** capability enabled before the profile is generated: `App/project.yml` writes `com.apple.developer.usernotifications.time-sensitive` into the entitlements, and `xcodebuild archive` fails with "doesn't include the Time Sensitive Notifications capability" against a profile made without it. Regenerate and re-upload `PROFILE_APP` after enabling it, and again at every profile renewal.
 
 ## Documentation
 
 - [Design](docs/DESIGN.md): the alert model, location strategy, surfaces, data and health checks
 - [Spec](docs/SPEC.md): the platform-neutral rules and the route vectors, the contract for Android
 - [Device verification](docs/VERIFY.md): what only a real iPhone and a real drive can prove
-- [CarPlay](docs/CARPLAY.md): what reaches the car today and the CarPlay rules
+- [CarPlay](docs/CARPLAY.md): what reaches the car today and the rules once the entitlement exists
 - [Contributing](CONTRIBUTING.md) and [Security](SECURITY.md)
 
 ## License

@@ -33,7 +33,7 @@ public enum Thresholds {
     public static let candidateBandM: Double = 200
     /// A radar first seen inside warn distance minus this band still fires, flagged late (late wake-up, GPS warm-up).
     public static let lateBandM: Double = 100
-    /// Below this distance and still closing nothing is spoken: the sentence would end after the radar. The card shows it.
+    /// Below this distance and still closing nothing is spoken: the sentence would end after the radar. The notification and the in-app card show it.
     public static let noVoiceBelowM: Double = 60
     /// Passed when the distance increased on this many consecutive fixes after the minimum.
     public static let passedFixes: Int = 3
@@ -43,7 +43,7 @@ public enum Thresholds {
     /// this far (or the fix's horizontal accuracy, whichever is larger) above the minimum: GPS wander while stopped
     /// before a fired radar is not a pass.
     public static let passedMinRiseM: Double = 3
-    /// The card shows "Radar superado" for this long, then goes back to watching.
+    /// The in-app card shows "Radar superado" for this long, then goes back to watching.
     public static let passedCardSeconds: Double = 4
     /// Below this speed the reported course wanders, so the course comes from the last two fixes instead. Our own threshold, tuned from logged drives.
     public static let courseMinSpeedMps: Double = 3
@@ -66,22 +66,10 @@ public enum Thresholds {
     /// The pass ledger never holds more entries than this.
     public static let ledgerMaxEntries: Int = 200
 
-    // MARK: Card cadence (design 2.7, 4.2)
+    // MARK: Phrasing (design 2.7)
 
-    /// Live Activity milestones while a radar is ahead: updates are budgeted by the system, so the card shows milestones, the voice the exact distance.
-    public static let cardMilestonesM: [Double] = [1000, 750, 500, 250, 100]
-    /// Inside a stretch the remaining figure moves in steps of this size.
-    public static let stretchCardStepM: Double = 500
-    /// With nothing ahead the card is refreshed at most this often.
-    public static let cardIdleSeconds: Double = 60
     /// Spoken distances are rounded to this step.
     public static let spokenDistanceStepM: Double = 50
-    /// A Live Activity update is marked stale after this long, so a dead app shows as stale on the Lock Screen.
-    public static let activityStaleSeconds: Double = 120
-    /// While paused the stale date is pushed out to this, a jam is not a dead app.
-    public static let activityPausedStaleMinutes: Double = 15
-    /// An ended Live Activity lingers on the Lock Screen for this long (dismissalPolicy .after).
-    public static let activityDismissMinutes: Double = 5
 
     // MARK: Driving detection and wake-ups (design 3.1)
 

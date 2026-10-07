@@ -1,16 +1,6 @@
 {
   "sourceLanguage" : "es",
   "strings" : {
-    "Con iOS 26 la tarjeta del radar aparece en la pantalla de CarPlay y en la pantalla bloqueada. iOS solo deja que la tarjeta empiece mientras la app está en pantalla: si la quieres en el coche, deja la app abierta al salir y aparecerá en cuanto note que conduces. Si no, el aviso llega igual por voz y como notificación." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "With iOS 26 the radar card shows on the CarPlay screen and on the Lock Screen. iOS only lets the card start while the app is on screen: if you want it in the car, leave the app open when you set off and it appears as soon as the app notices you are driving. If not, the warning still arrives by voice and as a notification."
-          }
-        }
-      }
-    },
     "Sin «Avisos» la app no se despierta ni usa el GPS. «Pausar hoy» ignora los despertares hasta mañana (en autobús o tren); «Probar aviso» sigue funcionando." : {
       "localizations" : {
         "en" : {
@@ -201,12 +191,12 @@
         }
       }
     },
-    "Bloquea el iPhone para ver la tarjeta." : {
+    "Cada aviso llega como notificación urgente, que pasa la mayoría de los modos de concentración, y por voz cuando el radar está en tu sentido y no has apagado la voz; no hay nada que abrir ni que dejar en pantalla. Con el modo Conducción solo llega la voz." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lock the iPhone to see the card."
+            "value" : "Every warning arrives as a Time Sensitive notification, which gets through most Focus modes, and by voice when the radar is in your direction and the voice is on; there is nothing to open and nothing to leave on screen. With the Driving Focus only the voice arrives."
           }
         }
       }
@@ -217,16 +207,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Every radar keeps the source and attribution the feed publishes."
-          }
-        }
-      }
-    },
-    "Cuando no hay tarjeta en la pantalla del coche, el aviso llega como notificación urgente: pasa la mayoría de los modos de concentración. Con el modo Conducción el aviso llega por voz." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When there is no card on the car screen, the warning arrives as a Time Sensitive notification, which gets through most Focus modes. With the Driving Focus the warning arrives by voice."
           }
         }
       }
@@ -267,16 +247,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Start"
-          }
-        }
-      }
-    },
-    "En el coche" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In the car"
           }
         }
       }
@@ -421,16 +391,6 @@
         }
       }
     },
-    "No se pudo mostrar la tarjeta: revisa Actividades en directo en Ajustes." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The card could not be shown: check Live Activities in Settings."
-          }
-        }
-      }
-    },
     "Notificaciones denegadas: el aviso solo llegará por voz." : {
       "localizations" : {
         "en" : {
@@ -501,22 +461,12 @@
         }
       }
     },
-    "Pone un radar fijo de prueba a 600 m delante y lo pasa por el mismo camino que un aviso real: voz, pantalla del coche y notificación." : {
+    "Pone un radar fijo de prueba a 600 m delante y lo pasa por el mismo camino que un aviso real: voz y notificación." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Places a test fixed radar 600 m ahead and runs it through the same path as a real warning: voice, car screen and notification."
-          }
-        }
-      }
-    },
-    "Probar" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Try it"
+            "value" : "Places a test fixed radar 600 m ahead and runs it through the same path as a real warning: voice and notification."
           }
         }
       }
@@ -527,16 +477,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Test warning"
-          }
-        }
-      }
-    },
-    "Prueba" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Test"
           }
         }
       }
@@ -817,16 +757,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "late"
-          }
-        }
-      }
-    },
-    "tarjeta" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "card"
           }
         }
       }

@@ -1,8 +1,8 @@
 // Lane: surfaces
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// The pure rules of the surfaces: which update the read-back still waits for, when the notification takes over
-// from the card, the notification's sound, and the first card of an activity started while paused.
+// The pure rules of the surfaces: the notification's sound, and the text a warning without a sentence (a `.visual`
+// row) posts, since the notification is the visual surface of every warning and nothing has to be on screen.
 
 import RadaresCore
 import UserNotifications
@@ -11,51 +11,56 @@ import XCTest
 
 final class SurfacesRulesTests: XCTestCase {
     private let t0 = Date(timeIntervalSince1970: 1_800_000_000)
+    private let es = Locale(identifier: "es_ES")
+    private let en = Locale(identifier: "en_GB")
 
-    private func state(_ title: String, seq: Int, at t: Date? = nil) -> DriveAttributes.ContentState {
-        DriveAttributes.ContentState(phase: .alert, kindSymbol: "camera.fill", title: title, subtitle: "A-2", distanceMetres: 600, updatedAt: t ?? t0, seq: seq)
+    private var radar: Radar {
+        Radar(
+            id: "a2", kind: .fixed, role: .point, start: Coordinate(latitude: 41.30326, longitude: -1.94488),
+            name: "A-2 km 202,3", road: "A-2", kmFrom: 202.3, maxspeed: 90, directionText: "ZARAGOZA",
+            source: "dgt", attribution: ""
+        )
     }
 
-    /// Two cards of one fix share a second: the read-back of the first must count the second as "superseded", not as
-    /// the first one dropped; an older card still showing means the sent one has not arrived yet.
-    func testReadBackStopsWaitingWhenTheSameOrALaterUpdateShows() {
-        let sent = state("Radar fijo", seq: 5)
-        XCTAssertFalse(DriveActivityController.stillWaiting(shown: sent, sent: sent))
-        XCTAssertFalse(DriveActivityController.stillWaiting(shown: state("Radar superado", seq: 6), sent: sent), "a later update of the same second replaced it")
-        XCTAssertTrue(DriveActivityController.stillWaiting(shown: state("Radar fijo", seq: 4), sent: sent), "the previous card is still up")
-        XCTAssertTrue(DriveActivityController.stillWaiting(shown: state("Radar fijo", seq: 4, at: t0.addingTimeInterval(1)), sent: sent), "a timestamp never decides it")
+    private func event(_ level: Level, opposite: Bool, phrase: Phrase? = nil) -> AlertEvent {
+        AlertEvent(
+            kind: .warn(level), radar: radar, distance: 812, crossTrackMetres: 3, phrase: phrase,
+            content: DriveContent(phase: .alert, kindSymbol: "camera.fill", title: "Radar fijo", subtitle: "A-2 km 202,3", distanceMetres: 812, limit: 90, opposite: opposite, updatedAt: t0)
+        )
     }
 
-    /// No activity, or one that was gone when the update was sent: the Time Sensitive notification is the surface.
-    func testTheNotificationTakesOverWhenTheCardDidNotShow() {
-        XCTAssertTrue(AlertDispatcher.notificationTakesOver(activityShown: nil))
-        XCTAssertTrue(AlertDispatcher.notificationTakesOver(activityShown: false))
-        XCTAssertFalse(AlertDispatcher.notificationTakesOver(activityShown: true))
-    }
-
-    /// The notification is never silent: with the voice on it carries the tick the Live Activity alert uses, so a
-    /// failed speech on a cold background launch still makes a sound.
-    func testTheRadarNotificationAlwaysHasASound() {
-        XCTAssertEqual(Notifier.sound(voiceEnabled: true), UNNotificationSound(named: UNNotificationSoundName(DriveActivityController.alertSoundName)))
+    /// The notification is never silent for a radar ahead: with the voice on it carries the tick, so a failed speech
+    /// on a cold background launch still makes a sound; the default sound with the voice off. A radar of the
+    /// opposite flow is shown without a sound.
+    func testTheRadarNotificationAlwaysHasASoundForARadarAhead() {
+        XCTAssertEqual(Notifier.sound(voiceEnabled: true), UNNotificationSound(named: UNNotificationSoundName(Notifier.alertSoundName)))
         XCTAssertEqual(Notifier.sound(voiceEnabled: false), .default)
+        XCTAssertNil(Notifier.sound(voiceEnabled: true, silent: true), "sentido contrario: shown, never sounded")
+        XCTAssertNil(Notifier.sound(voiceEnabled: false, silent: true))
         XCTAssertNotNil(Bundle.main.url(forResource: "radar-tick", withExtension: "caf"), "the tick ships in the app bundle")
     }
 
-    /// An activity started from the foreground while the drive is paused begins as the paused card (15 min stale,
-    /// "En pausa"), not as "Sin radares cerca" that goes stale in two minutes with nothing to refresh it.
-    func testTheFirstCardOfAnActivityStartedWhilePausedIsThePausedCard() async {
-        let paused: DriveContent = {
-            var c = DriveContent.watching(at: t0)
-            c.phase = .paused
-            return c
-        }()
-        let pausedCard: @Sendable () async -> DriveContent = { paused }
-        let whilePaused = await AppModel.activityStartContent(for: .paused(since: t0), paused: pausedCard)?()
-        XCTAssertEqual(whilePaused?.phase, .paused)
-        XCTAssertEqual(whilePaused.map { ActivityCadence.staleDate(for: $0, now: t0) }, t0.addingTimeInterval(Thresholds.activityPausedStaleMinutes * 60))
-        let whileDriving = await AppModel.activityStartContent(for: .driving, paused: pausedCard)?()
-        XCTAssertEqual(whileDriving?.phase, .watching)
-        XCTAssertNil(AppModel.activityStartContent(for: .idle, paused: pausedCard))
-        XCTAssertNil(AppModel.activityStartContent(for: .probing, paused: pausedCard))
+    /// A `.full` warning posts the core's phrase as it is: the same title and body the route vectors assert.
+    func testAFullWarningPostsTheCorePhrase() {
+        let phrase = Phrase(spoken: "Radar fijo a 800 metros, sentido Zaragoza. Límite 90.", title: "Radar fijo a 800 m", body: "A-2 km 202,3 · límite 90 km/h · sentido Zaragoza")
+        XCTAssertEqual(AlertDispatcher.notificationPhrase(for: event(.full, opposite: false, phrase: phrase), level: .full, locale: es), phrase)
+    }
+
+    /// A `.visual` warning has no sentence from the engine, yet it posts: the title and body follow the same
+    /// phrasing rules, "sentido contrario" is added for the other carriageway, and nothing is marked as spoken.
+    func testAVisualWarningPostsANotificationWithoutAVoice() throws {
+        let opposite = try XCTUnwrap(AlertDispatcher.notificationPhrase(for: event(.visual, opposite: true), level: .visual, locale: es))
+        XCTAssertEqual(opposite.title, "Radar fijo a 800 m, sentido contrario")
+        XCTAssertEqual(opposite.body, "A-2 km 202,3 · límite 90 km/h · sentido Zaragoza")
+        XCTAssertEqual(opposite.spoken, "", "nothing is said for a visual row")
+
+        let paced = try XCTUnwrap(AlertDispatcher.notificationPhrase(for: event(.visual, opposite: false), level: .visual, locale: es))
+        XCTAssertEqual(paced.title, "Radar fijo a 800 m", "a radar ahead demoted by pacing is a plain title")
+
+        let english = try XCTUnwrap(AlertDispatcher.notificationPhrase(for: event(.visual, opposite: true), level: .visual, locale: en))
+        XCTAssertEqual(english.title, "Fixed speed camera in 800 m, opposite direction")
+
+        let noRadar = AlertEvent(kind: .driveEnded, content: .watching(at: t0))
+        XCTAssertNil(AlertDispatcher.notificationPhrase(for: noRadar, level: .visual, locale: es), "nothing to post without a radar")
     }
 }

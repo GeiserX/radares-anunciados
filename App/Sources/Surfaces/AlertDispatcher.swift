@@ -1,22 +1,21 @@
 // Lane: surfaces
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// Every AlertEvent goes through here to speech, the Live Activity and the notification (design 4). A missing
-// surface changes nothing upstream; the sink outcomes go to the log on every alert.
+// Every AlertEvent goes through here to speech and the notification (design 4). Nothing has to be started or
+// left on screen: the app wakes itself, warns by voice and posts a Time Sensitive notification, like a
+// notification app. A missing surface changes nothing upstream; the sink outcomes go to the log on every alert.
 //
 // What each event does:
-//   .warn(.full), .stretchEntered   speech + Live Activity alert, or the Time Sensitive notification when no
-//                                   activity runs; one `alert` log row with the sink outcomes
-//   .warn(.visual)                  the card only (sentido contrario, pacing gap); an `alert` row
-//   .passed                         the card; that radar's notification is removed
-//   .stretchExited                  "Fin de tramo" when the core phrased it (dropped if anything is speaking); the card
-//   .driveEnded                     the activity ends; the once-per-drive audio session is released
-// This lane writes the `alert`, `speech`, `notificationPosted` and `activity*` rows. `passed`, `stretchEntered`,
+//   .warn(.full), .stretchEntered   speech + the Time Sensitive notification; one `alert` log row with the sink outcomes
+//   .warn(.visual)                  the notification without the voice (sentido contrario, pacing gap); an `alert` row
+//   .passed                         that radar's notification is removed
+//   .stretchExited                  "Fin de tramo" when the core phrased it (dropped if anything is speaking)
+//   .driveEnded                     the once-per-drive audio session is released
+// This lane writes the `alert`, `speech` and `notificationPosted` rows. `passed`, `stretchEntered`,
 // `stretchExited` and `driveEnded` rows are the location lane's, which has the fix and the exit reason.
 
 import Foundation
 import RadaresCore
-import UIKit
 import UserNotifications
 import os
 
@@ -34,14 +33,13 @@ public final class AlertDispatcher {
     }
 
     private let speech = SpeechAnnouncer.shared
-    private let activity = DriveActivityController.shared
     private let notifier = Notifier.shared
     private let logger = Logger(subsystem: "io.github.geiserx.radares", category: "dispatch")
 
     private init() {}
 
     /// `fix` is the fix the event was decided on: its position and speed go into the `alert` row. Without it the
-    /// row carries the radar's gate and the card's speed.
+    /// row carries the radar's gate and the content's speed.
     public func handle(_ event: AlertEvent, at fix: Fix? = nil) async {
         switch event.kind {
         case .warn(let level):
@@ -50,7 +48,6 @@ public final class AlertDispatcher {
             // The level the core meant: a paced entry carries no sentence and is a visual row, like a paced point.
             await alert(event, level: event.phrase == nil ? .visual : .full, fix: fix)
         case .passed:
-            await activity.update(event.content, alert: nil)
             if let id = event.radar?.id {
                 await notifier.removeRadarNotifications(radarID: id)
             }
@@ -58,9 +55,7 @@ public final class AlertDispatcher {
             if voiceEnabled, let phrase = event.phrase {
                 _ = await speech.speak(phrase, as: .exit)
             }
-            await activity.update(event.content, alert: nil)
         case .driveEnded:
-            await activity.end(content: event.content)
             await speech.endDrive()
         }
     }
@@ -72,10 +67,11 @@ public final class AlertDispatcher {
 
     private func alert(_ event: AlertEvent, level: Level, fix: Fix?) async {
         let phrase = level == .full ? event.phrase : nil
-        // The three sinks run side by side: a slow audio session never holds back the card or the banner.
+        let text = Self.notificationPhrase(for: event, level: level, locale: .autoupdatingCurrent)
+        // The two sinks run side by side: a slow audio session never holds back the banner.
         async let spoken = speakIfWanted(phrase)
-        async let shown = showOnCard(event, alert: phrase)
-        let sinks = [await spoken, await shown].compactMap { $0 }
+        async let posted = post(text, for: event)
+        let sinks = [await spoken, await posted].compactMap { $0 }
 
         let radar = event.radar
         let speed = fix?.speed ?? event.content.speedKmh.map { Double($0) / 3.6 }
@@ -101,24 +97,25 @@ public final class AlertDispatcher {
         return await speech.speak(phrase).sink
     }
 
-    /// The Live Activity when one runs; otherwise, for a spoken-level alert, the Time Sensitive notification. An
-    /// activity that is gone by the time the update is sent (dismissed, the 8 h cap) hands over to the notification.
-    private func showOnCard(_ event: AlertEvent, alert phrase: Phrase?) async -> SinkOutcome? {
-        var shown: Bool?
-        if activity.current != nil {
-            shown = await activity.update(event.content, alert: phrase)
-        }
-        guard Self.notificationTakesOver(activityShown: shown), let phrase else {
-            return shown.map { SinkOutcome(sink: .activity, ok: $0, detail: $0 ? nil : "no activity") }
-        }
-        let error = await notifier.post(phrase, id: notificationID(for: event))
+    /// The Time Sensitive notification, unconditional: every warning posts one, silent for a radar of the opposite flow.
+    private func post(_ phrase: Phrase?, for event: AlertEvent) async -> SinkOutcome? {
+        guard let phrase else { return nil }
+        let error = await notifier.post(phrase, id: notificationID(for: event), silent: event.content.opposite)
         return SinkOutcome(sink: .notification, ok: error == nil, detail: error.map { String(describing: $0) })
     }
 
-    /// The notification is the surface when no activity ran (`nil`) or the one that ran was gone when the update
-    /// was sent (`false`); a shown update (`true`) is the surface.
-    nonisolated static func notificationTakesOver(activityShown: Bool?) -> Bool {
-        activityShown != true
+    /// The notification's text. A `.full` warning carries the core's phrase. A `.visual` one has no sentence (the
+    /// engine phrases only what is spoken), so its title and body come from the same `Phrasing` rules, with
+    /// "sentido contrario" in the title when the radar is for the other carriageway; the `spoken` field stays empty.
+    /// Nil when nothing can be said about the event (no radar).
+    nonisolated static func notificationPhrase(for event: AlertEvent, level: Level, locale: Locale) -> Phrase? {
+        if level == .full, let phrase = event.phrase { return phrase }
+        guard event.radar != nil else { return nil }
+        let made = Phrasing.make(event, locale: locale)
+        guard !made.title.isEmpty else { return nil }
+        let opposite = event.content.opposite
+        let suffix = Phrasing.isEnglish(locale) ? ", opposite direction" : ", sentido contrario"
+        return Phrase(spoken: "", title: opposite ? made.title + suffix : made.title, body: made.body)
     }
 
     /// `<radarId>#<passSeq>`: unique per pass, so a later pass of the same radar is a new notification.
@@ -134,8 +131,7 @@ public final class AlertDispatcher {
 
 extension AlertDispatcher {
     /// Launch argument that runs the surfaces self-test: `-SurfacesSelfTest 1` posts a synthetic fixed-radar warning
-    /// with no Live Activity (speech and the Time Sensitive notification); `-SurfacesSelfTest 2` starts a Live
-    /// Activity first and walks it through the milestones, the alert, "Radar superado" and the end.
+    /// through `handle(_:)` (speech and the Time Sensitive notification), then the pass that removes it.
     public static let selfTestKey = "SurfacesSelfTest"
 
     /// Call once from `application(_:didFinishLaunchingWithOptions:)`. It creates the surfaces at launch, so the
@@ -144,23 +140,18 @@ extension AlertDispatcher {
     /// event goes through `handle(_:)`, the same path a real warning takes.
     public static func runSelfTestIfRequested() {
         let dispatcher = shared
-        let mode = UserDefaults.standard.integer(forKey: selfTestKey)
-        guard mode > 0 else { return }
-        Task { await dispatcher.runSelfTest(withActivity: mode >= 2) }
+        guard UserDefaults.standard.integer(forKey: selfTestKey) > 0 else { return }
+        Task { await dispatcher.runSelfTest() }
     }
 
-    private func runSelfTest(withActivity: Bool) async {
-        logger.notice("self-test: start (activity \(withActivity))")
+    private func runSelfTest() async {
+        logger.notice("self-test: start")
         let center = UNUserNotificationCenter.current()
         // Onboarding asks for real; a self-test on a fresh install takes provisional authorization so it runs
         // unattended (no prompt to tap). Provisional notifications are delivered quietly to the Notification Center.
         if await center.notificationSettings().authorizationStatus == .notDetermined {
             let granted = (try? await center.requestAuthorization(options: [.alert, .sound, .provisional])) ?? false
             logger.notice("self-test: provisional notification authorization \(granted)")
-        }
-        // Activity.request needs the app in the foreground; at launch it is still inactive.
-        for _ in 0..<50 where UIApplication.shared.applicationState != .active {
-            try? await Task.sleep(for: .milliseconds(100))
         }
 
         let radar = Radar(
@@ -172,24 +163,11 @@ extension AlertDispatcher {
         )
         let title = String(localized: "Radar fijo", table: "Surfaces")
         let subtitle = "A-2 km 202,3"
-        func card(_ phase: DrivePhase, _ metres: Int?) -> DriveContent {
+        func content(_ phase: DrivePhase, _ metres: Int?) -> DriveContent {
             DriveContent(
                 phase: phase, kindSymbol: "camera.fill", title: title, subtitle: subtitle,
                 distanceMetres: metres, limit: 90, speedKmh: 120, updatedAt: Date()
             )
-        }
-
-        if withActivity {
-            do {
-                try activity.start(content: .watching(at: Date()))
-            } catch {
-                logger.error("self-test: activity start failed: \(String(describing: error), privacy: .public)")
-            }
-            for metres in [1150, 990, 900, 760] {
-                let sent = await activity.update(card(.approaching, metres), alert: nil)
-                logger.notice("self-test: card \(metres) m sent \(sent)")
-                try? await Task.sleep(for: .seconds(2))
-            }
         }
 
         let phrase = Phrase(
@@ -199,33 +177,18 @@ extension AlertDispatcher {
         )
         await handle(AlertEvent(
             kind: .warn(.full), radar: radar, distance: 600, crossTrackMetres: 4, phrase: phrase,
-            content: card(.alert, 600)
+            content: content(.alert, 600)
         ))
 
         let delivered = await center.deliveredNotifications().filter { $0.request.content.threadIdentifier == Notifier.radarThread }
         let timeSensitive = delivered.first?.request.content.interruptionLevel == .timeSensitive
         logger.notice("self-test: delivered radar notifications \(delivered.count), time sensitive \(timeSensitive)")
 
-        if !withActivity {
-            // The pass removes this radar's notification and leaves any other radar's.
-            try? await Task.sleep(for: .seconds(4))
-            await handle(AlertEvent(kind: .passed, radar: radar, content: card(.passed, nil)))
-            let left = await center.deliveredNotifications().filter { $0.request.content.threadIdentifier == Notifier.radarThread }
-            logger.notice("self-test: radar notifications after pass \(left.count)")
-        }
-
-        if withActivity {
-            try? await Task.sleep(for: .seconds(6))
-            for metres in [480, 240, 90] {
-                await activity.update(card(.alert, metres), alert: nil)
-                try? await Task.sleep(for: .seconds(2))
-            }
-            await handle(AlertEvent(kind: .passed, radar: radar, content: card(.passed, nil)))
-            try? await Task.sleep(for: .seconds(Thresholds.passedCardSeconds))
-            await activity.update(.watching(at: Date()), alert: nil)
-            try? await Task.sleep(for: .seconds(4))
-            await handle(AlertEvent(kind: .driveEnded, content: .watching(at: Date())))
-        }
+        // The pass removes this radar's notification and leaves any other radar's.
+        try? await Task.sleep(for: .seconds(4))
+        await handle(AlertEvent(kind: .passed, radar: radar, content: content(.passed, nil)))
+        let left = await center.deliveredNotifications().filter { $0.request.content.threadIdentifier == Notifier.radarThread }
+        logger.notice("self-test: radar notifications after pass \(left.count)")
         logger.notice("self-test: done")
     }
 }

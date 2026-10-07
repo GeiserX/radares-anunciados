@@ -4,7 +4,7 @@
 // "Probar aviso" (design 6): a synthetic fixed radar Thresholds.selfTestDistanceM ahead on the current heading (due
 // north when stopped or unknown), driven through the real AlertEngine and the real AlertDispatcher. The engine
 // decides from fixes exactly as on the road, so an engine or phrasing regression fails this test for the same
-// reason a real warning would. It runs in the foreground, so the Live Activity is started for it.
+// reason a real warning would. The warning goes out as on the road: the voice and the Time Sensitive notification.
 
 import CoreLocation
 import Foundation
@@ -46,16 +46,6 @@ enum SelfTest {
         )
         let engine = AlertEngine(store: RadarStore(radars: [radar]), ledger: PassLedger(), now: { now })
 
-        var startedActivity = false
-        if !LaunchFlags.noLiveActivity, DriveActivityController.shared.current == nil {
-            do {
-                try DriveActivityController.shared.start(content: .watching(at: now))
-                startedActivity = true
-            } catch {
-                logger.error("Live Activity: \(error.localizedDescription, privacy: .public)")
-            }
-        }
-
         // Approach from 200 m behind the phone up to the phone: the radar goes from 800 m to 600 m ahead.
         let behind = [200.0, 175, 150, 125, 100, 75, 50, 25, 0]
         var warning: AlertEvent?
@@ -75,15 +65,6 @@ enum SelfTest {
             }
         }
 
-        if startedActivity {
-            // A test card should not outlive the test when no drive is running.
-            Task {
-                try? await Task.sleep(for: .seconds(30))
-                if await LocationCoordinator.shared.state == .idle {
-                    await DriveActivityController.shared.end()
-                }
-            }
-        }
         guard let warning else {
             logger.error("self-test: the engine did not warn")
             return .silent

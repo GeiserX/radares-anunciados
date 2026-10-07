@@ -87,7 +87,6 @@ extension SinkOutcome.Sink {
     var label: String {
         switch self {
         case .speech: String(localized: "voz")
-        case .activity: String(localized: "tarjeta")
         case .notification: String(localized: "notificación")
         }
     }

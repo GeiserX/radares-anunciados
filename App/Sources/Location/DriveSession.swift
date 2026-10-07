@@ -3,8 +3,7 @@
 //
 // The liveUpdates(.automotiveNavigation) loop the probe and the drive share (`DriveSession.stream`), and the drive
 // itself: CLLocationUpdate -> Fix -> AlertEngine.ingest -> AlertDispatcher.handle(_:at:) on a serial queue off the
-// fix loop (an audio session activation never holds the next fix), the card handed to the
-// Live Activity after every fix (the controller's cadence decides what reaches the system), the passed, stretch
+// fix loop (an audio session activation never holds the next fix), the passed, stretch
 // and driveEnded log rows, the drive counters that end up in the driveEnded row, the pass ledger persisted on
 // warn, pass and drive end (never per fix), the drive state persisted in UserDefaults on every change so a relaunch
 // resumes the loop, and the CLBackgroundActivitySession of the degraded While-Using mode, rejoined at launch and
@@ -241,8 +240,8 @@ public actor DriveSession {
         persisted?.save(to: defaults)
     }
 
-    /// One fix of the drive: engine, dispatcher, the card to the Live Activity, ledger, counters, the fix row every
-    /// `Thresholds.fixLogSeconds`. Returns the engine's events (empty while paused or before the engine is ready).
+    /// One fix of the drive: engine, dispatcher, ledger, counters, the fix row every `Thresholds.fixLogSeconds`.
+    /// Returns the engine's events (empty while paused or before the engine is ready).
     @discardableResult
     public func ingest(_ fix: Fix, paused: Bool, now: Date = Date()) async -> [AlertEvent] {
         guard persisted != nil else { return [] }
@@ -274,18 +273,12 @@ public actor DriveSession {
         let events = engine.ingest(fix)
         if !events.isEmpty {
             await dispatch(events, ledger: engine.ledger, at: fix)
-        } else if engineEnabled {
-            // Every quiet fix: the controller's milestone cadence decides whether the system hears about it (design
-            // 4.2). A fix with events already put the event's card on the activity through the dispatcher. Queued
-            // behind the events so a quiet fix never overwrites the card of an event still being delivered.
-            let content = engine.snapshot.content
-            await surfaces.enqueue { await DriveActivityController.shared.update(content, alert: nil) }
         }
         return events
     }
 
-    /// Drive end: engine.endDrive, flush the ledger, end the Live Activity, forget the persisted drive. Returns the
-    /// driveEnded row. The background activity session is invalidated here and only here: the drive is over, and
+    /// Drive end: engine.endDrive, flush the ledger, forget the persisted drive. Returns the driveEnded row. The
+    /// background activity session is invalidated here and only here: the drive is over, and
     /// the user started it from the foreground, so nothing is lost that a launch path could have kept.
     public func end(now: Date = Date()) async -> LogEvent {
         engineLoad?.cancel()
@@ -294,11 +287,8 @@ public actor DriveSession {
             let events = engine.endDrive()
             await dispatch(events, ledger: engine.ledger, at: nil, force: true)
         }
-        // The drive end waits for the surfaces: the activity must end after the last card, not before it.
+        // The drive end waits for the surfaces: the driveEnded row comes after the last sentence was handed over.
         await surfaces.drain()
-        if engineEnabled {
-            await DriveActivityController.shared.end()
-        }
         let saved = persisted
         let firstFixAfterWakeS: Double? = if let wakeAt = saved?.wakeAt, let firstFixAt = saved?.firstFixAt {
             firstFixAt.timeIntervalSince(wakeAt)
@@ -320,21 +310,6 @@ public actor DriveSession {
         resetCounters()
         logger.info("drive ended: \(self.fixes, privacy: .public) fixes")
         return row
-    }
-
-    /// The card while paused: the engine's content with the phase changed, or the idle card.
-    public func pausedContent(now: Date = Date()) -> DriveContent {
-        var content = engine?.snapshot.content ?? .watching(at: now)
-        content.phase = .paused
-        content.updatedAt = now
-        return content
-    }
-
-    /// Hands the paused card to the Live Activity (staleDate is the controller's: 15 min while paused, design 3.1).
-    public func showPaused(now: Date = Date()) async {
-        guard engineEnabled else { return }
-        let content = pausedContent(now: now)
-        await surfaces.enqueue { await DriveActivityController.shared.update(content, alert: nil) }
     }
 
     // MARK: Private

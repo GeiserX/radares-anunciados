@@ -1,9 +1,9 @@
 // Lane: app
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// The four onboarding screens of design 7, each explaining before it asks, all skippable, re-openable from Estado:
+// The three onboarding screens of design 7, each explaining before it asks, all skippable, re-openable from Estado:
 // Ubicación (When In Use, then Always, then the Always session), Avisos (notifications and the Motion prompt, in
-// the foreground), En el coche (the Live Activity and when it can start), Estado.
+// the foreground), Estado. Nothing to start and nothing to leave on screen: the app warns on its own.
 
 import CoreLocation
 import CoreMotion
@@ -21,8 +21,7 @@ struct OnboardingFlow: View {
             TabView(selection: $step) {
                 LocationStep(permissions: permissions).tag(0)
                 AlertsStep(permissions: permissions).tag(1)
-                CarStep().tag(2)
-                HealthView().tag(3)
+                HealthView().tag(2)
             }
             .tabViewStyle(.page(indexDisplayMode: .always))
             .indexViewStyle(.page(backgroundDisplayMode: .always))
@@ -30,12 +29,12 @@ struct OnboardingFlow: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    if step < 3 {
+                    if step < 2 {
                         Button("Saltar") { step += 1 }
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    if step < 3 {
+                    if step < 2 {
                         Button("Siguiente") { withAnimation { step += 1 } }
                     } else {
                         Button("Empezar") { model.finishOnboarding() }.bold()
@@ -51,7 +50,6 @@ struct OnboardingFlow: View {
         switch step {
         case 0: "Ubicación"
         case 1: "Avisos"
-        case 2: "En el coche"
         default: "Estado"
         }
     }
@@ -103,7 +101,7 @@ private struct AlertsStep: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Image(systemName: "bell.badge.fill").font(.system(size: 56)).foregroundStyle(.tint)
-                Text("Cuando no hay tarjeta en la pantalla del coche, el aviso llega como notificación urgente: pasa la mayoría de los modos de concentración. Con el modo Conducción el aviso llega por voz.")
+                Text("Cada aviso llega como notificación urgente, que pasa la mayoría de los modos de concentración, y por voz cuando el radar está en tu sentido y no has apagado la voz; no hay nada que abrir ni que dejar en pantalla. Con el modo Conducción solo llega la voz.")
                 switch permissions.notifications {
                 case .authorized, .provisional, .ephemeral:
                     Label("Notificaciones permitidas", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
@@ -131,57 +129,6 @@ private struct AlertsStep: View {
             }
             .padding()
         }
-    }
-}
-
-/// Screen 3 (design 7): the car card, the one way it can start, and a button that starts the Live Activity now.
-private struct CarStep: View {
-    @State private var tried: Bool?
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Image(systemName: "car.fill").font(.system(size: 56)).foregroundStyle(.tint)
-                Text("Con iOS 26 la tarjeta del radar aparece en la pantalla de CarPlay y en la pantalla bloqueada. iOS solo deja que la tarjeta empiece mientras la app está en pantalla: si la quieres en el coche, deja la app abierta al salir y aparecerá en cuanto note que conduces. Si no, el aviso llega igual por voz y como notificación.")
-                Button("Probar") { tried = start() }
-                    .buttonStyle(.borderedProminent)
-                switch tried {
-                case true?:
-                    Label("Bloquea el iPhone para ver la tarjeta.", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-                case false?:
-                    Label("No se pudo mostrar la tarjeta: revisa Actividades en directo en Ajustes.", systemImage: "xmark.octagon.fill")
-                        .foregroundStyle(.red)
-                case nil:
-                    EmptyView()
-                }
-            }
-            .padding()
-        }
-    }
-
-    /// A sample card for a minute, so the user sees it on the Lock Screen; ended unless a drive is running.
-    private func start() -> Bool {
-        guard DriveActivityController.shared.current == nil else { return true }
-        let sample = DriveContent(
-            phase: .approaching,
-            kindSymbol: Kind.fixed.symbol,
-            title: String(localized: "Radar fijo"),
-            subtitle: String(localized: "Prueba"),
-            distanceMetres: 600,
-            updatedAt: Date()
-        )
-        do {
-            try DriveActivityController.shared.start(content: sample)
-        } catch {
-            return false
-        }
-        Task {
-            try? await Task.sleep(for: .seconds(60))
-            if await LocationCoordinator.shared.state == .idle {
-                await DriveActivityController.shared.end()
-            }
-        }
-        return true
     }
 }
 

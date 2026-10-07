@@ -1,7 +1,7 @@
 // Lane: app
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// The six launch steps of design 3.3, in didFinishLaunching, before any window. No branch on the deprecated
+// The five launch steps of design 3.3, in didFinishLaunching, before any window. No branch on the deprecated
 // location launch option: the reason is derived from the first event that arrives (logged by whoever receives it).
 
 import RadaresCore
@@ -44,13 +44,10 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             await CurrentFeed.shared.loadIfNeeded()
         }
 
-        // 5. Adopt a Live Activity that survived a relaunch while its drive is still on; end anything else.
-        DriveActivityController.shared.reattach(driveIsOn: PersistedDrive.load() != nil)
-
         // The surfaces' own launch-argument self-test (-SurfacesSelfTest), a no-op on a normal launch.
         AlertDispatcher.runSelfTestIfRequested()
 
-        // 6. The reason stays `unknown` until the first event tells it.
+        // 5. The reason stays `unknown` until the first event tells it.
         AppLog.shared.post(.launch(reason: .unknown, state: launchState))
         logger.info("launched, state \(launchState.rawValue, privacy: .public)")
         return true
