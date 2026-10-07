@@ -1,0 +1,175 @@
+{
+ "name": "a2-first-seen-40m",
+ "description": "First fix 40 m before the radar at 30 km/h: under 60 m and closing, so the card shows it (visual, late) and nothing is spoken.",
+ "locale": "es-ES",
+ "fixes": [
+  {
+   "t": "2026-10-07T10:00:01+02:00",
+   "lat": 41.3031176,
+   "lon": -1.9452083,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:02+02:00",
+   "lat": 41.3031551,
+   "lon": -1.9451219,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:03+02:00",
+   "lat": 41.3031926,
+   "lon": -1.9450355,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:04+02:00",
+   "lat": 41.30323,
+   "lon": -1.9449491,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:05+02:00",
+   "lat": 41.3032675,
+   "lon": -1.9448627,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:06+02:00",
+   "lat": 41.303305,
+   "lon": -1.9447763,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:07+02:00",
+   "lat": 41.3033424,
+   "lon": -1.9446899,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:08+02:00",
+   "lat": 41.3033799,
+   "lon": -1.9446035,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:09+02:00",
+   "lat": 41.3034174,
+   "lon": -1.9445171,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:10+02:00",
+   "lat": 41.3034549,
+   "lon": -1.9444307,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:11+02:00",
+   "lat": 41.3034923,
+   "lon": -1.9443443,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:12+02:00",
+   "lat": 41.3035298,
+   "lon": -1.9442579,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:13+02:00",
+   "lat": 41.3035673,
+   "lon": -1.9441716,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:14+02:00",
+   "lat": 41.3036047,
+   "lon": -1.9440852,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:15+02:00",
+   "lat": 41.3036422,
+   "lon": -1.9439988,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:16+02:00",
+   "lat": 41.3036797,
+   "lon": -1.9439124,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:17+02:00",
+   "lat": 41.3037172,
+   "lon": -1.943826,
+   "speed": 8.333333333333334,
+   "course": 60.0,
+   "accuracy": 5.0,
+   "stationary": false
+  }
+ ],
+ "expected": [
+  {
+   "kind": "warn",
+   "level": "visual",
+   "radar": "dgt-CABINACINEMOMETRO_120001",
+   "distance": 15.0,
+   "tolerance": 10,
+   "late": true,
+   "opposite": false
+  },
+  {
+   "kind": "passed",
+   "radar": "dgt-CABINACINEMOMETRO_120001"
+  }
+ ]
+}

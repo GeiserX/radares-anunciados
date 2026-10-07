@@ -1,61 +1,6997 @@
 {
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "id": "dgt-CABINACINEMOMETRO_120001",
-      "geometry": { "type": "Point", "coordinates": [-1.94488, 41.30326] },
-      "properties": {
-        "kind": "fixed",
-        "name": "A-2 km 202,3",
-        "source": "dgt",
-        "active": true,
-        "maxspeed": null,
-        "direction": "ZARAGOZA",
-        "province": "Zaragoza",
-        "road": "A-2",
-        "km_from": 202.3,
-        "km_to": null,
-        "url": "https://www.dgt.es/",
-        "attribution": "Dirección General de Tráfico (CC BY 4.0)"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "dgt_invive-Tramo_Invive_344",
-      "geometry": { "type": "LineString", "coordinates": [[0.13277, 40.51793], [0.24688, 40.51235]] },
-      "properties": {
-        "kind": "stretch",
-        "name": "N-232 km 20,81 a 30,91",
-        "source": "dgt_invive",
-        "active": true,
-        "maxspeed": null,
-        "direction": "both",
-        "province": "Castellón",
-        "road": "N-232",
-        "km_from": 20.81,
-        "km_to": 30.91,
-        "url": "https://www.dgt.es/",
-        "attribution": "Creative Commons Attribution"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "leon-2026-10-06-avenida-de-europa-0",
-      "geometry": { "type": "Point", "coordinates": [-5.5802, 42.6091] },
-      "properties": {
-        "kind": "mobile_announced",
-        "name": "Avenida de Europa",
-        "source": "leon",
-        "active": true,
-        "maxspeed": 50,
-        "direction": null,
-        "province": "León",
-        "valid_from": "2026-10-06",
-        "valid_to": "2026-10-06",
-        "url": "https://ileon.eldiario.es/",
-        "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
-      }
-    }
-  ]
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "barcelona_multas-avinguda-del-parc-logistic-0028",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.126219,
+     41.3410341
+    ]
+   },
+   "properties": {
+    "name": "Radar móvil frecuente Avinguda del Parc Logístic 28",
+    "source": "barcelona_multas",
+    "kind": "mobile_recurring",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "08",
+    "url": "https://opendata-ajuntament.barcelona.cat/data/es/dataset/denuncies_sancions_transit_bcn_detall",
+    "attribution": "Fuente de los datos: Ayuntamiento de Barcelona (CC BY 4.0), multas de tráfico de octubre a diciembre de 2025, actualizado 2026-09-01; multas aquí en 2 días de 92"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120001",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.94488,
+     41.30326
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-2 km 202.3 (sentido ZARAGOZA)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "ZARAGOZA",
+    "province": "50",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120002",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.65314,
+     41.33214
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-2 km 232.2 (sentido ZARAGOZA)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "ZARAGOZA",
+    "province": "50",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120014",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.3323933,
+     40.746853
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-23 km 165.4 (sentido ZARAGOZA)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "ZARAGOZA",
+    "province": "44",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120027",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.54181,
+     42.44163
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-12 km 93.9 (sentido BURGOS)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "BURGOS",
+    "province": "26",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120030",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -6.2491813,
+     36.460518
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo CA-33 km 4.0",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "11",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120075",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -8.613655,
+     42.8066
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo AP-9 km 83.5 (sentido VIGO)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "VIGO",
+    "province": "15",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120089",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -8.625822,
+     42.15782
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-55 km 15.9 (sentido TUI)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "TUI",
+    "province": "36",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120115",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -8.596446,
+     42.244877
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo N-550 km 146.9 (sentido TUI)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "TUI",
+    "province": "36",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120139",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0.20178248,
+     41.520145
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo N-II km 422.1 (sentido FRAGA)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "FRAGA",
+    "province": "22",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120144",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.987978,
+     37.963062
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-311 km 25.5",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "23",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120196",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -6.17808,
+     36.64519
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-4 km 645.4",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "11",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120210",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.31063,
+     42.73144
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-136 km 12.8 (sentido FRANCIA)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "FRANCIA",
+    "province": "22",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120266",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.7674475,
+     39.02962
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo N-430 km 113.2",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "06",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120332",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.351051,
+     38.182243
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-312 km 35.9",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "23",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120337",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -7.7440057,
+     42.441864
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo N-120 km 550.7 (sentido OURENSE)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "OURENSE",
+    "province": "32",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120392",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.895009,
+     37.43226
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo N-432 km 391.7",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "23",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120407",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.6571,
+     42.5739
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo N-120 km 312.3 (sentido PLASENCIA)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "PLASENCIA",
+    "province": "24",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120420",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.4166,
+     41.1644
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-62 km 207.1 (sentido BURGOS)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "BURGOS",
+    "province": "37",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120442",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -7.4551,
+     43.3615
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-8 km 555.3 (sentido ASTURIAS)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "ASTURIAS",
+    "province": "27",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120452",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     1.385242,
+     38.96439
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo EI-600 km 8.0",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "07",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120470",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -7.035189,
+     42.41156
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo N-120 km 459.1 (sentido OURENSE)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "OURENSE",
+    "province": "32",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120510",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.6978,
+     41.7166
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-62 km 116.3 (sentido PORTUGAL)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "PORTUGAL",
+    "province": "47",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120524",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.6006,
+     40.9489
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo AP-6 km 108.6 (sentido MADRID)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "MADRID",
+    "province": "05",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120540",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.5314,
+     41.9815
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo P-900 km 1.6 (sentido VILLAMURIEL DE CERRATO)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "VILLAMURIEL DE CERRATO",
+    "province": "34",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120553",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.6121,
+     41.003
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-62 km 233.3 (sentido PORTUGAL)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "PORTUGAL",
+    "province": "37",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120580",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.5734544,
+     38.931084
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-7 km 407.8",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "46",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120629",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.3947583,
+     38.407654
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo RM-714 km 8.9",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "30",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120647",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     1.386659,
+     38.9643
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo EI-600 km 9.6",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "07",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_120667",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.3332,
+     41.7631
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo N-122 km 142.3 (sentido ZAMORA)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "ZAMORA",
+    "province": "42",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_162917",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -8.491937,
+     42.91916
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo N-550 km 55.8 (sentido A CORUÑA)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "A CORUÑA",
+    "province": "15",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_163774",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.13475,
+     40.711277
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo N-6 km 56.4",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "28",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_165808",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -8.027691,
+     42.471092
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo AG-53 km 71.1 (sentido OURENSE)",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "OURENSE",
+    "province": "32",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CABINACINEMOMETRO_166687",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.760176,
+     38.12083
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-4 km 292.9",
+    "source": "dgt",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "23",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_161274",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -0.915697,
+      41.6088
+     ],
+     [
+      -0.9496,
+      41.6192
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo Z-40 km 26.6 (sentido MADRID)",
+    "source": "dgt",
+    "kind": "stretch",
+    "road": "Z-40",
+    "km_from": 26.6,
+    "km_to": 29.7,
+    "active": true,
+    "maxspeed": null,
+    "direction": "MADRID",
+    "province": "50",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_161274-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.915697,
+     41.6088
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo Z-40 km 26.6 (sentido MADRID)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "MADRID",
+    "province": "50",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_161274-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.9496,
+     41.6192
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo Z-40 km 26.6 (sentido MADRID)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "MADRID",
+    "province": "50",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_161319",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -4.128269,
+      40.699097
+     ],
+     [
+      -4.160718,
+      40.716904
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo AP-6 km 53.1",
+    "source": "dgt",
+    "kind": "stretch",
+    "road": "AP-6",
+    "km_from": 53.126,
+    "km_to": 56.608,
+    "active": true,
+    "maxspeed": null,
+    "direction": null,
+    "province": "28",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_161319-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.128269,
+     40.699097
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo AP-6 km 53.1",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "28",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_161319-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.160718,
+     40.716904
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo AP-6 km 53.1",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "28",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_161341",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -3.508122,
+      38.378616
+     ],
+     [
+      -3.4982207,
+      38.405853
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo A-4 km 248.4",
+    "source": "dgt",
+    "kind": "stretch",
+    "road": "A-4",
+    "km_from": 248.359,
+    "km_to": 245.229,
+    "active": true,
+    "maxspeed": null,
+    "direction": null,
+    "province": "23",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_161341-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.508122,
+     38.378616
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo A-4 km 248.4",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "23",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_161341-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.4982207,
+     38.405853
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo A-4 km 248.4",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "23",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_161427",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -7.407799,
+      43.377068
+     ],
+     [
+      -7.349219,
+      43.3832
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo A-8 km 550.3 (sentido ASTURIAS)",
+    "source": "dgt",
+    "kind": "stretch",
+    "road": "A-8",
+    "km_from": 550.28,
+    "km_to": 545.115,
+    "active": true,
+    "maxspeed": null,
+    "direction": "ASTURIAS",
+    "province": "27",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_161427-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -7.407799,
+     43.377068
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo A-8 km 550.3 (sentido ASTURIAS)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "ASTURIAS",
+    "province": "27",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_161427-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -7.349219,
+     43.3832
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo A-8 km 550.3 (sentido ASTURIAS)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "ASTURIAS",
+    "province": "27",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_161489",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -5.8757,
+      42.863
+     ],
+     [
+      -5.8753,
+      42.8471
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo AP-66 km 99.2 (sentido LEÓN)",
+    "source": "dgt",
+    "kind": "stretch",
+    "road": "AP-66",
+    "km_from": 99.15,
+    "km_to": 101.5,
+    "active": true,
+    "maxspeed": null,
+    "direction": "LEÓN",
+    "province": "24",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_161489-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.8757,
+     42.863
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo AP-66 km 99.2 (sentido LEÓN)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "LEÓN",
+    "province": "24",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_161489-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.8753,
+     42.8471
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo AP-66 km 99.2 (sentido LEÓN)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "LEÓN",
+    "province": "24",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_162916",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -8.4832,
+      42.926373
+     ],
+     [
+      -8.495357,
+      42.917484
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo N-550 km 54.6 (sentido SANTIAGO DE COMPOSTELA)",
+    "source": "dgt",
+    "kind": "stretch",
+    "road": "N-550",
+    "km_from": 54.627,
+    "km_to": 56.116,
+    "active": true,
+    "maxspeed": null,
+    "direction": "SANTIAGO DE COMPOSTELA",
+    "province": "15",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_162916-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -8.4832,
+     42.926373
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo N-550 km 54.6 (sentido SANTIAGO DE COMPOSTELA)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "SANTIAGO DE COMPOSTELA",
+    "province": "15",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_162916-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -8.495357,
+     42.917484
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo N-550 km 54.6 (sentido SANTIAGO DE COMPOSTELA)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "SANTIAGO DE COMPOSTELA",
+    "province": "15",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_163340",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -1.71095,
+      37.67964
+     ],
+     [
+      -1.7097,
+      37.67074
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo A-7 km 634.6",
+    "source": "dgt",
+    "kind": "stretch",
+    "road": "A-7",
+    "km_from": 634.615,
+    "km_to": 635.951,
+    "active": true,
+    "maxspeed": null,
+    "direction": null,
+    "province": "30",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_163340-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.71095,
+     37.67964
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo A-7 km 634.6",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "30",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_163340-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.7097,
+     37.67074
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo A-7 km 634.6",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "30",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_164150",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -7.353846,
+      43.38156
+     ],
+     [
+      -7.407311,
+      43.37759
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo A-8 km 545.5 (sentido BAAMONDE)",
+    "source": "dgt",
+    "kind": "stretch",
+    "road": "A-8",
+    "km_from": 545.5,
+    "km_to": 550.2,
+    "active": true,
+    "maxspeed": null,
+    "direction": "BAAMONDE",
+    "province": "27",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_164150-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -7.353846,
+     43.38156
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo A-8 km 545.5 (sentido BAAMONDE)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "BAAMONDE",
+    "province": "27",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_164150-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -7.407311,
+     43.37759
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo A-8 km 545.5 (sentido BAAMONDE)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "BAAMONDE",
+    "province": "27",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_164237",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -7.04073,
+      43.54282
+     ],
+     [
+      -7.02717,
+      43.54286
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo A-8 km 506.2 (sentido ASTURIAS)",
+    "source": "dgt",
+    "kind": "stretch",
+    "road": "A-8",
+    "km_from": 506.2,
+    "km_to": 505.05,
+    "active": true,
+    "maxspeed": null,
+    "direction": "ASTURIAS",
+    "province": "27",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_164237-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -7.04073,
+     43.54282
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo A-8 km 506.2 (sentido ASTURIAS)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "ASTURIAS",
+    "province": "27",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_164237-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -7.02717,
+     43.54286
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo A-8 km 506.2 (sentido ASTURIAS)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "ASTURIAS",
+    "province": "27",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_164997",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -4.5596,
+      42.0378
+     ],
+     [
+      -4.6042,
+      42.3241
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo CL-615 km 1.7 (sentido GUARDO)",
+    "source": "dgt",
+    "kind": "stretch",
+    "road": "CL-615",
+    "km_from": 1.706,
+    "km_to": 34.61,
+    "active": true,
+    "maxspeed": null,
+    "direction": "GUARDO",
+    "province": "34",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_164997-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.5596,
+     42.0378
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo CL-615 km 1.7 (sentido GUARDO)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "GUARDO",
+    "province": "34",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_164997-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.6042,
+     42.3241
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo CL-615 km 1.7 (sentido GUARDO)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "GUARDO",
+    "province": "34",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_165285",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -3.4225,
+      43.3675
+     ],
+     [
+      -3.4144,
+      43.3511
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo N-629 km 83.4 (sentido AMPUERO)",
+    "source": "dgt",
+    "kind": "stretch",
+    "road": "N-629",
+    "km_from": 83.37,
+    "km_to": 81.15,
+    "active": true,
+    "maxspeed": null,
+    "direction": "AMPUERO",
+    "province": "39",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_165285-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.4225,
+     43.3675
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo N-629 km 83.4 (sentido AMPUERO)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "AMPUERO",
+    "province": "39",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_165285-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.4144,
+     43.3511
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo N-629 km 83.4 (sentido AMPUERO)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "AMPUERO",
+    "province": "39",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_165336",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -6.205308,
+      36.469574
+     ],
+     [
+      -6.176094,
+      36.467777
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo CA-33 km 9.1",
+    "source": "dgt",
+    "kind": "stretch",
+    "road": "CA-33",
+    "km_from": 9.052,
+    "km_to": 12.2,
+    "active": true,
+    "maxspeed": null,
+    "direction": null,
+    "province": "11",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_165336-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -6.205308,
+     36.469574
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo CA-33 km 9.1",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "11",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_165336-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -6.176094,
+     36.467777
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo CA-33 km 9.1",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "11",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_165414",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -5.7333,
+      42.5416
+     ],
+     [
+      -5.714,
+      42.5536
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo N-120 km 319.6 (sentido ASTORGA)",
+    "source": "dgt",
+    "kind": "stretch",
+    "road": "N-120",
+    "km_from": 319.6,
+    "km_to": 317.6,
+    "active": true,
+    "maxspeed": null,
+    "direction": "ASTORGA",
+    "province": "24",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_165414-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.7333,
+     42.5416
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo N-120 km 319.6 (sentido ASTORGA)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "ASTORGA",
+    "province": "24",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt-CVM_165414-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.714,
+     42.5536
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo N-120 km 319.6 (sentido ASTORGA)",
+    "source": "dgt",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "ASTORGA",
+    "province": "24",
+    "url": "https://infocar.dgt.es/datex2/dgt/PredefinedLocationsPublication/radares/content.xml",
+    "attribution": "Dirección General de Tráfico (CC BY 4.0), actualizado 2025-12-18"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_1",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -1.91995,
+      39.25851
+     ],
+     [
+      -1.99897,
+      39.11986
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil CM-220 km 17.3-34.8",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "CM-220",
+    "km_from": 17.3,
+    "km_to": 34.8,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "02",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_1042",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -16.64118,
+      28.150278
+     ],
+     [
+      -16.68252,
+      28.07879
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil TF-51 km 0-16.91",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "TF-51",
+    "km_from": 0.0,
+    "km_to": 16.91,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "38",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_1082",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -4.21477,
+      40.72031
+     ],
+     [
+      -4.4269,
+      40.68978
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil SG-500 km 0-19.68",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "SG-500",
+    "km_from": 0.0,
+    "km_to": 19.68,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "40",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_1121",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -2.44639,
+      41.12981
+     ],
+     [
+      -2.40072,
+      41.18517
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil N-IIa km 145.1-153.8",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "N-IIa",
+    "km_from": 145.1,
+    "km_to": 153.8,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "42",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_1161",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -0.36479,
+      40.89863
+     ],
+     [
+      -0.8352,
+      40.83387
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil N-211 km 164.81-213.27",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "N-211",
+    "km_from": 164.81,
+    "km_to": 213.27,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "44",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_1200",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -3.9873137,
+      39.805237
+     ],
+     [
+      -3.9849012,
+      39.812847
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil N-401 km 79.36-80.3",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "N-401",
+    "km_from": 79.36,
+    "km_to": 80.3,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "45",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_1240",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -4.91333,
+      41.31149
+     ],
+     [
+      -4.9333076,
+      41.180683
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil CL-610 km 44.29-59.76",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "CL-610",
+    "km_from": 44.29,
+    "km_to": 59.76,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "47",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_1280",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -5.65789,
+      41.99653
+     ],
+     [
+      -6.24722,
+      42.00896
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil N-525 km 0-50.69",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "N-525",
+    "km_from": 0.0,
+    "km_to": 50.69,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "49",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_132",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -4.73099,
+      40.85533
+     ],
+     [
+      -4.72059,
+      41.05941
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil AV-804 km 21.07-44.92",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "AV-804",
+    "km_from": 21.07,
+    "km_to": 44.92,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "05",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_161",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -6.7127624,
+      38.094074
+     ],
+     [
+      -6.78413,
+      38.32449
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil N-435 km 70.78-104.34",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "N-435",
+    "km_from": 70.78,
+    "km_to": 104.34,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "06",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_200",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      3.37106,
+      39.60571
+     ],
+     [
+      3.3571813,
+      39.572987
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil Ma-4023 km 4.12-8.15",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "Ma-4023",
+    "km_from": 4.12,
+    "km_to": 8.15,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "07",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_240",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -3.68061,
+      42.44352
+     ],
+     [
+      -3.6143186,
+      42.82661
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil CL-629 km 0-46.9",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "CL-629",
+    "km_from": 0.0,
+    "km_to": 46.9,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "09",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_280",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -5.703,
+      36.840553
+     ],
+     [
+      -5.750909,
+      36.813366
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil A-384 km 8.56-14.39",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "A-384",
+    "km_from": 8.56,
+    "km_to": 14.39,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "11",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_32",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -0.74727,
+      37.97246
+     ],
+     [
+      -0.93855,
+      38.08202
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil CV-95 km 0-22.84",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "CV-95",
+    "km_from": 0.0,
+    "km_to": 22.84,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "03",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_344",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      0.13277,
+      40.51793
+     ],
+     [
+      0.24688,
+      40.51235
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil N-232 km 20.81-30.91",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "N-232",
+    "km_from": 20.81,
+    "km_to": 30.91,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "12",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_362",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -4.0287223,
+      38.645252
+     ],
+     [
+      -4.07726,
+      38.66634
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil CR-5031 km 4.84-9.94",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "CR-5031",
+    "km_from": 4.84,
+    "km_to": 9.94,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "13",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_402",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -4.5925,
+      37.91591
+     ],
+     [
+      -4.74151,
+      37.89755
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil N-IVa km 382.71-398.25",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "N-IVa",
+    "km_from": 382.71,
+    "km_to": 398.25,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "14",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_442",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -2.39872,
+      40.36158
+     ],
+     [
+      -2.50703,
+      40.43692
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil N-320 km 181.77-197.04",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "N-320",
+    "km_from": 181.77,
+    "km_to": 197.04,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "16",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_482",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -2.584957,
+      37.76669
+     ],
+     [
+      -2.7067494,
+      37.625813
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil A-4200 km 14.976-34.981",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "A-4200",
+    "km_from": 14.976,
+    "km_to": 34.981,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "18",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_521",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -6.51608,
+      37.24743
+     ],
+     [
+      -6.37082,
+      37.28917
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil A-474 km 32.98-48.01",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "A-474",
+    "km_from": 32.98,
+    "km_to": 48.01,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "21",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_561",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      0.34643,
+      41.52539
+     ],
+     [
+      0.14583,
+      41.72296
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil A-1234 km 0-28.49",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "A-1234",
+    "km_from": 0.0,
+    "km_to": 28.49,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "22",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_600",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -3.89259,
+      37.45288
+     ],
+     [
+      -3.92255,
+      37.46244
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil A-403R1 km 0-3.33",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "A-403R1",
+    "km_from": 0.0,
+    "km_to": 3.33,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "23",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_640",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -8.18035,
+      43.44849
+     ],
+     [
+      -8.23426,
+      43.45712
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil VG-1.2 km 0-5.81",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "VG-1.2",
+    "km_from": 0.0,
+    "km_to": 5.81,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "15",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_680",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -14.01482,
+      28.41085
+     ],
+     [
+      -14.02733,
+      28.37436
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil FV-20 km 21.46-26.21",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "FV-20",
+    "km_from": 21.46,
+    "km_to": 26.21,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "35",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_72",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -2.388601,
+      36.83326
+     ],
+     [
+      -2.4308674,
+      36.81604
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil AL-3202 km 0-4.48",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "AL-3202",
+    "km_from": 0.0,
+    "km_to": 4.48,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "04",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_760",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -7.62418,
+      43.12969
+     ],
+     [
+      -7.67508,
+      43.27706
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil LU-541 km 0-17.25",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "LU-541",
+    "km_from": 0.0,
+    "km_to": 17.25,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "27",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_80",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -2.37671,
+      36.88335
+     ],
+     [
+      -2.38028,
+      36.85062
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil N-347 km 0-3.93",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "N-347",
+    "km_from": 0.0,
+    "km_to": 3.93,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "04",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_84",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -2.4885666,
+      36.83161
+     ],
+     [
+      -2.5537565,
+      36.81785
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil N-340a km 431.8-438.3",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "N-340a",
+    "km_from": 431.8,
+    "km_to": 438.3,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "04",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_88",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -2.65401,
+      36.75758
+     ],
+     [
+      -2.78085,
+      36.77145
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil A-1050 km 0-12.08",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "A-1050",
+    "km_from": 0.0,
+    "km_to": 12.08,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "04",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_919",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -7.24649,
+      42.33724
+     ],
+     [
+      -7.85587,
+      42.3454
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil OU-536 km 0-71.22",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "OU-536",
+    "km_from": 0.0,
+    "km_to": 71.22,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "32",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-Tramo_Invive_959",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -4.55954,
+      42.03623
+     ],
+     [
+      -4.56423,
+      42.03916
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil CL-613 km 0-0.66",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "road": "CL-613",
+    "km_from": 0.0,
+    "km_to": 0.66,
+    "active": true,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "34",
+    "url": "https://nap.dgt.es/datex2/dgt/PredefinedLocationsPublication/tramos_invive/content.xml",
+    "attribution": "Dirección General de Tráfico (Creative Commons Attribution)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "donostia-43.29166_-1.97345",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.9734455903108072,
+     43.29165893106
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo Begiristain Doktorearen pasealekua, Donostia",
+    "source": "donostia",
+    "kind": "fixed",
+    "radius_m": 533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": "20",
+    "url": "https://www.donostia.eus/geozerbitzuak/rest/services/ext/GARRAIOA/MapServer/41/query?where=1%3D1&outFields=*&outSR=4326&f=geojson",
+    "attribution": "© Donostiako Udala - Ayuntamiento de Donostia / San Sebastián"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "euskadi-arkaute",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.6152965697880215,
+     42.85747119344759
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo N-104 km 356.1 (sentido VITORIA-GASTEIZ)",
+    "source": "euskadi",
+    "kind": "fixed",
+    "radius_m": 978,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 70,
+    "direction": "VITORIA-GASTEIZ",
+    "province": "01",
+    "url": "https://apps.trafikoa.euskadi.eus/lfr/web/trafikoa/cabinas-de-radar-fijo",
+    "attribution": "Gobierno Vasco / Eusko Jaurlaritza, Dirección de Tráfico (Trafikoa)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "euskadi-enlace-cruces",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.9858480375144243,
+     43.28752499265471
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo N-637 km 8.6 (sentido ERLETXE)",
+    "source": "euskadi",
+    "kind": "fixed",
+    "radius_m": 1089,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 80,
+    "direction": "ERLETXE",
+    "province": "48",
+    "url": "https://apps.trafikoa.euskadi.eus/lfr/web/trafikoa/cabinas-de-radar-fijo",
+    "attribution": "Gobierno Vasco / Eusko Jaurlaritza, Dirección de Tráfico (Trafikoa)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "euskadi-laguardia-tra",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.5829065112431873,
+     42.55305007888731
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-124 km 64.3 (sentido VITORIA - GASTEIZ)",
+    "source": "euskadi",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "VITORIA - GASTEIZ",
+    "province": "01",
+    "url": "https://apps.trafikoa.euskadi.eus/lfr/web/trafikoa/cabinas-de-radar-fijo",
+    "attribution": "Gobierno Vasco / Eusko Jaurlaritza, Dirección de Tráfico (Trafikoa)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "euskadi-sabino-arana",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.953121297609463,
+     43.257676080160174
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-8 km 118.0 (sentido CANTABRIA)",
+    "source": "euskadi",
+    "kind": "fixed",
+    "radius_m": 978,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 70,
+    "direction": "CANTABRIA",
+    "province": "48",
+    "url": "https://apps.trafikoa.euskadi.eus/lfr/web/trafikoa/cabinas-de-radar-fijo",
+    "attribution": "Gobierno Vasco / Eusko Jaurlaritza, Dirección de Tráfico (Trafikoa)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "euskadi-trabakua-tramo-1",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.5617786422806557,
+     43.19596542766028
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo BI-633 km 37.0 (sentido MARKINA)",
+    "source": "euskadi",
+    "kind": "section",
+    "radius_m": 867,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 60,
+    "direction": "MARKINA",
+    "province": "48",
+    "url": "https://apps.trafikoa.euskadi.eus/lfr/web/trafikoa/cabinas-de-radar-fijo",
+    "attribution": "Gobierno Vasco / Eusko Jaurlaritza, Dirección de Tráfico (Trafikoa)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "euskadi-trabakua-tramo-2",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.5448266685702436,
+     43.21141442467818
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo BI-633 km 39.8 (sentido BERRIZ)",
+    "source": "euskadi",
+    "kind": "section",
+    "radius_m": 867,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 60,
+    "direction": "BERRIZ",
+    "province": "48",
+    "url": "https://apps.trafikoa.euskadi.eus/lfr/web/trafikoa/cabinas-de-radar-fijo",
+    "attribution": "Gobierno Vasco / Eusko Jaurlaritza, Dirección de Tráfico (Trafikoa)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-02-calle-jose-maria-suarez-gonzalez-0",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.5566343,
+     42.6005527
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Calle José María Suárez González",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 478,
+    "active": false,
+    "valid_from": "2026-10-02",
+    "valid_to": "2026-10-02",
+    "reported": null,
+    "maxspeed": 50,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-28-septiembre-4-octubre-calles-horarios-limites-velocidad_1_13543560.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-03-avenida-de-nocedo-3",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.5686125,
+     42.6063059
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Avenida de Nocedo",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 367,
+    "active": false,
+    "valid_from": "2026-10-03",
+    "valid_to": "2026-10-03",
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-28-septiembre-4-octubre-calles-horarios-limites-velocidad_1_13543560.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-04-avenida-de-fernandez-ladreda-0",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.5568147,
+     42.588064
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Avenida de Fernández Ladreda",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 367,
+    "active": false,
+    "valid_from": "2026-10-04",
+    "valid_to": "2026-10-04",
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-28-septiembre-4-octubre-calles-horarios-limites-velocidad_1_13543560.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-04-avenida-san-ignacio-de-loyola-1",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.5928603,
+     42.6071348
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Avenida San Ignacio de Loyola",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 367,
+    "active": false,
+    "valid_from": "2026-10-04",
+    "valid_to": "2026-10-04",
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-28-septiembre-4-octubre-calles-horarios-limites-velocidad_1_13543560.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-06-avenida-de-europa-0",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.5565043,
+     42.588466
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Avenida de Europa",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 478,
+    "active": false,
+    "valid_from": "2026-10-06",
+    "valid_to": "2026-10-06",
+    "reported": null,
+    "maxspeed": 50,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-5-11-octubre-calles-horarios-limites-velocidad_1_13567192.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-06-avenida-de-europa-1",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.5631744,
+     42.5909277
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Avenida de Europa",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 478,
+    "active": false,
+    "valid_from": "2026-10-06",
+    "valid_to": "2026-10-06",
+    "reported": null,
+    "maxspeed": 50,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-5-11-octubre-calles-horarios-limites-velocidad_1_13567192.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-06-avenida-de-los-peregrinos-2",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.594597,
+     42.6156309
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Avenida de los Peregrinos",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 367,
+    "active": false,
+    "valid_from": "2026-10-06",
+    "valid_to": "2026-10-06",
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-5-11-octubre-calles-horarios-limites-velocidad_1_13567192.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-07-avenida-de-los-antibioticos-2",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.5828531,
+     42.5715537
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Avenida de Los Antibióticos",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 478,
+    "active": true,
+    "valid_from": "2026-10-07",
+    "valid_to": "2026-10-07",
+    "reported": null,
+    "maxspeed": 50,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-5-11-octubre-calles-horarios-limites-velocidad_1_13567192.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-07-avenida-doctor-fleming-1",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.5855904,
+     42.5990844
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Avenida Doctor Fleming",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 367,
+    "active": true,
+    "valid_from": "2026-10-07",
+    "valid_to": "2026-10-07",
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-5-11-octubre-calles-horarios-limites-velocidad_1_13567192.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-07-avenida-principe-de-asturias-0",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.5627535,
+     42.6034411
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Avenida Príncipe de Asturias",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 367,
+    "active": true,
+    "valid_from": "2026-10-07",
+    "valid_to": "2026-10-07",
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-5-11-octubre-calles-horarios-limites-velocidad_1_13567192.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-07-calle-san-juan-de-sahagun-0",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.5669808,
+     42.6060231
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Calle San Juan de Sahagún",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 367,
+    "active": true,
+    "valid_from": "2026-10-07",
+    "valid_to": "2026-10-07",
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-5-11-octubre-calles-horarios-limites-velocidad_1_13567192.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-07-calle-san-juan-de-sahagun-1",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.5641911,
+     42.6094432
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Calle San Juan de Sahagún",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 367,
+    "active": true,
+    "valid_from": "2026-10-07",
+    "valid_to": "2026-10-07",
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-5-11-octubre-calles-horarios-limites-velocidad_1_13567192.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-07-calle-santo-tirso-0",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.5652412,
+     42.5964125
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Calle Santo Tirso",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 367,
+    "active": true,
+    "valid_from": "2026-10-07",
+    "valid_to": "2026-10-07",
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-5-11-octubre-calles-horarios-limites-velocidad_1_13567192.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-07-paseo-de-salamanca-0",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.5913953,
+     42.6096539
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Paseo de Salamanca",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 367,
+    "active": true,
+    "valid_from": "2026-10-07",
+    "valid_to": "2026-10-07",
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-5-11-octubre-calles-horarios-limites-velocidad_1_13567192.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-07-paseo-de-salamanca-1",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.5897819,
+     42.6068859
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Paseo de Salamanca",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 367,
+    "active": true,
+    "valid_from": "2026-10-07",
+    "valid_to": "2026-10-07",
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-5-11-octubre-calles-horarios-limites-velocidad_1_13567192.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-07-paseo-de-salamanca-2",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.587108266666666,
+     42.6046525
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Paseo de Salamanca",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 367,
+    "active": true,
+    "valid_from": "2026-10-07",
+    "valid_to": "2026-10-07",
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-5-11-octubre-calles-horarios-limites-velocidad_1_13567192.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "leon-2026-10-07-paseo-de-salamanca-3",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.5839033,
+     42.600882
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Paseo de Salamanca",
+    "source": "leon",
+    "kind": "mobile_announced",
+    "radius_m": 367,
+    "active": true,
+    "valid_from": "2026-10-07",
+    "valid_to": "2026-10-07",
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": "24",
+    "url": "https://ileon.eldiario.es/actualidad/radares-moviles-leon-semana-5-11-octubre-calles-horarios-limites-velocidad_1_13567192.html",
+    "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "madrid-11",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.699691,
+     40.39118
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo TÚNEL M-30, SENTIDO NUDO SUR - PTE. DE LOS FRANCESES, (GTA. LEGAZPI - Pº STA. Mª DE LA CABEZA)",
+    "source": "madrid",
+    "kind": "fixed",
+    "radius_m": 978,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 70,
+    "direction": "Calzada interior",
+    "province": "28",
+    "url": "https://datos.madrid.es/dataset/300049-0-radares-fijos-moviles/resource/300049-1-radares-fijos-moviles-csv/download/300049-1-radares-fijos-moviles-csv.csv",
+    "attribution": "Origen de los datos: Ayuntamiento de Madrid (CC BY 4.0), actualizado 2026-07-31"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "madrid-28",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -3.69938,
+      40.387572
+     ],
+     [
+      -3.696519,
+      40.37859
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo AVENIDA DE CÓRDOBA CON CALLE DOCTOR TOLOSA LATOUR, SENTIDO GLORIETA DE MÁLAGA",
+    "source": "madrid",
+    "kind": "stretch",
+    "road": "AVENIDA DE CÓRDOBA",
+    "km_from": null,
+    "km_to": null,
+    "active": true,
+    "maxspeed": 50,
+    "direction": "Salida",
+    "province": "28",
+    "url": "https://datos.madrid.es/dataset/300049-0-radares-fijos-moviles/resource/300049-1-radares-fijos-moviles-csv/download/300049-1-radares-fijos-moviles-csv.csv",
+    "attribution": "Origen de los datos: Ayuntamiento de Madrid (CC BY 4.0), actualizado 2026-07-31"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "madrid-30",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -3.76358611606955,
+      40.4001241953525
+     ],
+     [
+      -3.74574755307117,
+      40.4072412609861
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo A-5 PK 4+000, SENTIDO ENTRADA",
+    "source": "madrid",
+    "kind": "stretch",
+    "road": "A5",
+    "km_from": null,
+    "km_to": null,
+    "active": true,
+    "maxspeed": 70,
+    "direction": "Entrada",
+    "province": "28",
+    "url": "https://datos.madrid.es/dataset/300049-0-radares-fijos-moviles/resource/300049-1-radares-fijos-moviles-csv/download/300049-1-radares-fijos-moviles-csv.csv",
+    "attribution": "Origen de los datos: Ayuntamiento de Madrid (CC BY 4.0), actualizado 2026-07-31"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "madrid-32",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -3.714454,
+      40.467149
+     ],
+     [
+      -3.728241,
+      40.460303
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo Sinesio Delgado, Sentido Ciudad Universitaria, Farolas 152 - 188",
+    "source": "madrid",
+    "kind": "stretch",
+    "road": "Calle Sinesio Delgado",
+    "km_from": null,
+    "km_to": null,
+    "active": true,
+    "maxspeed": 50,
+    "direction": "Ciudad Universitaria",
+    "province": "28",
+    "url": "https://datos.madrid.es/dataset/300049-0-radares-fijos-moviles/resource/300049-1-radares-fijos-moviles-csv/download/300049-1-radares-fijos-moviles-csv.csv",
+    "attribution": "Origen de los datos: Ayuntamiento de Madrid (CC BY 4.0), actualizado 2026-07-31"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "madrid-34",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -3.728207,
+      40.460208
+     ],
+     [
+      -3.714454,
+      40.467149
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo Sinesio Delgado, Sentido Av Betanzos, Farola 187-152",
+    "source": "madrid",
+    "kind": "stretch",
+    "road": "Calle Sinesio Delgado",
+    "km_from": null,
+    "km_to": null,
+    "active": true,
+    "maxspeed": 50,
+    "direction": "Av Betanzos",
+    "province": "28",
+    "url": "https://datos.madrid.es/dataset/300049-0-radares-fijos-moviles/resource/300049-1-radares-fijos-moviles-csv/download/300049-1-radares-fijos-moviles-csv.csv",
+    "attribution": "Origen de los datos: Ayuntamiento de Madrid (CC BY 4.0), actualizado 2026-07-31"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "madrid_multas-n033-po-san-francisco-sal",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.7134261,
+     40.4423081
+    ]
+   },
+   "properties": {
+    "name": "Radar móvil frecuente Paseo de San Francisco de Sales 33",
+    "source": "madrid_multas",
+    "kind": "mobile_recurring",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": null,
+    "province": "28",
+    "url": "https://datos.madrid.es/dataset/210104-0-multas-circulacion-detalle",
+    "attribution": "Origen de los datos: Ayuntamiento de Madrid (CC BY 4.0): multas de circulación de noviembre de 2025 a abril de 2026, actualizado 2026-10-06, y callejero oficial; multas aquí en 2 de 6 meses"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "murcia-2026-09-28-avenida-juan-carlos-i-zeneta-0",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.9960115,
+     38.011803
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Avenida Juan Carlos I (Zeneta)",
+    "source": "murcia",
+    "kind": "mobile_announced",
+    "radius_m": 478,
+    "active": false,
+    "valid_from": "2026-09-28",
+    "valid_to": "2026-10-04",
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "30",
+    "url": "https://www.laopiniondemurcia.es/murcia/2026/09/28/son-lugares-instalaran-radares-semana-134749342.html",
+    "attribution": "Policía Local de Murcia (lista semanal, leída en La Opinión de Murcia); geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "murcia-2026-09-28-calle-doctor-de-la-pe-a-espinardo-2",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.1509994,
+     38.0077172
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Calle Doctor de la Peña (Espinardo)",
+    "source": "murcia",
+    "kind": "mobile_announced",
+    "radius_m": 478,
+    "active": false,
+    "valid_from": "2026-09-28",
+    "valid_to": "2026-10-04",
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "30",
+    "url": "https://www.laopiniondemurcia.es/murcia/2026/09/28/son-lugares-instalaran-radares-semana-134749342.html",
+    "attribution": "Policía Local de Murcia (lista semanal, leída en La Opinión de Murcia); geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "murcia-2026-10-05-avenida-de-alcantarilla-nonduermas-2",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.1855423,
+     37.9728223
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Avenida de Alcantarilla (Nonduermas)",
+    "source": "murcia",
+    "kind": "mobile_announced",
+    "radius_m": 478,
+    "active": true,
+    "valid_from": "2026-10-05",
+    "valid_to": "2026-10-11",
+    "reported": null,
+    "maxspeed": 50,
+    "direction": null,
+    "province": "30",
+    "url": "https://www.laopiniondemurcia.es/murcia/2026/10/05/son-lugares-instalaran-radares-semana-135025924.html",
+    "attribution": "Policía Local de Murcia (lista semanal, leída en La Opinión de Murcia); geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "murcia-2026-10-05-avenida-de-murcia-casillas-4",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.0856926714285715,
+     38.018670657142856
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Avenida de Murcia (Casillas)",
+    "source": "murcia",
+    "kind": "mobile_announced",
+    "radius_m": 478,
+    "active": true,
+    "valid_from": "2026-10-05",
+    "valid_to": "2026-10-11",
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "30",
+    "url": "https://www.laopiniondemurcia.es/murcia/2026/10/05/son-lugares-instalaran-radares-semana-135025924.html",
+    "attribution": "Policía Local de Murcia (lista semanal, leída en La Opinión de Murcia); geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "murcia-2026-10-05-carretera-de-churra-santiago-y-zaraiche-1",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.1345228,
+     38.0051386
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Carretera de Churra (Santiago y Zaraiche)",
+    "source": "murcia",
+    "kind": "mobile_announced",
+    "radius_m": 478,
+    "active": true,
+    "valid_from": "2026-10-05",
+    "valid_to": "2026-10-11",
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "30",
+    "url": "https://www.laopiniondemurcia.es/murcia/2026/10/05/son-lugares-instalaran-radares-semana-135025924.html",
+    "attribution": "Policía Local de Murcia (lista semanal, leída en La Opinión de Murcia); geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "murcia-2026-10-05-costera-sur-santo-ngel-4",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.1232808666666665,
+     37.9699071
+    ]
+   },
+   "properties": {
+    "name": "Radar anunciado Costera Sur (Santo Ángel)",
+    "source": "murcia",
+    "kind": "mobile_announced",
+    "radius_m": 478,
+    "active": true,
+    "valid_from": "2026-10-05",
+    "valid_to": "2026-10-11",
+    "reported": null,
+    "maxspeed": 50,
+    "direction": null,
+    "province": "30",
+    "url": "https://www.laopiniondemurcia.es/murcia/2026/10/05/son-lugares-instalaran-radares-semana-135025924.html",
+    "attribution": "Policía Local de Murcia (lista semanal, leída en La Opinión de Murcia); geometría © OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-10002215811",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.186095,
+     41.4115003
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/10002215811",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-10005884017",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.1659491,
+     41.4089797
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 30,
+    "direction": "132",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/10005884017",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-10978384996",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.370096,
+     36.7224048
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 30,
+    "direction": "backward",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/10978384996",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-11023279368",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.7530962,
+     40.3002164
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "230",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/11023279368",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-11080765226",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     1.727401,
+     41.2366288
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/11080765226",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-11278354770",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.0340856,
+     41.3159226
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 644,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 40,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/11278354770",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-11370481637",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -6.9811719,
+     38.8738387
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "-10",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/11370481637",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-11393675021",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0.7364251,
+     42.8691058
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1089,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 80,
+    "direction": "120",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/11393675021",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-11542884926",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.37165,
+     40.49649
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/11542884926",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-11763151644",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.7560474,
+     39.4953175
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 30,
+    "direction": "145",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/11763151644",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-12029827822",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.0012225,
+     41.4253441
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1311,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 100,
+    "direction": "-20",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/12029827822",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-12500315971",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.4564714,
+     36.7034599
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "240",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/12500315971",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-12993247583",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.6210067,
+     39.9033897
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "35",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/12993247583",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13043403920",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.8250689,
+     40.3518598
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13043403920",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13167794844",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.9756966,
+     43.3742532
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "100",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13167794844",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13205212579",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.7776534,
+     42.3453044
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": "both",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13205212579",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13330068389",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.7333449,
+     42.161322
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1089,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 80,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13330068389",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13335532760",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.9406581,
+     43.1429347
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 30,
+    "direction": "both",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13335532760",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13347742642",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.7989582,
+     37.201576
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1089,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 80,
+    "direction": "120",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13347742642",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13375593333",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -7.3403284,
+     40.398062
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 978,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 70,
+    "direction": "both",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13375593333",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-1342459645",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.0491233,
+     41.4959853
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 120,
+    "direction": "150",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/1342459645",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13456389703",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.660692,
+     38.2877347
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1089,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 80,
+    "direction": "230",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13456389703",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13503383181",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.5868417,
+     40.4523098
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1089,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 80,
+    "direction": "20",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13503383181",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13523630295",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -7.6516763,
+     43.7297794
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": "280",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13523630295",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13586641836",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -15.4881962,
+     28.0363022
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 644,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 40,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13586641836",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13593557098",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -16.7301835,
+     28.0953066
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 120,
+    "direction": "150",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13593557098",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13641882029",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.1235823,
+     41.3746084
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 30,
+    "direction": "300",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13641882029",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13645871721",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.0338302,
+     41.5610102
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "-20",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13645871721",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13668638644",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.0126587,
+     43.1709523
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 867,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 60,
+    "direction": "150",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13668638644",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13718920203",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.6729822,
+     42.7991267
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13718920203",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13734373504",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.9675336,
+     37.4169688
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "80",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13734373504",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13767381509",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.6809828,
+     42.8377362
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13767381509",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-13990668479",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.6614373,
+     43.0599322
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "30",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/13990668479",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-2004518665",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.5560123,
+     40.4272017
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/2004518665",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-2334938821",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.485637,
+     42.1716789
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 30,
+    "direction": "200",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/2334938821",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-2334938886",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.4417664,
+     36.6920443
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "forward",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/2334938886",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-2334938931",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.5176845,
+     42.0010983
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 30,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/2334938931",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-2334938943",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.6907455,
+     43.5372911
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "300",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/2334938943",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-2378266789",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.16155,
+     41.39308
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "220",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/2378266789",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-2558012962",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.6762912,
+     42.3516313
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/2558012962",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-350447436",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.5289037,
+     36.7132806
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "144",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/350447436",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-4258215850",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.706049,
+     40.3958479
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 978,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 70,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/4258215850",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-564743924",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.4232708,
+     42.4565402
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1089,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 80,
+    "direction": "250",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/564743924",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-571649668",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.4781713,
+     43.0641397
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 644,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 40,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/571649668",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-619772731",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.9908187,
+     39.8566868
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1311,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 100,
+    "direction": "-40",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/619772731",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-619775424",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.9801876,
+     39.839218
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1311,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 100,
+    "direction": "-200",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/619775424",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-7105837247",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.8405981,
+     40.4020394
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 644,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 40,
+    "direction": "10",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/7105837247",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-7655721133",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.5135072,
+     41.7014793
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/7655721133",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-7944584037",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0.4572562,
+     40.4572667
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 867,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 60,
+    "direction": "210",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/7944584037",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-9070263471",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.0865214,
+     39.4560767
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": "70",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/9070263471",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-992000398",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.1223199,
+     40.879042
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": "265",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/992000398",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-992000853",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.7302565,
+     41.6535326
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/992000853",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-992001517",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -8.7294333,
+     42.2381345
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "10",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/992001517",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-992002748",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.15991,
+     41.38845
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "220",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/992002748",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-992003318",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     1.5594066,
+     42.5218206
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 978,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 70,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/992003318",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-992003666",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -8.71846,
+     42.19255
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "-1",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/992003666",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-992004416",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.4967331,
+     38.3612142
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "-20",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/992004416",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-992004571",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -6.0125143,
+     37.3960871
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "45",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/992004571",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-992005577",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.6252146,
+     40.4203566
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/992005577",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-992006578",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.1517888,
+     41.3941564
+    ]
+   },
+   "properties": {
+    "name": "Radar",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": null,
+    "direction": "300",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/992006578",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-992006870",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -8.7210636,
+     42.191861
+    ]
+   },
+   "properties": {
+    "name": "Radar PO-330 km 2.2",
+    "source": "osm",
+    "kind": "fixed",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "-10",
+    "province": null,
+    "url": "https://www.openstreetmap.org/node/992006870",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-note-3828288",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0.9346655,
+     41.0216531
+    ]
+   },
+   "properties": {
+    "name": "radar 30 km/h via StreetComplete 53.3",
+    "source": "osm_notes",
+    "kind": "reported",
+    "radius_m": 0,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": "2023-08-11",
+    "maxspeed": null,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/note/3828288",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-note-4531852",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0.208413,
+     41.8998515
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo ambas direcciones 50kmh",
+    "source": "osm_notes",
+    "kind": "reported",
+    "radius_m": 0,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": "2024-11-24",
+    "maxspeed": null,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/note/4531852",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-note-5041697",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.2976662,
+     42.1235624
+    ]
+   },
+   "properties": {
+    "name": "Faltan límites de velocidad ambos sentidos. Tres nuevos radares fijos en nuevo tramos",
+    "source": "osm_notes",
+    "kind": "reported",
+    "radius_m": 0,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": "2025-11-07",
+    "maxspeed": null,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/note/5041697",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-note-5118181",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.397262,
+     39.4372806
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo de 70kmh controla ambos sentidos",
+    "source": "osm_notes",
+    "kind": "reported",
+    "radius_m": 0,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": "2026-01-05",
+    "maxspeed": null,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/note/5118181",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-note-5151710",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.1660956,
+     42.2663074
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo de 30kmh en los dos sentidos de circulación",
+    "source": "osm_notes",
+    "kind": "reported",
+    "radius_m": 0,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": "2026-02-02",
+    "maxspeed": null,
+    "direction": null,
+    "province": null,
+    "url": "https://www.openstreetmap.org/note/5151710",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-11662542",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -2.3570134,
+      41.7459811
+     ],
+     [
+      -2.326663,
+      41.7348021
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo N-234 (OSM 11662542)",
+    "source": "osm",
+    "kind": "stretch",
+    "road": "N-234",
+    "km_from": null,
+    "km_to": null,
+    "active": true,
+    "maxspeed": 90,
+    "direction": "116",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/11662542",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-11662542-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.3570134,
+     41.7459811
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo N-234 (OSM 11662542)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": "116",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/11662542",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-11662542-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -2.326663,
+     41.7348021
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo N-234 (OSM 11662542)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": "116",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/11662542",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-16683597",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      0.3158742,
+      40.3653477
+     ],
+     [
+      0.3401575,
+      40.3833217
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo N-340 (OSM 16683597)",
+    "source": "osm",
+    "kind": "stretch",
+    "road": "N-340",
+    "km_from": null,
+    "km_to": null,
+    "active": true,
+    "maxspeed": 90,
+    "direction": "46",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/16683597",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-16683597-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0.3158742,
+     40.3653477
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo N-340 (OSM 16683597)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": "46",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/16683597",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-16683597-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0.3401575,
+     40.3833217
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo N-340 (OSM 16683597)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": "46",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/16683597",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-18345583",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      2.1764961,
+      41.3726916
+     ],
+     [
+      2.1871992,
+      41.3825739
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo B-10 (OSM 18345583)",
+    "source": "osm",
+    "kind": "stretch",
+    "road": "B-10",
+    "km_from": null,
+    "km_to": null,
+    "active": true,
+    "maxspeed": 60,
+    "direction": "39",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/18345583",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-18345583-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.1764961,
+     41.3726916
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo B-10 (OSM 18345583)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 867,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 60,
+    "direction": "39",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/18345583",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-18345583-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.1871992,
+     41.3825739
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo B-10 (OSM 18345583)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 867,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 60,
+    "direction": "39",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/18345583",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-19050792",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      0.1679358,
+      38.7202013
+     ],
+     [
+      0.1660502,
+      38.7245628
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo (OSM 19050792)",
+    "source": "osm",
+    "kind": "stretch",
+    "road": null,
+    "km_from": null,
+    "km_to": null,
+    "active": true,
+    "maxspeed": 30,
+    "direction": "341",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/19050792",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-19050792-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0.1679358,
+     38.7202013
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo (OSM 19050792)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 30,
+    "direction": "341",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/19050792",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-19050792-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0.1660502,
+     38.7245628
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo (OSM 19050792)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 30,
+    "direction": "341",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/19050792",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-19949360",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -5.6337434,
+      36.0448342
+     ],
+     [
+      -5.6440926,
+      36.0514309
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo N-340 (OSM 19949360)",
+    "source": "osm",
+    "kind": "stretch",
+    "road": "N-340",
+    "km_from": null,
+    "km_to": null,
+    "active": true,
+    "maxspeed": 70,
+    "direction": "308",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/19949360",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-19949360-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.6337434,
+     36.0448342
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo N-340 (OSM 19949360)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 978,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 70,
+    "direction": "308",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/19949360",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-19949360-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.6440926,
+     36.0514309
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo N-340 (OSM 19949360)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 978,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 70,
+    "direction": "308",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/19949360",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-20078196",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -0.7645279,
+      38.2522553
+     ],
+     [
+      -0.7391764,
+      38.2813958
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo A-7 (OSM 20078196)",
+    "source": "osm",
+    "kind": "stretch",
+    "road": "A-7",
+    "km_from": null,
+    "km_to": null,
+    "active": true,
+    "maxspeed": 120,
+    "direction": "34",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/20078196",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-20078196-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.7645279,
+     38.2522553
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo A-7 (OSM 20078196)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 120,
+    "direction": "34",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/20078196",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-20078196-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.7391764,
+     38.2813958
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo A-7 (OSM 20078196)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 120,
+    "direction": "34",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/20078196",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-20140396",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -4.2082009,
+      40.5110711
+     ],
+     [
+      -4.2162534,
+      40.5102229
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo M-521 (OSM 20140396)",
+    "source": "osm",
+    "kind": "stretch",
+    "road": "M-521",
+    "km_from": null,
+    "km_to": null,
+    "active": true,
+    "maxspeed": 50,
+    "direction": "261",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/20140396",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-20140396-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.2082009,
+     40.5110711
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo M-521 (OSM 20140396)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "261",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/20140396",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-20140396-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.2162534,
+     40.5102229
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo M-521 (OSM 20140396)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 756,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 50,
+    "direction": "261",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/20140396",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-20201128",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -4.2076277,
+      40.8058211
+     ],
+     [
+      -4.2158623,
+      40.7922664
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo N-603 (OSM 20201128)",
+    "source": "osm",
+    "kind": "stretch",
+    "road": "N-603",
+    "km_from": null,
+    "km_to": null,
+    "active": true,
+    "maxspeed": 90,
+    "direction": "205",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/20201128",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-20201128-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.2076277,
+     40.8058211
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo N-603 (OSM 20201128)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": "205",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/20201128",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-20201128-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.2158623,
+     40.7922664
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo N-603 (OSM 20201128)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": "205",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/20201128",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-20274494",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -4.3486313,
+      40.4605481
+     ],
+     [
+      -4.3667066,
+      40.4600963
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo AV-562 (OSM 20274494)",
+    "source": "osm",
+    "kind": "stretch",
+    "road": "AV-562",
+    "km_from": null,
+    "km_to": null,
+    "active": true,
+    "maxspeed": 90,
+    "direction": "271",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/20274494",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-20274494-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.3486313,
+     40.4605481
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo AV-562 (OSM 20274494)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": "271",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/20274494",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-20274494-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.3667066,
+     40.4600963
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo AV-562 (OSM 20274494)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": "271",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/20274494",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-20613841",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -6.4221064,
+      37.2701556
+     ],
+     [
+      -6.455594,
+      37.263408
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo A-474 (OSM 20613841)",
+    "source": "osm",
+    "kind": "stretch",
+    "road": "A-474",
+    "km_from": null,
+    "km_to": null,
+    "active": true,
+    "maxspeed": 90,
+    "direction": "256",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/20613841",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-20613841-from",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -6.4221064,
+     37.2701556
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo A-474 (OSM 20613841)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": "256",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/20613841",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "osm-relation-20613841-to",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -6.455594,
+     37.263408
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo A-474 (OSM 20613841)",
+    "source": "osm",
+    "kind": "section",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": "256",
+    "province": null,
+    "url": "https://www.openstreetmap.org/relation/20613841",
+    "attribution": "© OpenStreetMap contributors (ODbL 1.0)"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "salamanca-tramo-2",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -5.68286491,
+      40.96529924
+     ],
+     [
+      -5.68360842,
+      40.96499529
+     ],
+     [
+      -5.68375969,
+      40.96489268
+     ],
+     [
+      -5.68386737,
+      40.96473393
+     ],
+     [
+      -5.68398531,
+      40.96450548
+     ],
+     [
+      -5.68404684,
+      40.96438352
+     ],
+     [
+      -5.6842058,
+      40.96424606
+     ],
+     [
+      -5.68467499,
+      40.96394017
+     ],
+     [
+      -5.68529288,
+      40.96356071
+     ],
+     [
+      -5.68571591,
+      40.96331677
+     ],
+     [
+      -5.68617484,
+      40.96313865
+     ],
+     [
+      -5.68677735,
+      40.96288696
+     ],
+     [
+      -5.68927198,
+      40.96214545
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo",
+    "source": "salamanca",
+    "kind": "stretch",
+    "road": null,
+    "km_from": null,
+    "km_to": null,
+    "active": true,
+    "maxspeed": 30,
+    "direction": null,
+    "province": "37",
+    "url": "https://ide.aytosalamanca.es/geoserver/ide_salamanca_movilidad/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=ide_salamanca_movilidad%3ARADAR_TRAMO&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+    "attribution": "Ayuntamiento de Salamanca, Radares Municipales (GNU Free Documentation License), actualizado 2025-01-22"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "salamanca-tramo-4",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -5.68286491,
+      40.96529924
+     ],
+     [
+      -5.68360842,
+      40.96499529
+     ],
+     [
+      -5.68375969,
+      40.96489268
+     ],
+     [
+      -5.68386737,
+      40.96473393
+     ],
+     [
+      -5.68398531,
+      40.96450548
+     ],
+     [
+      -5.68404684,
+      40.96438352
+     ],
+     [
+      -5.6842058,
+      40.96424606
+     ],
+     [
+      -5.68467499,
+      40.96394017
+     ],
+     [
+      -5.68529288,
+      40.96356071
+     ],
+     [
+      -5.68571591,
+      40.96331677
+     ],
+     [
+      -5.68617484,
+      40.96313865
+     ],
+     [
+      -5.68677735,
+      40.96288696
+     ],
+     [
+      -5.68927198,
+      40.96214545
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo",
+    "source": "salamanca",
+    "kind": "stretch",
+    "road": null,
+    "km_from": null,
+    "km_to": null,
+    "active": true,
+    "maxspeed": 30,
+    "direction": null,
+    "province": "37",
+    "url": "https://ide.aytosalamanca.es/geoserver/ide_salamanca_movilidad/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=ide_salamanca_movilidad%3ARADAR_TRAMO&outputFormat=application%2Fjson&srsName=EPSG%3A4326",
+    "attribution": "Ayuntamiento de Salamanca, Radares Municipales (GNU Free Documentation License), actualizado 2025-01-22"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sct-A-2-522.046",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     1.2969644206874569,
+     41.666638351481986
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo A-2 km 522.046",
+    "source": "sct",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 120,
+    "direction": null,
+    "province": "25",
+    "url": "https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars.txt",
+    "attribution": "Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit (Llicència oberta d'ús d'informació – Catalunya), actualizado 2026-09-17"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sct-A-2-539.2-545.1",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     1.4691517432801124,
+     41.630715594384064
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo A-2 km 539.2-545.1",
+    "source": "sct",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 120,
+    "direction": null,
+    "province": "08",
+    "url": "https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars.txt",
+    "attribution": "Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit (Llicència oberta d'ús d'informació – Catalunya), actualizado 2026-09-17"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sct-A-2-545.1-539.2",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     1.530977029969133,
+     41.609806451882115
+    ]
+   },
+   "properties": {
+    "name": "Radar de tramo A-2 km 545.1-539.2",
+    "source": "sct",
+    "kind": "section",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 120,
+    "direction": null,
+    "province": "08",
+    "url": "https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars.txt",
+    "attribution": "Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit (Llicència oberta d'ús d'informació – Catalunya), actualizado 2026-09-17"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sct-B-124-4.7",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.0892878310144356,
+     41.58966243899266
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo B-124 km 4.7",
+    "source": "sct",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": null,
+    "province": "08",
+    "url": "https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars.txt",
+    "attribution": "Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit (Llicència oberta d'ús d'informació – Catalunya), actualizado 2026-09-17"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sct-C-13-27.925",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0.8130540090325815,
+     41.76356451334679
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo C-13 km 27.925",
+    "source": "sct",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": null,
+    "province": "25",
+    "url": "https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars.txt",
+    "attribution": "Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit (Llicència oberta d'ús d'informació – Catalunya), actualizado 2026-09-17"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sct-C-16-78",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     1.877438326273026,
+     41.93972161903057
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo C-16 km 78",
+    "source": "sct",
+    "kind": "fixed",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 120,
+    "direction": null,
+    "province": "08",
+    "url": "https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars.txt",
+    "attribution": "Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit (Llicència oberta d'ús d'informació – Catalunya), actualizado 2026-09-17"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sct-C-31-194.688",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.0936393401455624,
+     41.33459457579507
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo C-31 km 194.688",
+    "source": "sct",
+    "kind": "fixed",
+    "radius_m": 1089,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 80,
+    "direction": null,
+    "province": "08",
+    "url": "https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars.txt",
+    "attribution": "Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit (Llicència oberta d'ús d'informació – Catalunya), actualizado 2026-09-17"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sct-C-55-18.52",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     1.8573018510215815,
+     41.647276026431705
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo C-55 km 18.52",
+    "source": "sct",
+    "kind": "fixed",
+    "radius_m": 1089,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 80,
+    "direction": null,
+    "province": "08",
+    "url": "https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars.txt",
+    "attribution": "Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit (Llicència oberta d'ús d'informació – Catalunya), actualizado 2026-09-17"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sct-C-63-21.194",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.701895192024008,
+     41.838409326524996
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo C-63 km 21.194",
+    "source": "sct",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": null,
+    "province": "17",
+    "url": "https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars.txt",
+    "attribution": "Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit (Llicència oberta d'ús d'informació – Catalunya), actualizado 2026-09-17"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sct-N-2-761",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.935509533005874,
+     42.30816406235116
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo N-2 km 761",
+    "source": "sct",
+    "kind": "fixed",
+    "radius_m": 1089,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 80,
+    "direction": null,
+    "province": "17",
+    "url": "https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars.txt",
+    "attribution": "Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit (Llicència oberta d'ús d'informació – Catalunya), actualizado 2026-09-17"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sct-N-340-1176.25",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     1.3924436649964722,
+     41.1586354732114
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo N-340 km 1176.25",
+    "source": "sct",
+    "kind": "fixed",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": null,
+    "province": "43",
+    "url": "https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars.txt",
+    "attribution": "Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit (Llicència oberta d'ús d'informació – Catalunya), actualizado 2026-09-17"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sct_remolc-A-2-501.25",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     1.0747740034054443,
+     41.64420987325134
+    ]
+   },
+   "properties": {
+    "name": "Radar en remolque A-2 km 501.25",
+    "source": "sct_remolc",
+    "kind": "trailer",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 120,
+    "direction": null,
+    "province": "25",
+    "url": "https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars-remolc.txt",
+    "attribution": "Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit (Llicència oberta d'ús d'informació – Catalunya), actualizado 2025-11-27"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sct_remolc-AP-7-147.57",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.136974001110331,
+     41.509709881432386
+    ]
+   },
+   "properties": {
+    "name": "Radar en remolque AP-7 km 147.57",
+    "source": "sct_remolc",
+    "kind": "trailer",
+    "radius_m": 1311,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 100,
+    "direction": null,
+    "province": "08",
+    "url": "https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars-remolc.txt",
+    "attribution": "Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit (Llicència oberta d'ús d'informació – Catalunya), actualizado 2025-11-27"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sct_remolc-AP-7-280.7",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0.9087400032984592,
+     41.00470686222062
+    ]
+   },
+   "properties": {
+    "name": "Radar en remolque AP-7 km 280.7",
+    "source": "sct_remolc",
+    "kind": "trailer",
+    "radius_m": 1533,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 120,
+    "direction": null,
+    "province": "43",
+    "url": "https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars-remolc.txt",
+    "attribution": "Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit (Llicència oberta d'ús d'informació – Catalunya), actualizado 2025-11-27"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sct_remolc-C-16-13.5",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.058491601844654,
+     41.49007048067447
+    ]
+   },
+   "properties": {
+    "name": "Radar en remolque C-16 km 13.5",
+    "source": "sct_remolc",
+    "kind": "trailer",
+    "radius_m": 1422,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 110,
+    "direction": null,
+    "province": "08",
+    "url": "https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars-remolc.txt",
+    "attribution": "Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit (Llicència oberta d'ús d'informació – Catalunya), actualizado 2025-11-27"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "sct_remolc-C-37-155.8",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.2997059012441907,
+     42.05056177449561
+    ]
+   },
+   "properties": {
+    "name": "Radar en remolque C-37 km 155.8",
+    "source": "sct_remolc",
+    "kind": "trailer",
+    "radius_m": 1200,
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "reported": null,
+    "maxspeed": 90,
+    "direction": null,
+    "province": "08",
+    "url": "https://transit.gencat.cat/web/.content/documents/seguretat_viaria/radars-remolc.txt",
+    "attribution": "Generalitat de Catalunya. Departament d'Interior i Seguretat Pública. Servei Català de Trànsit (Llicència oberta d'ús d'informació – Catalunya), actualizado 2025-11-27"
+   }
+  }
+ ]
 }
