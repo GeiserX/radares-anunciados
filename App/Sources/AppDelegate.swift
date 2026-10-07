@@ -29,6 +29,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         let coordinator = LocationCoordinator.shared
         Task { await coordinator.bootstrap(state: application.applicationState) }
 
+        // The folder every lane writes to, with its protection class, before anything is written into it.
+        FileStore.shared.prepareFolder()
+
         // 2. Must be registered before launch finishes.
         FeedRefresher.shared.registerBackgroundTask()
 
@@ -37,8 +40,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 
         // 4. The store loads off the main thread; the bundled snapshot is copied in when no feed exists yet.
         Task.detached(priority: .utility) {
-            FileStore.shared.copySnapshotIfNeeded()
+            await CurrentFeed.shared.loadIfNeeded()
         }
+
+        // The one setting the surfaces read (design 1): voice on unless the driver turned it off.
+        AlertDispatcher.shared.voiceEnabled = UserDefaults.standard.object(forKey: SettingsKey.voiceEnabled) as? Bool ?? true
 
         // 5. Adopt a Live Activity that survived a relaunch, end anything older.
         DriveActivityController.shared.reattach()
