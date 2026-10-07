@@ -87,7 +87,9 @@ public final class AlertDispatcher {
             crossTrackMetres: event.crossTrackMetres,
             suppressedByDirection: level == .visual && event.content.opposite,
             coordinate: fix?.coordinate ?? radar?.start ?? Coordinate(latitude: 0, longitude: 0),
-            sinks: sinks
+            sinks: sinks,
+            // The sentence only when the voice took it: with the voice off the row must not claim the driver heard it.
+            spoken: sinks.contains { $0.sink == .speech && $0.ok } ? phrase?.spoken : nil
         ))
         let summary = sinks.map { "\($0.sink.rawValue)=\($0.ok)" }.joined(separator: " ")
         logger.notice("alert \(radar?.id ?? "-", privacy: .public) \(level.rawValue, privacy: .public) \(summary, privacy: .public)")

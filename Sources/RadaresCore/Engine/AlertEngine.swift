@@ -106,7 +106,7 @@ public final class AlertEngine {
             case .exited(let radar, let reason):
                 passes.markPassed(radar.id, now: t)
                 lastStretchExitReason = reason
-                let draft = AlertEvent(kind: .stretchExited, radar: radar, distance: nil, late: false, crossTrackMetres: nil, phrase: nil, content: .watching(at: t))
+                let draft = AlertEvent(kind: .stretchExited(reason), radar: radar, distance: nil, late: false, crossTrackMetres: nil, phrase: nil, content: .watching(at: t))
                 events.append(withPhrase(draft, phrase: reason == .farGate ? Phrasing.make(draft, locale: locale) : nil))
             }
         }
@@ -211,7 +211,7 @@ public final class AlertEngine {
         if case .exited(let radar, let reason)? = stretches.endDrive() {
             passes.markPassed(radar.id, now: t)
             lastStretchExitReason = reason
-            events.append(AlertEvent(kind: .stretchExited, radar: radar, distance: nil, late: false, crossTrackMetres: nil, phrase: nil, content: .watching(at: t)))
+            events.append(AlertEvent(kind: .stretchExited(reason), radar: radar, distance: nil, late: false, crossTrackMetres: nil, phrase: nil, content: .watching(at: t)))
         }
         passes.prune(now: t)
         histories = [:]
@@ -237,6 +237,7 @@ public final class AlertEngine {
         case .section: "ruler.fill"
         case .stretch: radar.role == .mobileCorridor ? "road.lanes" : "timer"
         case .mobileAnnounced: "camera.badge.clock.fill"
+        case .mobileRecurring: "camera.badge.clock"
         case .trailer: "truck.box.fill"
         case .reported: "questionmark.circle"
         }
@@ -301,7 +302,9 @@ public final class AlertEngine {
             return s
         }
         let armed = candidates.filter { !$0.isLine && passes.state(of: $0.id, now: t) == .armed }
-        if let radar = armed.first {
+        // The card keeps the radar it already shows while that one stays armed: with several radars ahead at once
+        // (a city), the nearest one flips every few fixes and every flip would be a Live Activity update.
+        if let radar = armed.first(where: { $0.id == current.next?.id }) ?? armed.first {
             let d = Geo.distance(fix.coordinate, radar.start)
             s.next = radar
             s.distanceMetres = d

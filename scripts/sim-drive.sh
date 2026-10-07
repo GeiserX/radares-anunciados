@@ -16,7 +16,9 @@
 #   --probe                do not pass -StartDriveForTest: let the significant-change delivery wake the idle app and
 #                          watch the probe decide (idle -> probing -> driving)
 #   --state-machine-only   pass -StateMachineOnlyForTest 1: no engine, no surfaces (while those lanes are stubs)
-#   --no-live-activity     pass -NoLiveActivity 1: the Time Sensitive notification instead of the activity
+#   --no-live-activity     pass -NoLiveActivity 1 and -ProvisionalNotifications 1: the Time Sensitive notification
+#                          instead of the activity (the Simulator cannot grant notifications; provisional
+#                          authorization needs no prompt and delivers at the Time Sensitive level)
 #   --before <m>           metres before the target the route starts (default 3000)
 #   --after <m>            metres past the target the route ends (default 1000)
 #   --settle <s>           extra seconds to wait after the route ends (default 15)
@@ -150,17 +152,19 @@ if [ "$SMO" -eq 1 ]; then
 else
   xcrun simctl spawn "$UDID" defaults delete "$PREFS" StateMachineOnlyForTest >/dev/null 2>&1 || true
 fi
-# A probe run starts from idle: a drive persisted by an earlier run would be resumed at launch instead.
-if [ "$PROBE" -eq 1 ]; then
-  xcrun simctl spawn "$UDID" defaults delete "$PREFS" drive.persisted >/dev/null 2>&1 || true
-fi
+# Every run is one drive from idle: a drive persisted by an earlier run would be resumed at launch instead (the
+# relaunch path has its own run in docs/VERIFY.md).
+xcrun simctl spawn "$UDID" defaults delete "$PREFS" drive.persisted >/dev/null 2>&1 || true
 
 ARGS=()
 [ "$PROBE" -eq 1 ] || ARGS+=(-StartDriveForTest 1)
-[ "$NOLA" -eq 1 ] && ARGS+=(-NoLiveActivity 1)
+[ "$NOLA" -eq 1 ] && ARGS+=(-NoLiveActivity 1 -ProvisionalNotifications 1)
 START_EPOCH=$(date +%s)
 # Launch first, then place the car: a simulated position set before the launch makes the system launch the app in
-# the background for significant change, and that process would not see the launch arguments.
+# the background for significant change, and that process would not see the launch arguments. The same can happen
+# in the seconds since the terminate above (the Simulator re-delivers significant change on its own), so the app is
+# ended again right before the launch; `simctl launch` on a running app only brings it forward, arguments ignored.
+xcrun simctl terminate "$UDID" "$BUNDLE" >/dev/null 2>&1 || true
 xcrun simctl launch "$UDID" "$BUNDLE" ${ARGS[@]+"${ARGS[@]}"} >/dev/null
 sleep 2
 xcrun simctl location "$UDID" set "$(echo "$WAYPOINTS" | cut -d' ' -f1)"
@@ -176,7 +180,7 @@ EVENTS="$CONTAINER/Library/Application Support/Radares/events.jsonl"
 echo
 echo "== events.jsonl: alert and state rows"
 if [ -s "$EVENTS" ]; then
-  grep -E 'launch|sessionTaken|wakeup|probe|driveStarted|drivePaused|driveResumed|driveEnded|alert|passed|stretchEntered|stretchExited|monitorEvent' "$EVENTS" || echo "(no matching rows)"
+  grep -E 'launch|sessionTaken|wakeup|probe|driveStarted|drivePaused|driveResumed|driveEnded|alert|passed|stretchEntered|stretchExited|monitorEvent|notificationPosted|speech|activityStarted|activityFailed' "$EVENTS" || echo "(no matching rows)"
 else
   echo "(empty or missing: $EVENTS)"
 fi

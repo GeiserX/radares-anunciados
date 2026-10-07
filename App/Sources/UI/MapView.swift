@@ -49,6 +49,14 @@ struct MapView: View {
                 }
             }
         }
+        .task {
+            // While driving the card follows the engine; the snapshot is a cheap actor read.
+            while !Task.isCancelled {
+                await model.refreshDriveSnapshot()
+                me = AppModel.lastKnown
+                try? await Task.sleep(for: .seconds(2))
+            }
+        }
         .navigationTitle("Mapa")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)
@@ -78,8 +86,12 @@ struct MapView: View {
         }
     }
 
-    /// The nearest radar to the user that can warn today, within the map radius.
+    /// Driving: the engine's next radar and its distance (design 4.4). Otherwise the nearest radar to the user that
+    /// can warn today, within the map radius.
     private var nearest: (radar: Radar, metres: Double)? {
+        if let snapshot = model.driveSnapshot, let next = snapshot.next, let metres = snapshot.distanceMetres {
+            return (next, metres)
+        }
         guard let me, let store = model.store else { return nil }
         return store.candidates(near: me, within: Thresholds.mapRadiusM, on: Date())
             .map { radar in (radar, [radar.start, radar.end].compactMap { $0 }.map { Geo.distance(me, $0) }.min() ?? .infinity) }

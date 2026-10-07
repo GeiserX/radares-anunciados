@@ -74,6 +74,7 @@ public enum Phrasing {
         case .section: return en ? "Average speed camera" : "Radar de tramo"
         case .stretch: return radar.role == .mobileCorridor ? (en ? "Mobile radar stretch" : "Tramo de radar móvil") : (en ? "Average speed section" : "Radar de tramo")
         case .mobileAnnounced: return en ? "Announced mobile speed camera" : "Radar móvil anunciado"
+        case .mobileRecurring: return en ? "Usual mobile radar" : "Radar móvil habitual"
         case .trailer: return en ? "Trailer speed camera" : "Radar en remolque"
         case .reported: return en ? "Unconfirmed report" : "Radar sin confirmar"
         }

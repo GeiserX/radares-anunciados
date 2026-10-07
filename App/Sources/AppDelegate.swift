@@ -17,17 +17,18 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        let launchState: LaunchState = switch application.applicationState {
-        case .active: .active
-        case .inactive: .inactive
-        case .background: .background
-        @unknown default: .background
-        }
+        // The one rule for "is this a background wake", applied here and in the coordinator: `applicationState`
+        // reads `.background` inside didFinishLaunching on every launch, a user's included, so it decides nothing.
+        // A launch is a background wake when iOS passed the location launch key (a hint; the event itself arrives
+        // through the monitor or the significant-change delegate), and the first thing that arrives afterwards
+        // names the launch: a scene connecting (`noteSceneConnected`) marks a user launch.
+        let launchedInBackground = Self.launchedForLocation(launchOptions)
+        let launchState: LaunchState = launchedInBackground ? .background : .inactive
 
         // 1. Re-take the Always session (created in the coordinator's init, so touching `shared` is the first
         //    statement), start the wake-ups, and in the background start the stream first, then probe.
         let coordinator = LocationCoordinator.shared
-        Task { await coordinator.bootstrap(state: application.applicationState) }
+        Task { await coordinator.bootstrap(launchedInBackground: launchedInBackground) }
 
         // The folder every lane writes to, with its protection class, before anything is written into it.
         FileStore.shared.prepareFolder()
@@ -43,8 +44,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             await CurrentFeed.shared.loadIfNeeded()
         }
 
-        // 5. Adopt a Live Activity that survived a relaunch, end anything older.
-        DriveActivityController.shared.reattach()
+        // 5. Adopt a Live Activity that survived a relaunch while its drive is still on; end anything else.
+        DriveActivityController.shared.reattach(driveIsOn: PersistedDrive.load() != nil)
 
         // The surfaces' own launch-argument self-test (-SurfacesSelfTest), a no-op on a normal launch.
         AlertDispatcher.runSelfTestIfRequested()
@@ -53,6 +54,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         AppLog.shared.post(.launch(reason: .unknown, state: launchState))
         logger.info("launched, state \(launchState.rawValue, privacy: .public)")
         return true
+    }
+
+    /// `UIApplicationLaunchOptionsLocationKey`, by its raw name: the typed key is deprecated as of iOS 26 and is
+    /// read only as an informational hint (design 3.3), never as the event.
+    nonisolated static func launchedForLocation(_ options: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        options?[UIApplication.LaunchOptionsKey(rawValue: "UIApplicationLaunchOptionsLocationKey")] != nil
     }
 
     func applicationWillTerminate(_ application: UIApplication) {

@@ -107,7 +107,8 @@ public struct AlertEvent: Sendable, Codable, Hashable {
         case warn(Level)
         case passed
         case stretchEntered
-        case stretchExited
+        /// Carries why the stretch was left, so the log row can be written from the event alone (design 2.5).
+        case stretchExited(StretchExitReason)
         case driveEnded
     }
 

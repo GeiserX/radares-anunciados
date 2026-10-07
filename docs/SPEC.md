@@ -37,11 +37,11 @@ event. Refresh: at app open if the body is older than 6 h, a periodic job every 
 
 What is read from each feature: `id`, `geometry` (`Point` or `LineString`, `[lon, lat]`), and in `properties`:
 `kind`, `name`, `source`, `active`, `maxspeed`, `direction`, `province`, `url`, `attribution`, `valid_from`,
-`valid_to`, `road`, `km_from`, `km_to`. Unknown properties are ignored. A feature with an unknown `kind` (the feed
-added `mobile_recurring` in October 2026), an unknown geometry type, no `id` or no usable coordinates is skipped,
-never fatal.
+`valid_to`, `road`, `km_from`, `km_to`. Unknown properties are ignored. A feature with an unknown `kind`, an unknown
+geometry type, no `id` or no usable coordinates is skipped, never fatal.
 
-Kinds: `fixed`, `section`, `stretch`, `mobile_announced`, `trailer`, `reported`.
+Kinds: `fixed`, `section`, `stretch`, `mobile_announced`, `mobile_recurring` (a spot where a mobile radar is set up
+often, derived from published fines; no dates, alertable while `active`), `trailer`, `reported`.
 
 Roles, derived: a `stretch` from source `dgt_invive` is a **mobile corridor** (bidirectional); any other `stretch` is
 an **average-speed section**; everything else is a **point**. A `section` point whose coordinates equal an endpoint
@@ -158,6 +158,7 @@ title-cased and appended when present. Spanish is the default; English only when
 | section entry | Radar de tramo a 600 metros, 3 kilómetros. Límite 100. | Average speed section 600 metres ahead, 3 kilometres. Limit 100. |
 | corridor entry | Tramo de radar móvil, N-232, 10 kilómetros. | Mobile radar stretch, N-232, 10 kilometres. |
 | mobile announced | Radar móvil anunciado a 350 metros. Límite 50. | Announced mobile speed camera 350 metres ahead. Limit 50. |
+| mobile recurring | Radar móvil habitual a 350 metros. Límite 50. | Usual mobile radar 350 metres ahead. Limit 50. |
 | trailer | Radar en remolque a 800 metros. | Trailer speed camera 800 metres ahead. |
 | stretch exit at the far gate | Fin de tramo. | End of section. |
 
@@ -235,7 +236,8 @@ snapshot and check the listed fields within their tolerances; then compare the c
 order. `kind` is one of `warn`, `passed`, `stretchEntered`, `stretchExited`, `driveEnded`; `level` is `full` or
 `visual` (a `stretchEntered` is always full); `distance` is checked within `tolerance` (default 40 m); `late`,
 `opposite` and `spoken` are checked when present; a `warn` with `level: visual` and a silent `stretchExited` must
-carry no sentence; `exitReason` is one of `farGate`, `distance`, `time`, `driveEnd`. Any difference fails the
+carry no sentence; `exitReason` is one of `farGate`, `distance`, `time`, `driveEnd` and rides on the
+`stretchExited` event itself. Any difference fails the
 vector. A vector with `negativeControl: true` is deliberately wrong and the suite must assert that the engine's
 output differs from it: that is the proof the harness can fail. A test suite that executes zero tests fails.
 

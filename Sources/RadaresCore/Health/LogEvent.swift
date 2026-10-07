@@ -109,7 +109,9 @@ public enum LogEvent: Sendable, Codable, Hashable {
         crossTrackMetres: Double?,
         suppressedByDirection: Bool,
         coordinate: Coordinate,
-        sinks: [SinkOutcome]
+        sinks: [SinkOutcome],
+        /// The sentence spoken for a `.full` alert, nil for `.visual`: the row is the evidence of what the driver heard.
+        spoken: String? = nil
     )
     case passed(id: String)
     case stretchEntered(id: String)

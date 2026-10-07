@@ -16,7 +16,7 @@ struct AlertsListView: View {
                 Text("Ningún aviso en las últimas 24 horas.").foregroundStyle(.secondary)
             }
             ForEach(model.recentAlerts, id: \.self) { entry in
-                if case let .alert(id, level, distance, speed, late, _, suppressed, _, sinks) = entry.event {
+                if case let .alert(id, level, distance, speed, late, _, suppressed, _, sinks, _) = entry.event {
                     AlertRow(
                         time: entry.t,
                         radar: model.store?.radar(id: id),

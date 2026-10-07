@@ -62,7 +62,7 @@ struct Vector: Decodable {
 }
 
 struct VectorRun {
-    var events: [(index: Int, event: AlertEvent, exitReason: StretchExitReason?)] = []
+    var events: [(index: Int, event: AlertEvent)] = []
     var mismatches: [String] = []
 }
 
@@ -72,7 +72,7 @@ enum VectorRunner {
         var run = VectorRun()
         for (i, fix) in vector.fixList.enumerated() {
             for e in engine.ingest(fix) {
-                run.events.append((i, e, engine.lastStretchExitReason))
+                run.events.append((i, e))
             }
             for check in vector.snapshots ?? [] where check.fixIndex == i {
                 let s = engine.snapshot
@@ -88,7 +88,7 @@ enum VectorRunner {
                 if let phase = check.phase, s.content.phase.rawValue != phase { run.mismatches.append("fix \(i): phase \(s.content.phase) vs \(phase)") }
             }
         }
-        run.mismatches.append(contentsOf: compare(run.events.map(\.event), reasons: run.events.map(\.exitReason), to: vector.expected))
+        run.mismatches.append(contentsOf: compare(run.events.map(\.event), to: vector.expected))
         return run
     }
 
@@ -96,7 +96,7 @@ enum VectorRunner {
         "\(e.kind) \(e.radar?.id ?? "-") \(e.distance.map { Int($0) } ?? -1) m late=\(e.late) spoken=\(e.phrase?.spoken ?? "nil")"
     }
 
-    static func compare(_ events: [AlertEvent], reasons: [StretchExitReason?], to expected: [Vector.VEvent]) -> [String] {
+    static func compare(_ events: [AlertEvent], to expected: [Vector.VEvent]) -> [String] {
         var out: [String] = []
         if events.count != expected.count {
             out.append("expected \(expected.count) events, got \(events.count): \(events.map(describe))")
@@ -104,11 +104,12 @@ enum VectorRunner {
         for (i, (e, x)) in zip(events, expected).enumerated() {
             let kind: String
             var level: String?
+            var exitReason: StretchExitReason?
             switch e.kind {
             case .warn(let l): kind = "warn"; level = l.rawValue
             case .passed: kind = "passed"
             case .stretchEntered: kind = "stretchEntered"; level = "full"
-            case .stretchExited: kind = "stretchExited"
+            case .stretchExited(let r): kind = "stretchExited"; exitReason = r
             case .driveEnded: kind = "driveEnded"
             }
             if kind != x.kind { out.append("event \(i): kind \(kind) vs \(x.kind)") }
@@ -123,7 +124,8 @@ enum VectorRunner {
             if let spoken = x.spoken, spoken != e.phrase?.spoken { out.append("event \(i): spoken \"\(e.phrase?.spoken ?? "nil")\" vs \"\(spoken)\"") }
             if x.spoken == nil, kind == "warn", level == "visual", e.phrase != nil { out.append("event \(i): a visual warning must not have a phrase") }
             if x.spoken == nil, kind == "stretchExited", e.phrase != nil { out.append("event \(i): a silent exit must not have a phrase") }
-            if let reason = x.exitReason, reason != reasons[i]?.rawValue { out.append("event \(i): exit reason \(reasons[i]?.rawValue ?? "nil") vs \(reason)") }
+            // The reason rides on the event itself, so the log row can be written from the event alone.
+            if let reason = x.exitReason, reason != exitReason?.rawValue { out.append("event \(i): exit reason \(exitReason?.rawValue ?? "nil") vs \(reason)") }
         }
         return out
     }
@@ -222,7 +224,7 @@ final class AlertEngineVectorTests: XCTestCase {
         for fix in fixes.prefix(150) { _ = engine.ingest(fix) }
         XCTAssertNotNil(engine.snapshot.stretch)
         let events = engine.endDrive()
-        XCTAssertEqual(events.map(\.kind), [.stretchExited, .driveEnded])
+        XCTAssertEqual(events.map(\.kind), [.stretchExited(.driveEnd), .driveEnded])
         XCTAssertNil(events.first?.phrase)
         XCTAssertEqual(engine.lastStretchExitReason, .driveEnd)
         XCTAssertNil(engine.snapshot.stretch)
@@ -245,6 +247,25 @@ final class AlertEngineVectorTests: XCTestCase {
         XCTAssertEqual(kinds, [.warn(.full), .passed])
         let passedIndex = try XCTUnwrap(fixes.firstIndex { Geo.distance($0.coordinate, a2.start) < Thresholds.passedBelowM })
         XCTAssertEqual(fixes[passedIndex].speed, 0, "the first fix under 30 m is the stopped one")
+    }
+
+    /// Two radars armed ahead, the nearer one changing as the car moves: the card keeps the radar it shows until it
+    /// fires or drops out, so a city does not flip the card (and spend a Live Activity update) every few fixes.
+    func testSnapshotKeepsTheArmedRadarItShowsWhileItStaysArmed() throws {
+        let origin = Coordinate.at(41.3, -1.9)
+        // A on the line 940 m ahead; B 700 m ahead and 600 m beside (922 m away, 41° off the course): B is nearer
+        // for the first fixes, A from the sixth, and neither is in range (warn 750 m at 30 m/s) before the eighth.
+        let a = makeRadar(id: "A", start: Geo.destination(from: origin, bearingDegrees: 90, metres: 940))
+        let b = makeRadar(id: "B", start: Geo.destination(from: Geo.destination(from: origin, bearingDegrees: 90, metres: 700), bearingDegrees: 0, metres: 600))
+        let engine = AlertEngine(store: RadarStore(radars: [a, b]), ledger: PassLedger(), locale: Fixtures.es)
+        var shown: [String] = []
+        for i in 0..<7 {
+            let fix = makeFix(Geo.destination(from: origin, bearingDegrees: 90, metres: Double(i) * 30), t: Date(timeIntervalSince1970: 1_800_000_000 + Double(i)), speed: 30, course: 90)
+            XCTAssertTrue(engine.ingest(fix).isEmpty, "fix \(i) must not fire")
+            shown.append(engine.snapshot.next?.id ?? "-")
+        }
+        XCTAssertEqual(shown.first, "B", "B is the nearer armed radar at the start")
+        XCTAssertEqual(Set(shown).count, 1, "the card stays on B while B stays armed: \(shown)")
     }
 
     func testSnapshotShowsTheNearestRadarAsCercaWithoutACourse() throws {

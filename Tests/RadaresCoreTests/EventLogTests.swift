@@ -20,13 +20,14 @@ final class EventLogTests: XCTestCase {
         XCTAssertEqual(log.recent(10), [])
         log.append(.launch(reason: .slc, state: .background), at: t0)
         log.append(.sessionTaken, at: t0.addingTimeInterval(1))
-        log.append(.alert(id: "r", level: .full, distance: 820.5, speedMps: 33.3, late: false, crossTrackMetres: 2.5, suppressedByDirection: false, coordinate: .at(41.3, -1.9), sinks: [SinkOutcome(sink: .speech, ok: true)]), at: t0.addingTimeInterval(2))
+        log.append(.alert(id: "r", level: .full, distance: 820.5, speedMps: 33.3, late: false, crossTrackMetres: 2.5, suppressedByDirection: false, coordinate: .at(41.3, -1.9), sinks: [SinkOutcome(sink: .speech, ok: true)], spoken: "Radar fijo a 800 metros."), at: t0.addingTimeInterval(2))
         let all = log.recent(10)
         guard all.count == 3 else { return XCTFail("expected 3 entries, got \(all.count)") }
         XCTAssertEqual(all[0], LogEntry(t: t0, event: .launch(reason: .slc, state: .background)))
         XCTAssertEqual(all[2].t, t0.addingTimeInterval(2))
-        guard case .alert(let id, let level, let distance, _, _, _, _, let coordinate, let sinks) = all[2].event else { return XCTFail("\(all[2])") }
+        guard case .alert(let id, let level, let distance, _, _, _, _, let coordinate, let sinks, let spoken) = all[2].event else { return XCTFail("\(all[2])") }
         XCTAssertEqual(id, "r")
+        XCTAssertEqual(spoken, "Radar fijo a 800 metros.")
         XCTAssertEqual(level, .full)
         XCTAssertEqual(distance, 820.5)
         XCTAssertEqual(coordinate, .at(41.3, -1.9))

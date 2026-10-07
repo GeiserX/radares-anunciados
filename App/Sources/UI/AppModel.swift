@@ -8,18 +8,22 @@ import CoreLocation
 import Observation
 import RadaresCore
 import SwiftUI
+import UserNotifications
 import os
 
 /// Launch arguments for the simulator scripts (`scripts/sim-drive.sh`): `-StartDriveForTest 1` starts a test drive
 /// in the foreground so the Live Activity exists, `-NoLiveActivity 1` keeps the Live Activity off so the Time
-/// Sensitive notification is the visible surface. `-InitialTab mapa` (or `ajustes`) opens on that tab, so a script
-/// can screenshot every tab without tapping, and `-RunSelfTest 1` presses "Probar aviso" once.
+/// Sensitive notification is the visible surface, `-ProvisionalNotifications 1` takes provisional notification
+/// authorization (no prompt; the Simulator cannot grant notifications any other way) so that surface can post.
+/// `-InitialTab mapa` (or `ajustes`) opens on that tab, so a script can screenshot every tab without tapping, and
+/// `-RunSelfTest 1` presses "Probar aviso" once.
 enum LaunchFlags {
     static var initialTab: String? { UserDefaults.standard.string(forKey: "InitialTab") }
     /// `-RunSelfTest 1` runs "Probar aviso" on the first foreground, as the button would.
     static var runSelfTest: Bool { UserDefaults.standard.bool(forKey: "RunSelfTest") }
     static var startDriveForTest: Bool { UserDefaults.standard.bool(forKey: "StartDriveForTest") }
     static var noLiveActivity: Bool { UserDefaults.standard.bool(forKey: "NoLiveActivity") }
+    static var provisionalNotifications: Bool { UserDefaults.standard.bool(forKey: "ProvisionalNotifications") }
 }
 
 /// UserDefaults keys the app lane owns.
@@ -41,6 +45,8 @@ final class AppModel {
     private(set) var refreshing = false
     private(set) var selfTest: SelfTest.Outcome?
     private(set) var selfTestRunning = false
+    /// The engine's view while a drive is on (design 4.4: the next-radar card reads it); nil when idle.
+    private(set) var driveSnapshot: DriveSnapshot?
     var showOnboarding = !UserDefaults.standard.bool(forKey: SettingsKey.onboardingDone)
     var showRecipe = false
     var selectedTab = LaunchFlags.initialTab.flatMap(Tab.init(rawValue:)) ?? .estado
@@ -57,6 +63,7 @@ final class AppModel {
 
     private var startedTestDrive = false
     private var ranLaunchSelfTest = false
+    private var stateWatcher: Task<Void, Never>?
     private let logger = Logger(subsystem: "io.github.geiserx.radares", category: "ui")
 
     private init() {}
@@ -75,11 +82,17 @@ final class AppModel {
         meta = FileStore.shared.readMeta()
         report = healthReport(await HealthMonitor().collect())
         lastBackgroundLaunch = await HealthMonitor.lastBackgroundLaunch()
+        await refreshDriveSnapshot()
         let since = Date().addingTimeInterval(-Thresholds.alertHistoryHours * 3600)
         recentAlerts = await AppLog.shared.recent(Thresholds.logMaxLines).filter { entry in
             guard entry.t >= since, case .alert = entry.event else { return false }
             return true
         }.reversed()
+    }
+
+    /// The engine's snapshot, cheap enough for the map to poll while it is on screen.
+    func refreshDriveSnapshot() async {
+        driveSnapshot = await LocationCoordinator.shared.snapshot
     }
 
     /// "Actualizar ahora".
@@ -93,6 +106,13 @@ final class AppModel {
     /// Every time the scene becomes active: the foreground refresh (design 5.2), the test drive argument once, and
     /// the Live Activity for a drive that is already running (design 4.2, way 2).
     func didBecomeActive() async {
+        // A scene is up: this launch was the user's (design 3.3, step 6), unless an event already named it.
+        await LocationCoordinator.shared.noteSceneConnected()
+        watchDriveState()
+        if LaunchFlags.provisionalNotifications,
+           await UNUserNotificationCenter.current().notificationSettings().authorizationStatus == .notDetermined {
+            _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .provisional])
+        }
         if !startedTestDrive, LaunchFlags.startDriveForTest {
             startedTestDrive = true
             logger.info("starting a test drive (-StartDriveForTest)")
@@ -106,6 +126,19 @@ final class AppModel {
         }
         await FeedRefresher.shared.refreshIfNeeded(trigger: .foreground)
         await reload()
+    }
+
+    /// A drive that begins while the app is open (a wake-up's probe that was already running when the user opened
+    /// the app, the "Conducir" control) gets its Live Activity from the foreground (design 4.2, way 2). The
+    /// coordinator's stream has one consumer: this one.
+    private func watchDriveState() {
+        guard stateWatcher == nil else { return }
+        stateWatcher = Task { [weak self] in
+            for await state in LocationCoordinator.shared.stateChanges {
+                guard state.isDriveOn, UIApplication.shared.applicationState == .active else { continue }
+                await self?.ensureActivityIfDriving()
+            }
+        }
     }
 
     func ensureActivityIfDriving() async {
@@ -185,6 +218,7 @@ extension Kind {
         case .section: "Radar de tramo"
         case .stretch: "Tramo"
         case .mobileAnnounced: "Radar móvil anunciado"
+        case .mobileRecurring: "Radar móvil habitual"
         case .trailer: "Radar en remolque"
         case .reported: "Sin confirmar"
         }
@@ -195,6 +229,7 @@ extension Kind {
         case .fixed: "camera.fill"
         case .section, .stretch: "road.lanes"
         case .mobileAnnounced: "car.side.fill"
+        case .mobileRecurring: "car.side"
         case .trailer: "truck.box.fill"
         case .reported: "questionmark.circle"
         }
@@ -204,7 +239,7 @@ extension Kind {
         switch self {
         case .fixed: .red
         case .section, .stretch: .orange
-        case .mobileAnnounced: .blue
+        case .mobileAnnounced, .mobileRecurring: .blue
         case .trailer: .purple
         case .reported: .gray
         }
