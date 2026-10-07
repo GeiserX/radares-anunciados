@@ -1,0 +1,4307 @@
+{
+ "name": "corridor-n232-from-west",
+ "description": "The 10.1 km dgt_invive corridor entered from its west gate at 90 km/h: entry sentence at 625 +- 40 m, remaining distance inside, Fin de tramo within 300 m of the far gate.",
+ "locale": "es-ES",
+ "fixes": [
+  {
+   "t": "2026-10-07T10:00:01+02:00",
+   "lat": 40.5190619,
+   "lon": 0.1093345,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:02+02:00",
+   "lat": 40.5190476,
+   "lon": 0.1096296,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:03+02:00",
+   "lat": 40.5190334,
+   "lon": 0.1099248,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:04+02:00",
+   "lat": 40.5190191,
+   "lon": 0.1102199,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:05+02:00",
+   "lat": 40.5190048,
+   "lon": 0.1105151,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:06+02:00",
+   "lat": 40.5189905,
+   "lon": 0.1108102,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:07+02:00",
+   "lat": 40.5189762,
+   "lon": 0.1111054,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:08+02:00",
+   "lat": 40.5189619,
+   "lon": 0.1114006,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:09+02:00",
+   "lat": 40.5189476,
+   "lon": 0.1116957,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:10+02:00",
+   "lat": 40.5189334,
+   "lon": 0.1119909,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:11+02:00",
+   "lat": 40.5189191,
+   "lon": 0.112286,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:12+02:00",
+   "lat": 40.5189048,
+   "lon": 0.1125812,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:13+02:00",
+   "lat": 40.5188905,
+   "lon": 0.1128763,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:14+02:00",
+   "lat": 40.5188762,
+   "lon": 0.1131715,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:15+02:00",
+   "lat": 40.5188619,
+   "lon": 0.1134667,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:16+02:00",
+   "lat": 40.5188476,
+   "lon": 0.1137618,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:17+02:00",
+   "lat": 40.5188333,
+   "lon": 0.114057,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:18+02:00",
+   "lat": 40.5188191,
+   "lon": 0.1143521,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:19+02:00",
+   "lat": 40.5188048,
+   "lon": 0.1146473,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:20+02:00",
+   "lat": 40.5187905,
+   "lon": 0.1149424,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:21+02:00",
+   "lat": 40.5187762,
+   "lon": 0.1152376,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:22+02:00",
+   "lat": 40.5187619,
+   "lon": 0.1155328,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:23+02:00",
+   "lat": 40.5187476,
+   "lon": 0.1158279,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:24+02:00",
+   "lat": 40.5187333,
+   "lon": 0.1161231,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:25+02:00",
+   "lat": 40.518719,
+   "lon": 0.1164182,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:26+02:00",
+   "lat": 40.5187048,
+   "lon": 0.1167134,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:27+02:00",
+   "lat": 40.5186905,
+   "lon": 0.1170085,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:28+02:00",
+   "lat": 40.5186762,
+   "lon": 0.1173037,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:29+02:00",
+   "lat": 40.5186619,
+   "lon": 0.1175989,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:30+02:00",
+   "lat": 40.5186476,
+   "lon": 0.117894,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:31+02:00",
+   "lat": 40.5186333,
+   "lon": 0.1181892,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:32+02:00",
+   "lat": 40.518619,
+   "lon": 0.1184843,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:33+02:00",
+   "lat": 40.5186047,
+   "lon": 0.1187795,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:34+02:00",
+   "lat": 40.5185905,
+   "lon": 0.1190746,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:35+02:00",
+   "lat": 40.5185762,
+   "lon": 0.1193698,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:36+02:00",
+   "lat": 40.5185619,
+   "lon": 0.1196649,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:37+02:00",
+   "lat": 40.5185476,
+   "lon": 0.1199601,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:38+02:00",
+   "lat": 40.5185333,
+   "lon": 0.1202553,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:39+02:00",
+   "lat": 40.518519,
+   "lon": 0.1205504,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:40+02:00",
+   "lat": 40.5185047,
+   "lon": 0.1208456,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:41+02:00",
+   "lat": 40.5184905,
+   "lon": 0.1211407,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:42+02:00",
+   "lat": 40.5184762,
+   "lon": 0.1214359,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:43+02:00",
+   "lat": 40.5184619,
+   "lon": 0.121731,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:44+02:00",
+   "lat": 40.5184476,
+   "lon": 0.1220262,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:45+02:00",
+   "lat": 40.5184333,
+   "lon": 0.1223213,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:46+02:00",
+   "lat": 40.518419,
+   "lon": 0.1226165,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:47+02:00",
+   "lat": 40.5184047,
+   "lon": 0.1229117,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:48+02:00",
+   "lat": 40.5183904,
+   "lon": 0.1232068,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:49+02:00",
+   "lat": 40.5183762,
+   "lon": 0.123502,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:50+02:00",
+   "lat": 40.5183619,
+   "lon": 0.1237971,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:51+02:00",
+   "lat": 40.5183476,
+   "lon": 0.1240923,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:52+02:00",
+   "lat": 40.5183333,
+   "lon": 0.1243874,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:53+02:00",
+   "lat": 40.518319,
+   "lon": 0.1246826,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:54+02:00",
+   "lat": 40.5183047,
+   "lon": 0.1249777,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:55+02:00",
+   "lat": 40.5182904,
+   "lon": 0.1252729,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:56+02:00",
+   "lat": 40.5182761,
+   "lon": 0.125568,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:57+02:00",
+   "lat": 40.5182619,
+   "lon": 0.1258632,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:58+02:00",
+   "lat": 40.5182476,
+   "lon": 0.1261584,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:00:59+02:00",
+   "lat": 40.5182333,
+   "lon": 0.1264535,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:00+02:00",
+   "lat": 40.518219,
+   "lon": 0.1267487,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:01+02:00",
+   "lat": 40.5182047,
+   "lon": 0.1270438,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:02+02:00",
+   "lat": 40.5181904,
+   "lon": 0.127339,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:03+02:00",
+   "lat": 40.5181761,
+   "lon": 0.1276341,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:04+02:00",
+   "lat": 40.5181619,
+   "lon": 0.1279293,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:05+02:00",
+   "lat": 40.5181476,
+   "lon": 0.1282244,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:06+02:00",
+   "lat": 40.5181333,
+   "lon": 0.1285196,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:07+02:00",
+   "lat": 40.518119,
+   "lon": 0.1288147,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:08+02:00",
+   "lat": 40.5181047,
+   "lon": 0.1291099,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:09+02:00",
+   "lat": 40.5180904,
+   "lon": 0.129405,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:10+02:00",
+   "lat": 40.5180761,
+   "lon": 0.1297002,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:11+02:00",
+   "lat": 40.5180618,
+   "lon": 0.1299954,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:12+02:00",
+   "lat": 40.5180476,
+   "lon": 0.1302905,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:13+02:00",
+   "lat": 40.5180333,
+   "lon": 0.1305857,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:14+02:00",
+   "lat": 40.518019,
+   "lon": 0.1308808,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:15+02:00",
+   "lat": 40.5180047,
+   "lon": 0.131176,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:16+02:00",
+   "lat": 40.5179904,
+   "lon": 0.1314711,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:17+02:00",
+   "lat": 40.5179761,
+   "lon": 0.1317663,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:18+02:00",
+   "lat": 40.5179618,
+   "lon": 0.1320614,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:19+02:00",
+   "lat": 40.5179475,
+   "lon": 0.1323566,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:20+02:00",
+   "lat": 40.5179333,
+   "lon": 0.1326517,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:21+02:00",
+   "lat": 40.517919,
+   "lon": 0.1329469,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:22+02:00",
+   "lat": 40.5179047,
+   "lon": 0.133242,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:23+02:00",
+   "lat": 40.5178904,
+   "lon": 0.1335372,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:24+02:00",
+   "lat": 40.5178761,
+   "lon": 0.1338323,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:25+02:00",
+   "lat": 40.5178618,
+   "lon": 0.1341275,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:26+02:00",
+   "lat": 40.5178475,
+   "lon": 0.1344226,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:27+02:00",
+   "lat": 40.5178332,
+   "lon": 0.1347178,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:28+02:00",
+   "lat": 40.517819,
+   "lon": 0.135013,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:29+02:00",
+   "lat": 40.5178047,
+   "lon": 0.1353081,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:30+02:00",
+   "lat": 40.5177904,
+   "lon": 0.1356033,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:31+02:00",
+   "lat": 40.5177761,
+   "lon": 0.1358984,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:32+02:00",
+   "lat": 40.5177618,
+   "lon": 0.1361936,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:33+02:00",
+   "lat": 40.5177475,
+   "lon": 0.1364887,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:34+02:00",
+   "lat": 40.5177332,
+   "lon": 0.1367839,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:35+02:00",
+   "lat": 40.517719,
+   "lon": 0.137079,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:36+02:00",
+   "lat": 40.5177047,
+   "lon": 0.1373742,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:37+02:00",
+   "lat": 40.5176904,
+   "lon": 0.1376693,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:38+02:00",
+   "lat": 40.5176761,
+   "lon": 0.1379645,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:39+02:00",
+   "lat": 40.5176618,
+   "lon": 0.1382596,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:40+02:00",
+   "lat": 40.5176475,
+   "lon": 0.1385548,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:41+02:00",
+   "lat": 40.5176332,
+   "lon": 0.1388499,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:42+02:00",
+   "lat": 40.5176189,
+   "lon": 0.1391451,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:43+02:00",
+   "lat": 40.5176047,
+   "lon": 0.1394402,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:44+02:00",
+   "lat": 40.5175904,
+   "lon": 0.1397354,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:45+02:00",
+   "lat": 40.5175761,
+   "lon": 0.1400305,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:46+02:00",
+   "lat": 40.5175618,
+   "lon": 0.1403257,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:47+02:00",
+   "lat": 40.5175475,
+   "lon": 0.1406208,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:48+02:00",
+   "lat": 40.5175332,
+   "lon": 0.140916,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:49+02:00",
+   "lat": 40.5175189,
+   "lon": 0.1412111,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:50+02:00",
+   "lat": 40.5175046,
+   "lon": 0.1415063,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:51+02:00",
+   "lat": 40.5174904,
+   "lon": 0.1418014,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:52+02:00",
+   "lat": 40.5174761,
+   "lon": 0.1420966,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:53+02:00",
+   "lat": 40.5174618,
+   "lon": 0.1423917,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:54+02:00",
+   "lat": 40.5174475,
+   "lon": 0.1426869,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:55+02:00",
+   "lat": 40.5174332,
+   "lon": 0.142982,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:56+02:00",
+   "lat": 40.5174189,
+   "lon": 0.1432772,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:57+02:00",
+   "lat": 40.5174046,
+   "lon": 0.1435723,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:58+02:00",
+   "lat": 40.5173903,
+   "lon": 0.1438675,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:01:59+02:00",
+   "lat": 40.5173761,
+   "lon": 0.1441626,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:00+02:00",
+   "lat": 40.5173618,
+   "lon": 0.1444578,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:01+02:00",
+   "lat": 40.5173475,
+   "lon": 0.1447529,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:02+02:00",
+   "lat": 40.5173332,
+   "lon": 0.1450481,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:03+02:00",
+   "lat": 40.5173189,
+   "lon": 0.1453432,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:04+02:00",
+   "lat": 40.5173046,
+   "lon": 0.1456384,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:05+02:00",
+   "lat": 40.5172903,
+   "lon": 0.1459335,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:06+02:00",
+   "lat": 40.5172761,
+   "lon": 0.1462287,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:07+02:00",
+   "lat": 40.5172618,
+   "lon": 0.1465238,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:08+02:00",
+   "lat": 40.5172475,
+   "lon": 0.146819,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:09+02:00",
+   "lat": 40.5172332,
+   "lon": 0.1471141,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:10+02:00",
+   "lat": 40.5172189,
+   "lon": 0.1474093,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:11+02:00",
+   "lat": 40.5172046,
+   "lon": 0.1477044,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:12+02:00",
+   "lat": 40.5171903,
+   "lon": 0.1479996,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:13+02:00",
+   "lat": 40.517176,
+   "lon": 0.1482947,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:14+02:00",
+   "lat": 40.5171618,
+   "lon": 0.1485899,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:15+02:00",
+   "lat": 40.5171475,
+   "lon": 0.148885,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:16+02:00",
+   "lat": 40.5171332,
+   "lon": 0.1491802,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:17+02:00",
+   "lat": 40.5171189,
+   "lon": 0.1494753,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:18+02:00",
+   "lat": 40.5171046,
+   "lon": 0.1497705,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:19+02:00",
+   "lat": 40.5170903,
+   "lon": 0.1500656,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:20+02:00",
+   "lat": 40.517076,
+   "lon": 0.1503608,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:21+02:00",
+   "lat": 40.5170617,
+   "lon": 0.1506559,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:22+02:00",
+   "lat": 40.5170475,
+   "lon": 0.1509511,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:23+02:00",
+   "lat": 40.5170332,
+   "lon": 0.1512462,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:24+02:00",
+   "lat": 40.5170189,
+   "lon": 0.1515414,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:25+02:00",
+   "lat": 40.5170046,
+   "lon": 0.1518365,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:26+02:00",
+   "lat": 40.5169903,
+   "lon": 0.1521317,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:27+02:00",
+   "lat": 40.516976,
+   "lon": 0.1524268,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:28+02:00",
+   "lat": 40.5169617,
+   "lon": 0.152722,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:29+02:00",
+   "lat": 40.5169475,
+   "lon": 0.1530171,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:30+02:00",
+   "lat": 40.5169332,
+   "lon": 0.1533123,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:31+02:00",
+   "lat": 40.5169189,
+   "lon": 0.1536074,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:32+02:00",
+   "lat": 40.5169046,
+   "lon": 0.1539026,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:33+02:00",
+   "lat": 40.5168903,
+   "lon": 0.1541977,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:34+02:00",
+   "lat": 40.516876,
+   "lon": 0.1544929,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:35+02:00",
+   "lat": 40.5168617,
+   "lon": 0.154788,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:36+02:00",
+   "lat": 40.5168474,
+   "lon": 0.1550832,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:37+02:00",
+   "lat": 40.5168332,
+   "lon": 0.1553783,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:38+02:00",
+   "lat": 40.5168189,
+   "lon": 0.1556735,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:39+02:00",
+   "lat": 40.5168046,
+   "lon": 0.1559686,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:40+02:00",
+   "lat": 40.5167903,
+   "lon": 0.1562638,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:41+02:00",
+   "lat": 40.516776,
+   "lon": 0.1565589,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:42+02:00",
+   "lat": 40.5167617,
+   "lon": 0.1568541,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:43+02:00",
+   "lat": 40.5167474,
+   "lon": 0.1571492,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:44+02:00",
+   "lat": 40.5167331,
+   "lon": 0.1574444,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:45+02:00",
+   "lat": 40.5167189,
+   "lon": 0.1577395,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:46+02:00",
+   "lat": 40.5167046,
+   "lon": 0.1580346,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:47+02:00",
+   "lat": 40.5166903,
+   "lon": 0.1583298,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:48+02:00",
+   "lat": 40.516676,
+   "lon": 0.1586249,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:49+02:00",
+   "lat": 40.5166617,
+   "lon": 0.1589201,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:50+02:00",
+   "lat": 40.5166474,
+   "lon": 0.1592152,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:51+02:00",
+   "lat": 40.5166331,
+   "lon": 0.1595104,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:52+02:00",
+   "lat": 40.5166188,
+   "lon": 0.1598055,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:53+02:00",
+   "lat": 40.5166046,
+   "lon": 0.1601007,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:54+02:00",
+   "lat": 40.5165903,
+   "lon": 0.1603958,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:55+02:00",
+   "lat": 40.516576,
+   "lon": 0.160691,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:56+02:00",
+   "lat": 40.5165617,
+   "lon": 0.1609861,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:57+02:00",
+   "lat": 40.5165474,
+   "lon": 0.1612813,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:58+02:00",
+   "lat": 40.5165331,
+   "lon": 0.1615764,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:02:59+02:00",
+   "lat": 40.5165188,
+   "lon": 0.1618716,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:00+02:00",
+   "lat": 40.5165046,
+   "lon": 0.1621667,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:01+02:00",
+   "lat": 40.5164903,
+   "lon": 0.1624619,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:02+02:00",
+   "lat": 40.516476,
+   "lon": 0.162757,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:03+02:00",
+   "lat": 40.5164617,
+   "lon": 0.1630521,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:04+02:00",
+   "lat": 40.5164474,
+   "lon": 0.1633473,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:05+02:00",
+   "lat": 40.5164331,
+   "lon": 0.1636424,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:06+02:00",
+   "lat": 40.5164188,
+   "lon": 0.1639376,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:07+02:00",
+   "lat": 40.5164045,
+   "lon": 0.1642327,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:08+02:00",
+   "lat": 40.5163903,
+   "lon": 0.1645279,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:09+02:00",
+   "lat": 40.516376,
+   "lon": 0.164823,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:10+02:00",
+   "lat": 40.5163617,
+   "lon": 0.1651182,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:11+02:00",
+   "lat": 40.5163474,
+   "lon": 0.1654133,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:12+02:00",
+   "lat": 40.5163331,
+   "lon": 0.1657085,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:13+02:00",
+   "lat": 40.5163188,
+   "lon": 0.1660036,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:14+02:00",
+   "lat": 40.5163045,
+   "lon": 0.1662988,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:15+02:00",
+   "lat": 40.5162902,
+   "lon": 0.1665939,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:16+02:00",
+   "lat": 40.516276,
+   "lon": 0.166889,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:17+02:00",
+   "lat": 40.5162617,
+   "lon": 0.1671842,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:18+02:00",
+   "lat": 40.5162474,
+   "lon": 0.1674793,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:19+02:00",
+   "lat": 40.5162331,
+   "lon": 0.1677745,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:20+02:00",
+   "lat": 40.5162188,
+   "lon": 0.1680696,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:21+02:00",
+   "lat": 40.5162045,
+   "lon": 0.1683648,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:22+02:00",
+   "lat": 40.5161902,
+   "lon": 0.1686599,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:23+02:00",
+   "lat": 40.5161759,
+   "lon": 0.1689551,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:24+02:00",
+   "lat": 40.5161617,
+   "lon": 0.1692502,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:25+02:00",
+   "lat": 40.5161474,
+   "lon": 0.1695454,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:26+02:00",
+   "lat": 40.5161331,
+   "lon": 0.1698405,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:27+02:00",
+   "lat": 40.5161188,
+   "lon": 0.1701356,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:28+02:00",
+   "lat": 40.5161045,
+   "lon": 0.1704308,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:29+02:00",
+   "lat": 40.5160902,
+   "lon": 0.1707259,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:30+02:00",
+   "lat": 40.5160759,
+   "lon": 0.1710211,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:31+02:00",
+   "lat": 40.5160617,
+   "lon": 0.1713162,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:32+02:00",
+   "lat": 40.5160474,
+   "lon": 0.1716114,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:33+02:00",
+   "lat": 40.5160331,
+   "lon": 0.1719065,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:34+02:00",
+   "lat": 40.5160188,
+   "lon": 0.1722017,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:35+02:00",
+   "lat": 40.5160045,
+   "lon": 0.1724968,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:36+02:00",
+   "lat": 40.5159902,
+   "lon": 0.1727919,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:37+02:00",
+   "lat": 40.5159759,
+   "lon": 0.1730871,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:38+02:00",
+   "lat": 40.5159616,
+   "lon": 0.1733822,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:39+02:00",
+   "lat": 40.5159474,
+   "lon": 0.1736774,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:40+02:00",
+   "lat": 40.5159331,
+   "lon": 0.1739725,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:41+02:00",
+   "lat": 40.5159188,
+   "lon": 0.1742677,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:42+02:00",
+   "lat": 40.5159045,
+   "lon": 0.1745628,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:43+02:00",
+   "lat": 40.5158902,
+   "lon": 0.174858,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:44+02:00",
+   "lat": 40.5158759,
+   "lon": 0.1751531,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:45+02:00",
+   "lat": 40.5158616,
+   "lon": 0.1754482,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:46+02:00",
+   "lat": 40.5158473,
+   "lon": 0.1757434,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:47+02:00",
+   "lat": 40.5158331,
+   "lon": 0.1760385,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:48+02:00",
+   "lat": 40.5158188,
+   "lon": 0.1763337,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:49+02:00",
+   "lat": 40.5158045,
+   "lon": 0.1766288,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:50+02:00",
+   "lat": 40.5157902,
+   "lon": 0.176924,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:51+02:00",
+   "lat": 40.5157759,
+   "lon": 0.1772191,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:52+02:00",
+   "lat": 40.5157616,
+   "lon": 0.1775142,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:53+02:00",
+   "lat": 40.5157473,
+   "lon": 0.1778094,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:54+02:00",
+   "lat": 40.5157331,
+   "lon": 0.1781045,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:55+02:00",
+   "lat": 40.5157188,
+   "lon": 0.1783997,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:56+02:00",
+   "lat": 40.5157045,
+   "lon": 0.1786948,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:57+02:00",
+   "lat": 40.5156902,
+   "lon": 0.17899,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:58+02:00",
+   "lat": 40.5156759,
+   "lon": 0.1792851,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:03:59+02:00",
+   "lat": 40.5156616,
+   "lon": 0.1795802,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:00+02:00",
+   "lat": 40.5156473,
+   "lon": 0.1798754,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:01+02:00",
+   "lat": 40.515633,
+   "lon": 0.1801705,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:02+02:00",
+   "lat": 40.5156188,
+   "lon": 0.1804657,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:03+02:00",
+   "lat": 40.5156045,
+   "lon": 0.1807608,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:04+02:00",
+   "lat": 40.5155902,
+   "lon": 0.181056,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:05+02:00",
+   "lat": 40.5155759,
+   "lon": 0.1813511,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:06+02:00",
+   "lat": 40.5155616,
+   "lon": 0.1816462,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:07+02:00",
+   "lat": 40.5155473,
+   "lon": 0.1819414,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:08+02:00",
+   "lat": 40.515533,
+   "lon": 0.1822365,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:09+02:00",
+   "lat": 40.5155187,
+   "lon": 0.1825317,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:10+02:00",
+   "lat": 40.5155045,
+   "lon": 0.1828268,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:11+02:00",
+   "lat": 40.5154902,
+   "lon": 0.183122,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:12+02:00",
+   "lat": 40.5154759,
+   "lon": 0.1834171,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:13+02:00",
+   "lat": 40.5154616,
+   "lon": 0.1837122,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:14+02:00",
+   "lat": 40.5154473,
+   "lon": 0.1840074,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:15+02:00",
+   "lat": 40.515433,
+   "lon": 0.1843025,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:16+02:00",
+   "lat": 40.5154187,
+   "lon": 0.1845977,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:17+02:00",
+   "lat": 40.5154044,
+   "lon": 0.1848928,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:18+02:00",
+   "lat": 40.5153902,
+   "lon": 0.1851879,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:19+02:00",
+   "lat": 40.5153759,
+   "lon": 0.1854831,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:20+02:00",
+   "lat": 40.5153616,
+   "lon": 0.1857782,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:21+02:00",
+   "lat": 40.5153473,
+   "lon": 0.1860734,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:22+02:00",
+   "lat": 40.515333,
+   "lon": 0.1863685,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:23+02:00",
+   "lat": 40.5153187,
+   "lon": 0.1866637,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:24+02:00",
+   "lat": 40.5153044,
+   "lon": 0.1869588,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:25+02:00",
+   "lat": 40.5152902,
+   "lon": 0.1872539,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:26+02:00",
+   "lat": 40.5152759,
+   "lon": 0.1875491,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:27+02:00",
+   "lat": 40.5152616,
+   "lon": 0.1878442,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:28+02:00",
+   "lat": 40.5152473,
+   "lon": 0.1881394,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:29+02:00",
+   "lat": 40.515233,
+   "lon": 0.1884345,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:30+02:00",
+   "lat": 40.5152187,
+   "lon": 0.1887296,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:31+02:00",
+   "lat": 40.5152044,
+   "lon": 0.1890248,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:32+02:00",
+   "lat": 40.5151901,
+   "lon": 0.1893199,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:33+02:00",
+   "lat": 40.5151759,
+   "lon": 0.1896151,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:34+02:00",
+   "lat": 40.5151616,
+   "lon": 0.1899102,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:35+02:00",
+   "lat": 40.5151473,
+   "lon": 0.1902053,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:36+02:00",
+   "lat": 40.515133,
+   "lon": 0.1905005,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:37+02:00",
+   "lat": 40.5151187,
+   "lon": 0.1907956,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:38+02:00",
+   "lat": 40.5151044,
+   "lon": 0.1910908,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:39+02:00",
+   "lat": 40.5150901,
+   "lon": 0.1913859,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:40+02:00",
+   "lat": 40.5150758,
+   "lon": 0.1916811,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:41+02:00",
+   "lat": 40.5150616,
+   "lon": 0.1919762,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:42+02:00",
+   "lat": 40.5150473,
+   "lon": 0.1922713,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:43+02:00",
+   "lat": 40.515033,
+   "lon": 0.1925665,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:44+02:00",
+   "lat": 40.5150187,
+   "lon": 0.1928616,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:45+02:00",
+   "lat": 40.5150044,
+   "lon": 0.1931568,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:46+02:00",
+   "lat": 40.5149901,
+   "lon": 0.1934519,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:47+02:00",
+   "lat": 40.5149758,
+   "lon": 0.193747,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:48+02:00",
+   "lat": 40.5149616,
+   "lon": 0.1940422,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:49+02:00",
+   "lat": 40.5149473,
+   "lon": 0.1943373,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:50+02:00",
+   "lat": 40.514933,
+   "lon": 0.1946324,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:51+02:00",
+   "lat": 40.5149187,
+   "lon": 0.1949276,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:52+02:00",
+   "lat": 40.5149044,
+   "lon": 0.1952227,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:53+02:00",
+   "lat": 40.5148901,
+   "lon": 0.1955179,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:54+02:00",
+   "lat": 40.5148758,
+   "lon": 0.195813,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:55+02:00",
+   "lat": 40.5148615,
+   "lon": 0.1961081,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:56+02:00",
+   "lat": 40.5148473,
+   "lon": 0.1964033,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:57+02:00",
+   "lat": 40.514833,
+   "lon": 0.1966984,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:58+02:00",
+   "lat": 40.5148187,
+   "lon": 0.1969936,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:04:59+02:00",
+   "lat": 40.5148044,
+   "lon": 0.1972887,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:00+02:00",
+   "lat": 40.5147901,
+   "lon": 0.1975838,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:01+02:00",
+   "lat": 40.5147758,
+   "lon": 0.197879,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:02+02:00",
+   "lat": 40.5147615,
+   "lon": 0.1981741,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:03+02:00",
+   "lat": 40.5147472,
+   "lon": 0.1984693,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:04+02:00",
+   "lat": 40.514733,
+   "lon": 0.1987644,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:05+02:00",
+   "lat": 40.5147187,
+   "lon": 0.1990595,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:06+02:00",
+   "lat": 40.5147044,
+   "lon": 0.1993547,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:07+02:00",
+   "lat": 40.5146901,
+   "lon": 0.1996498,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:08+02:00",
+   "lat": 40.5146758,
+   "lon": 0.199945,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:09+02:00",
+   "lat": 40.5146615,
+   "lon": 0.2002401,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:10+02:00",
+   "lat": 40.5146472,
+   "lon": 0.2005352,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:11+02:00",
+   "lat": 40.5146329,
+   "lon": 0.2008304,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:12+02:00",
+   "lat": 40.5146187,
+   "lon": 0.2011255,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:13+02:00",
+   "lat": 40.5146044,
+   "lon": 0.2014206,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:14+02:00",
+   "lat": 40.5145901,
+   "lon": 0.2017158,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:15+02:00",
+   "lat": 40.5145758,
+   "lon": 0.2020109,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:16+02:00",
+   "lat": 40.5145615,
+   "lon": 0.2023061,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:17+02:00",
+   "lat": 40.5145472,
+   "lon": 0.2026012,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:18+02:00",
+   "lat": 40.5145329,
+   "lon": 0.2028963,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:19+02:00",
+   "lat": 40.5145187,
+   "lon": 0.2031915,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:20+02:00",
+   "lat": 40.5145044,
+   "lon": 0.2034866,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:21+02:00",
+   "lat": 40.5144901,
+   "lon": 0.2037817,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:22+02:00",
+   "lat": 40.5144758,
+   "lon": 0.2040769,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:23+02:00",
+   "lat": 40.5144615,
+   "lon": 0.204372,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:24+02:00",
+   "lat": 40.5144472,
+   "lon": 0.2046672,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:25+02:00",
+   "lat": 40.5144329,
+   "lon": 0.2049623,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:26+02:00",
+   "lat": 40.5144186,
+   "lon": 0.2052574,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:27+02:00",
+   "lat": 40.5144044,
+   "lon": 0.2055526,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:28+02:00",
+   "lat": 40.5143901,
+   "lon": 0.2058477,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:29+02:00",
+   "lat": 40.5143758,
+   "lon": 0.2061428,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:30+02:00",
+   "lat": 40.5143615,
+   "lon": 0.206438,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:31+02:00",
+   "lat": 40.5143472,
+   "lon": 0.2067331,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:32+02:00",
+   "lat": 40.5143329,
+   "lon": 0.2070283,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:33+02:00",
+   "lat": 40.5143186,
+   "lon": 0.2073234,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:34+02:00",
+   "lat": 40.5143043,
+   "lon": 0.2076185,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:35+02:00",
+   "lat": 40.5142901,
+   "lon": 0.2079137,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:36+02:00",
+   "lat": 40.5142758,
+   "lon": 0.2082088,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:37+02:00",
+   "lat": 40.5142615,
+   "lon": 0.2085039,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:38+02:00",
+   "lat": 40.5142472,
+   "lon": 0.2087991,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:39+02:00",
+   "lat": 40.5142329,
+   "lon": 0.2090942,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:40+02:00",
+   "lat": 40.5142186,
+   "lon": 0.2093894,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:41+02:00",
+   "lat": 40.5142043,
+   "lon": 0.2096845,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:42+02:00",
+   "lat": 40.51419,
+   "lon": 0.2099796,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:43+02:00",
+   "lat": 40.5141758,
+   "lon": 0.2102748,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:44+02:00",
+   "lat": 40.5141615,
+   "lon": 0.2105699,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:45+02:00",
+   "lat": 40.5141472,
+   "lon": 0.210865,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:46+02:00",
+   "lat": 40.5141329,
+   "lon": 0.2111602,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:47+02:00",
+   "lat": 40.5141186,
+   "lon": 0.2114553,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:48+02:00",
+   "lat": 40.5141043,
+   "lon": 0.2117504,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:49+02:00",
+   "lat": 40.51409,
+   "lon": 0.2120456,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:50+02:00",
+   "lat": 40.5140758,
+   "lon": 0.2123407,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:51+02:00",
+   "lat": 40.5140615,
+   "lon": 0.2126359,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:52+02:00",
+   "lat": 40.5140472,
+   "lon": 0.212931,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:53+02:00",
+   "lat": 40.5140329,
+   "lon": 0.2132261,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:54+02:00",
+   "lat": 40.5140186,
+   "lon": 0.2135213,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:55+02:00",
+   "lat": 40.5140043,
+   "lon": 0.2138164,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:56+02:00",
+   "lat": 40.51399,
+   "lon": 0.2141115,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:57+02:00",
+   "lat": 40.5139757,
+   "lon": 0.2144067,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:58+02:00",
+   "lat": 40.5139615,
+   "lon": 0.2147018,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:05:59+02:00",
+   "lat": 40.5139472,
+   "lon": 0.2149969,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:00+02:00",
+   "lat": 40.5139329,
+   "lon": 0.2152921,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:01+02:00",
+   "lat": 40.5139186,
+   "lon": 0.2155872,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:02+02:00",
+   "lat": 40.5139043,
+   "lon": 0.2158823,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:03+02:00",
+   "lat": 40.51389,
+   "lon": 0.2161775,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:04+02:00",
+   "lat": 40.5138757,
+   "lon": 0.2164726,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:05+02:00",
+   "lat": 40.5138614,
+   "lon": 0.2167677,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:06+02:00",
+   "lat": 40.5138472,
+   "lon": 0.2170629,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:07+02:00",
+   "lat": 40.5138329,
+   "lon": 0.217358,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:08+02:00",
+   "lat": 40.5138186,
+   "lon": 0.2176532,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:09+02:00",
+   "lat": 40.5138043,
+   "lon": 0.2179483,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:10+02:00",
+   "lat": 40.51379,
+   "lon": 0.2182434,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:11+02:00",
+   "lat": 40.5137757,
+   "lon": 0.2185386,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:12+02:00",
+   "lat": 40.5137614,
+   "lon": 0.2188337,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:13+02:00",
+   "lat": 40.5137472,
+   "lon": 0.2191288,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:14+02:00",
+   "lat": 40.5137329,
+   "lon": 0.219424,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:15+02:00",
+   "lat": 40.5137186,
+   "lon": 0.2197191,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:16+02:00",
+   "lat": 40.5137043,
+   "lon": 0.2200142,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:17+02:00",
+   "lat": 40.51369,
+   "lon": 0.2203094,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:18+02:00",
+   "lat": 40.5136757,
+   "lon": 0.2206045,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:19+02:00",
+   "lat": 40.5136614,
+   "lon": 0.2208996,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:20+02:00",
+   "lat": 40.5136471,
+   "lon": 0.2211948,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:21+02:00",
+   "lat": 40.5136329,
+   "lon": 0.2214899,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:22+02:00",
+   "lat": 40.5136186,
+   "lon": 0.221785,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:23+02:00",
+   "lat": 40.5136043,
+   "lon": 0.2220802,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:24+02:00",
+   "lat": 40.51359,
+   "lon": 0.2223753,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:25+02:00",
+   "lat": 40.5135757,
+   "lon": 0.2226704,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:26+02:00",
+   "lat": 40.5135614,
+   "lon": 0.2229656,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:27+02:00",
+   "lat": 40.5135471,
+   "lon": 0.2232607,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:28+02:00",
+   "lat": 40.5135328,
+   "lon": 0.2235558,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:29+02:00",
+   "lat": 40.5135186,
+   "lon": 0.223851,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:30+02:00",
+   "lat": 40.5135043,
+   "lon": 0.2241461,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:31+02:00",
+   "lat": 40.51349,
+   "lon": 0.2244412,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:32+02:00",
+   "lat": 40.5134757,
+   "lon": 0.2247364,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:33+02:00",
+   "lat": 40.5134614,
+   "lon": 0.2250315,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:34+02:00",
+   "lat": 40.5134471,
+   "lon": 0.2253266,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:35+02:00",
+   "lat": 40.5134328,
+   "lon": 0.2256218,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:36+02:00",
+   "lat": 40.5134185,
+   "lon": 0.2259169,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:37+02:00",
+   "lat": 40.5134043,
+   "lon": 0.226212,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:38+02:00",
+   "lat": 40.51339,
+   "lon": 0.2265072,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:39+02:00",
+   "lat": 40.5133757,
+   "lon": 0.2268023,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:40+02:00",
+   "lat": 40.5133614,
+   "lon": 0.2270974,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:41+02:00",
+   "lat": 40.5133471,
+   "lon": 0.2273926,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:42+02:00",
+   "lat": 40.5133328,
+   "lon": 0.2276877,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:43+02:00",
+   "lat": 40.5133185,
+   "lon": 0.2279828,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:44+02:00",
+   "lat": 40.5133043,
+   "lon": 0.228278,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:45+02:00",
+   "lat": 40.51329,
+   "lon": 0.2285731,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:46+02:00",
+   "lat": 40.5132757,
+   "lon": 0.2288682,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:47+02:00",
+   "lat": 40.5132614,
+   "lon": 0.2291634,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:48+02:00",
+   "lat": 40.5132471,
+   "lon": 0.2294585,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:49+02:00",
+   "lat": 40.5132328,
+   "lon": 0.2297536,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:50+02:00",
+   "lat": 40.5132185,
+   "lon": 0.2300488,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:51+02:00",
+   "lat": 40.5132042,
+   "lon": 0.2303439,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:52+02:00",
+   "lat": 40.51319,
+   "lon": 0.230639,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:53+02:00",
+   "lat": 40.5131757,
+   "lon": 0.2309342,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:54+02:00",
+   "lat": 40.5131614,
+   "lon": 0.2312293,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:55+02:00",
+   "lat": 40.5131471,
+   "lon": 0.2315244,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:56+02:00",
+   "lat": 40.5131328,
+   "lon": 0.2318195,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:57+02:00",
+   "lat": 40.5131185,
+   "lon": 0.2321147,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:58+02:00",
+   "lat": 40.5131042,
+   "lon": 0.2324098,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:06:59+02:00",
+   "lat": 40.5130899,
+   "lon": 0.2327049,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:00+02:00",
+   "lat": 40.5130757,
+   "lon": 0.2330001,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:01+02:00",
+   "lat": 40.5130614,
+   "lon": 0.2332952,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:02+02:00",
+   "lat": 40.5130471,
+   "lon": 0.2335903,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:03+02:00",
+   "lat": 40.5130328,
+   "lon": 0.2338855,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:04+02:00",
+   "lat": 40.5130185,
+   "lon": 0.2341806,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:05+02:00",
+   "lat": 40.5130042,
+   "lon": 0.2344757,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:06+02:00",
+   "lat": 40.5129899,
+   "lon": 0.2347709,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:07+02:00",
+   "lat": 40.5129756,
+   "lon": 0.235066,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:08+02:00",
+   "lat": 40.5129614,
+   "lon": 0.2353611,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:09+02:00",
+   "lat": 40.5129471,
+   "lon": 0.2356563,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:10+02:00",
+   "lat": 40.5129328,
+   "lon": 0.2359514,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:11+02:00",
+   "lat": 40.5129185,
+   "lon": 0.2362465,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:12+02:00",
+   "lat": 40.5129042,
+   "lon": 0.2365416,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:13+02:00",
+   "lat": 40.5128899,
+   "lon": 0.2368368,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:14+02:00",
+   "lat": 40.5128756,
+   "lon": 0.2371319,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:15+02:00",
+   "lat": 40.5128614,
+   "lon": 0.237427,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:16+02:00",
+   "lat": 40.5128471,
+   "lon": 0.2377222,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:17+02:00",
+   "lat": 40.5128328,
+   "lon": 0.2380173,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:18+02:00",
+   "lat": 40.5128185,
+   "lon": 0.2383124,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:19+02:00",
+   "lat": 40.5128042,
+   "lon": 0.2386076,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:20+02:00",
+   "lat": 40.5127899,
+   "lon": 0.2389027,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:21+02:00",
+   "lat": 40.5127756,
+   "lon": 0.2391978,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:22+02:00",
+   "lat": 40.5127613,
+   "lon": 0.239493,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:23+02:00",
+   "lat": 40.5127471,
+   "lon": 0.2397881,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:24+02:00",
+   "lat": 40.5127328,
+   "lon": 0.2400832,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:25+02:00",
+   "lat": 40.5127185,
+   "lon": 0.2403783,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:26+02:00",
+   "lat": 40.5127042,
+   "lon": 0.2406735,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:27+02:00",
+   "lat": 40.5126899,
+   "lon": 0.2409686,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:28+02:00",
+   "lat": 40.5126756,
+   "lon": 0.2412637,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:29+02:00",
+   "lat": 40.5126613,
+   "lon": 0.2415589,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:30+02:00",
+   "lat": 40.512647,
+   "lon": 0.241854,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:31+02:00",
+   "lat": 40.5126328,
+   "lon": 0.2421491,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:32+02:00",
+   "lat": 40.5126185,
+   "lon": 0.2424443,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:33+02:00",
+   "lat": 40.5126042,
+   "lon": 0.2427394,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:34+02:00",
+   "lat": 40.5125899,
+   "lon": 0.2430345,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:35+02:00",
+   "lat": 40.5125756,
+   "lon": 0.2433296,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:36+02:00",
+   "lat": 40.5125613,
+   "lon": 0.2436248,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:37+02:00",
+   "lat": 40.512547,
+   "lon": 0.2439199,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:38+02:00",
+   "lat": 40.5125328,
+   "lon": 0.244215,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:39+02:00",
+   "lat": 40.5125185,
+   "lon": 0.2445102,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:40+02:00",
+   "lat": 40.5125042,
+   "lon": 0.2448053,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:41+02:00",
+   "lat": 40.5124899,
+   "lon": 0.2451004,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:42+02:00",
+   "lat": 40.5124756,
+   "lon": 0.2453955,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:43+02:00",
+   "lat": 40.5124613,
+   "lon": 0.2456907,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:44+02:00",
+   "lat": 40.512447,
+   "lon": 0.2459858,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:45+02:00",
+   "lat": 40.5124327,
+   "lon": 0.2462809,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:46+02:00",
+   "lat": 40.5124185,
+   "lon": 0.2465761,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:47+02:00",
+   "lat": 40.5124042,
+   "lon": 0.2468712,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:48+02:00",
+   "lat": 40.5123899,
+   "lon": 0.2471663,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:49+02:00",
+   "lat": 40.5123756,
+   "lon": 0.2474614,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:50+02:00",
+   "lat": 40.5123613,
+   "lon": 0.2477566,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:51+02:00",
+   "lat": 40.512347,
+   "lon": 0.2480517,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:52+02:00",
+   "lat": 40.5123327,
+   "lon": 0.2483468,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:53+02:00",
+   "lat": 40.5123184,
+   "lon": 0.248642,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:54+02:00",
+   "lat": 40.5123042,
+   "lon": 0.2489371,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  },
+  {
+   "t": "2026-10-07T10:07:55+02:00",
+   "lat": 40.5122899,
+   "lon": 0.2492322,
+   "speed": 25.0,
+   "course": 93.64,
+   "accuracy": 5.0,
+   "stationary": false
+  }
+ ],
+ "expected": [
+  {
+   "kind": "stretchEntered",
+   "radar": "dgt_invive-Tramo_Invive_344",
+   "distance": 610.0,
+   "tolerance": 40,
+   "spoken": "Tramo de radar móvil, N-232, 10 kilómetros.",
+   "level": "full"
+  },
+  {
+   "kind": "stretchExited",
+   "radar": "dgt_invive-Tramo_Invive_344",
+   "exitReason": "farGate",
+   "spoken": "Fin de tramo."
+  }
+ ],
+ "snapshots": [
+  {
+   "fixIndex": 155,
+   "stretch": "dgt_invive-Tramo_Invive_344",
+   "remainingMetres": 7776,
+   "tolerance": 60,
+   "phase": "insideStretch"
+  }
+ ]
+}

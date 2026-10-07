@@ -32,6 +32,8 @@ public struct Approach: Sendable, Hashable {
 }
 
 public struct ApproachEvaluator: Sendable {
+    /// `previousDistances` are the distances to this gate on earlier fixes, oldest first, since the gate entered the
+    /// candidate band: the first one decides `late`, the last two decide `closing`.
     public static func evaluate(
         gate: Coordinate,
         bearing: Double?,
@@ -41,6 +43,32 @@ public struct ApproachEvaluator: Sendable {
         previousDistances: [Double],
         warnDistance: Double
     ) -> Approach {
-        fatalError("lane: core")
+        let distance = Geo.distance(fix.coordinate, gate)
+        let toGate = Geo.bearing(from: fix.coordinate, to: gate)
+        let ahead = Geo.angleDiff(courseDegrees, toGate) <= Thresholds.aheadDeg
+
+        var closing = false
+        let n = previousDistances.count
+        if n >= Thresholds.closingFixes {
+            closing = true
+            var later = distance
+            for i in stride(from: n - 1, through: n - Thresholds.closingFixes, by: -1) {
+                let earlier = previousDistances[i]
+                if earlier - later < Thresholds.closingMinM { closing = false; break }
+                later = earlier
+            }
+        }
+
+        let inRange = distance <= warnDistance
+        let directionMatch: Bool
+        if let bearing, !bidirectional {
+            directionMatch = Geo.angleDiff(courseDegrees, bearing) <= Thresholds.bearingToleranceDeg
+        } else {
+            directionMatch = true
+        }
+        let firstSeen = previousDistances.first ?? distance
+        let late = firstSeen < warnDistance - Thresholds.lateBandM
+        let crossTrack = Geo.crossTrack(point: gate, from: fix.coordinate, courseDegrees: courseDegrees)
+        return Approach(ahead: ahead, closing: closing, inRange: inRange, directionMatch: directionMatch, late: late, distanceMetres: distance, crossTrackMetres: crossTrack)
     }
 }
