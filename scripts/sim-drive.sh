@@ -161,7 +161,10 @@ ARGS=()
 [ "$NOLA" -eq 1 ] && ARGS+=(-NoLiveActivity 1 -ProvisionalNotifications 1)
 START_EPOCH=$(date +%s)
 # Launch first, then place the car: a simulated position set before the launch makes the system launch the app in
-# the background for significant change, and that process would not see the launch arguments.
+# the background for significant change, and that process would not see the launch arguments. The same can happen
+# in the seconds since the terminate above (the Simulator re-delivers significant change on its own), so the app is
+# ended again right before the launch; `simctl launch` on a running app only brings it forward, arguments ignored.
+xcrun simctl terminate "$UDID" "$BUNDLE" >/dev/null 2>&1 || true
 xcrun simctl launch "$UDID" "$BUNDLE" ${ARGS[@]+"${ARGS[@]}"} >/dev/null
 sleep 2
 xcrun simctl location "$UDID" set "$(echo "$WAYPOINTS" | cut -d' ' -f1)"

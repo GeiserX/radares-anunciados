@@ -63,7 +63,10 @@ struct ActivityCadence: Sendable {
             return .target
         }
         if content.note != last.note { return .note }
-        if content.distanceMetres != last.distanceMetres { return .milestone }
+        // Milestones are for a radar ahead (approaching, alert). The watching card names the nearest radar as
+        // "cerca" whichever side it is on; in a city its distance crosses a milestone every few seconds, and each
+        // of those updates would spend budget on a card that only says "nearby".
+        if content.distanceMetres != last.distanceMetres, content.phase != .watching { return .milestone }
         if content.stretchRemainingMetres != last.stretchRemainingMetres { return .stretchStep }
         if now.timeIntervalSince(sentAt) >= Thresholds.cardIdleSeconds { return .idle }
         return nil

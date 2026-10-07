@@ -250,9 +250,9 @@ public actor DriveSession {
         let events = engine.ingest(fix)
         if !events.isEmpty {
             await dispatch(events, ledger: engine.ledger, at: fix)
-        }
-        if engineEnabled {
-            // Every fix: the controller's milestone cadence decides whether the system hears about it (design 4.2).
+        } else if engineEnabled {
+            // Every quiet fix: the controller's milestone cadence decides whether the system hears about it (design
+            // 4.2). A fix with events already put the event's card on the activity through the dispatcher.
             await DriveActivityController.shared.update(engine.snapshot.content, alert: nil)
         }
         return events

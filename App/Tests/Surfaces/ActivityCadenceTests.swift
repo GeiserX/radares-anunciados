@@ -63,6 +63,17 @@ final class ActivityCadenceTests: XCTestCase {
         XCTAssertEqual(inside.reason(for: ActivityCadence.display(card(.insideStretch, remaining: 7_990)), alert: false, now: t), .stretchStep)
     }
 
+    func testWatchingCardIgnoresDistanceMilestones() {
+        var cadence = ActivityCadence()
+        var nearby = card(.watching, metres: 990)
+        nearby.subtitle = "cerca"
+        cadence.record(ActivityCadence.display(nearby), at: t0)
+        var closer = nearby
+        closer.distanceMetres = 480
+        XCTAssertNil(cadence.reason(for: ActivityCadence.display(closer), alert: false, now: t0.addingTimeInterval(5)), "a radar beside the road moving from 1,0 km to 500 m is not a milestone")
+        XCTAssertEqual(cadence.reason(for: ActivityCadence.display(card(.approaching, metres: 480)), alert: false, now: t0.addingTimeInterval(5)), .phase)
+    }
+
     func testIdleRefreshAfterSixtySeconds() {
         var cadence = ActivityCadence()
         let watching = ActivityCadence.display(.watching(at: t0))
