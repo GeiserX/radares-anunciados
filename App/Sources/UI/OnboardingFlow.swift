@@ -101,7 +101,7 @@ private struct AlertsStep: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Image(systemName: "bell.badge.fill").font(.system(size: 56)).foregroundStyle(.tint)
-                Text("Cada aviso llega por voz y como notificación urgente, que pasa la mayoría de los modos de concentración; no hay nada que abrir ni que dejar en pantalla. Con el modo Conducción el aviso llega por voz.")
+                Text("Cada aviso llega como notificación urgente, que pasa la mayoría de los modos de concentración, y por voz cuando el radar está en tu sentido y no has apagado la voz; no hay nada que abrir ni que dejar en pantalla. Con el modo Conducción solo llega la voz.")
                 switch permissions.notifications {
                 case .authorized, .provisional, .ephemeral:
                     Label("Notificaciones permitidas", systemImage: "checkmark.circle.fill").foregroundStyle(.green)

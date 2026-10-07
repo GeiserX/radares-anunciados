@@ -105,8 +105,8 @@ A point fires on the first fix where all four hold:
 3. **in range**: distance ≤ `warn`;
 4. **direction**: `bearing` is null, or the radar is bidirectional, or `|course − bearing| ≤ 90°` (mod 360).
 
-1 to 3 with 4 failing is a **visual** warning (shown as "sentido contrario", not spoken, no notification); 1 to 4 is
-**full**. **Late** when the first recorded distance was under `warn − 100 m`; late warnings still fire. Under 60 m
+1 to 3 with 4 failing is a **visual** warning (the notification titled "…, sentido contrario", silent, not spoken; section
+6); 1 to 4 is **full**. **Late** when the first recorded distance was under `warn − 100 m`; late warnings still fire. Under 60 m
 and closing: fires as visual (the notification without the voice, the sentence would end after the radar).
 
 Passed: on a later fix, distance under 30 m, or three consecutive increases of at least 1 m after the minimum (a

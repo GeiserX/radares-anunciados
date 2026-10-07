@@ -4,17 +4,17 @@ Radares Anunciados v1 is not a CarPlay app. The design is in [DESIGN.md](DESIGN.
 
 - **Voice** through the car's audio (`AVAudioSession` mode `.voicePrompt`), which works on any iOS version and through any Focus.
 
-Every warning is also a **Time Sensitive notification** on the phone. iOS draws it on the Lock Screen; once the CarPlay driving-task entitlement below is granted, iOS draws the same notification on the car screen, and the app changes nothing in how it warns. There is no card to start and nothing to leave on screen: the app wakes itself when the car moves, like the Home Assistant app, and warns.
+Every warning is also a **Time Sensitive notification** on the phone. iOS draws it on the Lock Screen. Once the CarPlay driving-task entitlement below is granted and the app adds the three pieces the rules below list (the `.carPlay` authorization option, the `allowInCarPlay` category, the app icon on the CarPlay Home Screen), iOS draws the same notification on the car screen; how the app warns does not change. There is no card to start and nothing to leave on screen: the app wakes itself when the car moves, like the Home Assistant app, and warns.
 
 ## Español
 
-No hay nada que abrir ni que dejar en pantalla: la app se despierta sola al empezar a conducir y avisa por voz y con una notificación urgente en el iPhone. Cuando Apple conceda el permiso de CarPlay, esa misma notificación aparecerá en la pantalla del coche.
+No hay nada que abrir ni que dejar en pantalla: la app se despierta sola al empezar a conducir y avisa por voz y con una notificación urgente en el iPhone. Cuando Apple conceda el permiso de CarPlay y la app añada lo que ese permiso exige (la opción `.carPlay`, la categoría `allowInCarPlay` y el icono en la pantalla de inicio de CarPlay), esa misma notificación aparecerá en la pantalla del coche.
 
 Con el permiso de ubicación "Mientras se usa" y sin "Siempre", abrir la app es la única forma de empezar el viaje.
 
 ## English
 
-There is nothing to open and nothing to leave on screen: the app wakes on its own when you start driving and warns by voice and with a Time Sensitive notification on the iPhone. Once Apple grants the CarPlay entitlement, that same notification appears on the car screen.
+There is nothing to open and nothing to leave on screen: the app wakes on its own when you start driving and warns by voice and with a Time Sensitive notification on the iPhone. Once Apple grants the CarPlay entitlement and the app adds what it requires (the `.carPlay` option, the `allowInCarPlay` category and the icon on the CarPlay Home Screen), that same notification appears on the car screen.
 
 With "While Using" location permission and no "Always", opening the app is the only way a drive can start.
 

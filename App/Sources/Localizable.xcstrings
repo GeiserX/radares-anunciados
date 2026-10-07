@@ -191,12 +191,12 @@
         }
       }
     },
-    "Cada aviso llega por voz y como notificación urgente, que pasa la mayoría de los modos de concentración; no hay nada que abrir ni que dejar en pantalla. Con el modo Conducción el aviso llega por voz." : {
+    "Cada aviso llega como notificación urgente, que pasa la mayoría de los modos de concentración, y por voz cuando el radar está en tu sentido y no has apagado la voz; no hay nada que abrir ni que dejar en pantalla. Con el modo Conducción solo llega la voz." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Every warning arrives by voice and as a Time Sensitive notification, which gets through most Focus modes; there is nothing to open and nothing to leave on screen. With the Driving Focus the warning arrives by voice."
+            "value" : "Every warning arrives as a Time Sensitive notification, which gets through most Focus modes, and by voice when the radar is in your direction and the voice is on; there is nothing to open and nothing to leave on screen. With the Driving Focus only the voice arrives."
           }
         }
       }
