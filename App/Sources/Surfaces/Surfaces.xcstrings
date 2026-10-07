@@ -1,0 +1,76 @@
+{
+  "sourceLanguage": "es",
+  "strings": {
+    "A-2 km 202,3 · límite 90 km/h": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A-2 km 202.3 · limit 90 km/h"
+          }
+        }
+      }
+    },
+    "Abre la app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the app"
+          }
+        }
+      }
+    },
+    "Radar de prueba": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test radar"
+          }
+        }
+      }
+    },
+    "Radar fijo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fixed radar"
+          }
+        }
+      }
+    },
+    "Radar fijo a 600 m": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fixed radar in 600 m"
+          }
+        }
+      }
+    },
+    "Radar fijo a 600 metros, sentido Zaragoza. Límite 90.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fixed radar in 600 metres, towards Zaragoza. Limit 90."
+          }
+        }
+      }
+    },
+    "Radares Anunciados": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radares Anunciados"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

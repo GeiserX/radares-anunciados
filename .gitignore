@@ -1,0 +1,30 @@
+# Xcode project is generated from project.yml by XcodeGen, and so are these three (every generate rewrites them)
+*.xcodeproj
+*.xcworkspace
+App/Sources/Info.plist
+App/Sources/Radares.entitlements
+App/Widgets/Info.plist
+DerivedData/
+xcuserdata/
+*.xcarchive
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# macOS
+.DS_Store
+
+# Beads exports (the tracker lives in Dolt, never in git)
+.beads/issues.jsonl
+.beads/interactions.jsonl
+.beads/events.jsonl
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+.beads/proxieddb/
