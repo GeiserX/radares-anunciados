@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/banner.svg" alt="Radares Anunciados" width="100%">
+  <img src="docs/images/banner.svg" alt="Radares Anunciados: Que el radar no te pille" width="100%">
 </p>
 
 <h1 align="center">Radares Anunciados</h1>
