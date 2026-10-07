@@ -1,26 +1,6 @@
 {
   "sourceLanguage": "es",
   "strings": {
-    "Conducir": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Drive"
-          }
-        }
-      }
-    },
-    "Empieza a avisar de los radares anunciados.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Starts warning about announced speed cameras."
-          }
-        }
-      }
-    },
     "En pausa": {
       "localizations": {
         "en": {

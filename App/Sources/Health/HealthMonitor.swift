@@ -56,7 +56,6 @@ public final class HealthMonitor {
             switch entry.event {
             case let .launch(reason, _):
                 if reason.isBackgroundLaunch { inputs.backgroundLaunches += 1 }
-                if reason == .intent { inputs.intentLaunches += 1 }
             case .driveStarted:
                 inputs.drives += 1
             default:
@@ -79,9 +78,8 @@ public final class HealthMonitor {
             case let .driveEnded(_, maxGap, _, _, _):
                 inputs.lastDriveEnded = entry.t
                 inputs.lastDriveMaxGapSeconds = maxGap
-            case let .driveStarted(reason):
+            case .driveStarted:
                 inputs.lastDriveStarted = entry.t
-                if reason == .intent { inputs.intentStartedDriveLogged = true }
                 inputs.lastDriveHadLateAlert = false
             case let .alert(_, _, _, _, late, _, _, _, _, _) where late:
                 inputs.lastDriveHadLateAlert = true

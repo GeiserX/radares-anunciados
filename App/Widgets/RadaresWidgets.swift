@@ -8,6 +8,5 @@ import WidgetKit
 struct RadaresWidgets: WidgetBundle {
     var body: some Widget {
         DriveLiveActivity()
-        DriveControl()
     }
 }

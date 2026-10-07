@@ -77,6 +77,40 @@ final class EventLogTests: XCTestCase {
         XCTAssertEqual(log.count, 0)
     }
 
+    /// Build 1 (TestFlight) wrote `intent` as a launch and a drive reason; those cases are gone. A device log that
+    /// carries such rows must still read, and a health report must still come out of what survives.
+    func testBuildOneIntentRowsAreSkippedAndTheReportStillBuilds() throws {
+        var log = EventLog(url: url)
+        log.append(.launch(reason: .unknown, state: .inactive), at: t0)
+        var data = try Data(contentsOf: url)
+        data.append(Data("""
+        {"event":{"launch":{"reason":"intent","state":"inactive"}},"t":"2026-10-07T10:00:01Z"}
+        {"event":{"driveStarted":{"reason":{"intent":{}}}},"t":"2026-10-07T10:00:02Z"}
+
+        """.utf8))
+        try data.write(to: url)
+        log.append(.driveStarted(reason: .foreground), at: t0.addingTimeInterval(3))
+        log.append(.activityStarted, at: t0.addingTimeInterval(4))
+
+        let entries = log.recent(10)
+        XCTAssertEqual(entries.map(\.event), [.launch(reason: .unknown, state: .inactive), .driveStarted(reason: .foreground), .activityStarted], "the two build-1 rows are skipped, the rest is read")
+        XCTAssertEqual(EventLog(url: url).count, 5, "the skipped rows still count as lines on disk")
+
+        var drives = 0
+        var lastDriveStarted: Date?
+        var lastActivityStarted: Date?
+        for e in entries {
+            switch e.event {
+            case .driveStarted: drives += 1; lastDriveStarted = e.t
+            case .activityStarted: lastActivityStarted = e.t
+            default: break
+            }
+        }
+        let report = healthReport(HealthInputs(now: t0.addingTimeInterval(10), drives: drives, lastActivityStarted: lastActivityStarted, lastDriveStarted: lastDriveStarted))
+        XCTAssertEqual(report.count, 13)
+        XCTAssertEqual(report.first { $0.title == HealthTitles.activity }?.detail, "Actividades en directo desactivadas", "built from the surviving rows: the activity inputs default to off, the card row says so")
+    }
+
     func testMissingFolderIsCreated() {
         var log = EventLog(url: url)
         XCTAssertFalse(FileManager.default.fileExists(atPath: url.deletingLastPathComponent().path))

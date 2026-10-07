@@ -3,7 +3,7 @@
 //
 // The four onboarding screens of design 7, each explaining before it asks, all skippable, re-openable from Estado:
 // Ubicación (When In Use, then Always, then the Always session), Avisos (notifications and the Motion prompt, in
-// the foreground), En el coche (the Live Activity and the automation recipe), Estado.
+// the foreground), En el coche (the Live Activity and when it can start), Estado.
 
 import CoreLocation
 import CoreMotion
@@ -134,7 +134,7 @@ private struct AlertsStep: View {
     }
 }
 
-/// Screen 3 (design 7): the car card and its three starters, and a button that starts the Live Activity now.
+/// Screen 3 (design 7): the car card, the one way it can start, and a button that starts the Live Activity now.
 private struct CarStep: View {
     @State private var tried: Bool?
 
@@ -142,8 +142,7 @@ private struct CarStep: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Image(systemName: "car.fill").font(.system(size: 56)).foregroundStyle(.tint)
-                Text("Con iOS 26 la tarjeta del radar aparece en la pantalla de CarPlay y en la pantalla bloqueada. La tarjeta solo puede empezar si la app se abre o la inicia un atajo, así que conviene una de estas tres:")
-                AutomationRecipeView()
+                Text("Con iOS 26 la tarjeta del radar aparece en la pantalla de CarPlay y en la pantalla bloqueada. iOS solo deja que la tarjeta empiece mientras la app está en pantalla: si la quieres en el coche, deja la app abierta al salir y aparecerá en cuanto note que conduces. Si no, el aviso llega igual por voz y como notificación.")
                 Button("Probar") { tried = start() }
                     .buttonStyle(.borderedProminent)
                 switch tried {

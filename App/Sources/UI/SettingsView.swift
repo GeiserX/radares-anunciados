@@ -33,7 +33,7 @@ struct SettingsView: View {
                         Task { await LocationCoordinator.shared.setPausedToday(on) }
                     }
             } footer: {
-                Text("Sin «Avisos» la app no se despierta ni usa el GPS. «Pausar hoy» ignora los despertares hasta mañana (en autobús o tren); el control «Conducir» y el atajo siguen avisando.")
+                Text("Sin «Avisos» la app no se despierta ni usa el GPS. «Pausar hoy» ignora los despertares hasta mañana (en autobús o tren); «Probar aviso» sigue funcionando.")
             }
             .task {
                 pausedToday = await LocationCoordinator.shared.pausedToday

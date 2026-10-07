@@ -14,8 +14,6 @@ public enum WakeSource: String, Sendable, Codable, Hashable {
 /// Why a drive started. Logged as-is; the location lane's `startDrive(reason:)` takes it.
 /// Lives in the core (not the location lane, as section 9 lists it) because the log row carries it.
 public enum DriveReason: Sendable, Codable, Hashable {
-    /// `StartDriveIntent`: the control, the Action button, Siri or the CarPlay automation.
-    case intent
     /// The app opened at drive start (or a drive begun from the UI).
     case foreground
     /// "Probar aviso".
@@ -30,7 +28,6 @@ public enum LaunchReason: String, Sendable, Codable, Hashable {
     case slc
     case liveUpdate
     case bgTask
-    case intent
     case scene
     case unknown
 
@@ -38,7 +35,7 @@ public enum LaunchReason: String, Sendable, Codable, Hashable {
     public var isBackgroundLaunch: Bool {
         switch self {
         case .monitorEvent, .slc, .liveUpdate, .bgTask: true
-        case .intent, .scene, .unknown: false
+        case .scene, .unknown: false
         }
     }
 }

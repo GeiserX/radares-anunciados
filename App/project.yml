@@ -50,7 +50,6 @@ targets:
       - path: Sources/Location
       # surfaces lane
       - path: Sources/Surfaces
-      - path: Sources/Intents
       # frozen
       - path: Shared
     info:
@@ -101,16 +100,13 @@ targets:
       - target: RadaresWidgets
         embed: true
 
-  # The Live Activity (Lock Screen, Dynamic Island, CarPlay Dashboard on iOS 26) and the "Conducir" control.
-  # The intents are compiled here too: a control's action must exist in the extension.
+  # The Live Activity (Lock Screen, Dynamic Island, CarPlay Dashboard on iOS 26).
   RadaresWidgets:
     type: app-extension
     platform: iOS
     sources:
       # surfaces lane
       - path: Widgets
-      - path: Sources/Intents/StartDriveIntent.swift
-      - path: Sources/Intents/StopDriveIntent.swift
       # frozen
       - path: Shared
     info:

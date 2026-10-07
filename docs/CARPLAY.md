@@ -5,65 +5,23 @@ Radares Anunciados v1 is not a CarPlay app. The design is in [DESIGN.md](DESIGN.
 - **Voice** through the car's audio (`AVAudioSession` mode `.voicePrompt`), which works on any iOS version and through any Focus.
 - **The Live Activity** on the CarPlay Dashboard, iOS 26 and later. CarPlay draws the activity's small family (`.supplementalActivityFamilies([.small])`): kind symbol, title, distance in large digits and the limit badge, with no buttons, because Live Activities in CarPlay are non-interactive. When the Dashboard is not on screen, CarPlay shows a Live Activity alert as a notification at the bottom of the display (WWDC25 session 216, https://developer.apple.com/videos/play/wwdc2025/216/).
 
-The Live Activity has one hard limit. An app cannot start it from a background wake-up such as a location event. Apple's DTS: "It is not possible to programmatically initiate a Live Activity from a background execution context, such as a CLLocationManager wakeup, using local APIs." (https://developer.apple.com/forums/thread/818467). A Shortcut, a control or Siri running a `LiveActivityIntent` may start one. There is also no API that launches an app when the iPhone connects to CarPlay; DTS recommends a Shortcuts automation instead (https://developer.apple.com/forums/thread/820693). Hence the recipe below.
+The Live Activity has one hard limit. An app cannot start it from a background wake-up such as a location event. Apple's DTS: "It is not possible to programmatically initiate a Live Activity from a background execution context, such as a CLLocationManager wakeup, using local APIs." (https://developer.apple.com/forums/thread/818467). The app ships no other starter for the card, so the card begins only for a drive that starts while the app is on screen: under Always, the wake-up's probe turns into the drive and the app, still in the foreground, requests the card; under While Using, opening the app starts the drive at once. The voice and the Time Sensitive notification do not depend on this: they come from the background wake-ups on every drive.
 
 ## Español
 
-### La automatización de Atajos (una vez)
+Si quieres la tarjeta en la pantalla del coche, deja la app abierta en pantalla al salir: aparece en cuanto la app nota que conduces. Si bloqueas el iPhone antes, la app sigue avisando por voz y con la notificación cuando iOS la despierta al empezar a conducir, pero la tarjeta no aparece en el coche en ese viaje. Estado lo indica con "Pantalla del coche no iniciada en el último viaje: deja la app en pantalla al salir".
 
-Con ella, la tarjeta aparece en la pantalla del coche cada vez que conectas CarPlay, sin tocar el iPhone.
-
-1. Abre **Atajos** y ve a la pestaña **Automatización**.
-2. Toca **+** (Nueva automatización).
-3. Elige **CarPlay**, marca **Conecta** y desmarca **Se desconecta**.
-4. Elige **Ejecutar inmediatamente**, no "Ejecutar tras confirmar", y desactiva **Notificar al ejecutarse** si no quieres un aviso cada vez.
-5. Toca **Siguiente**, busca **Radares Anunciados** y elige la acción **Iniciar aviso de radares**.
-6. Toca **OK**.
-
-Opcional: una segunda automatización con **CarPlay → Se desconecta → Ejecutar inmediatamente → Parar aviso de radares** termina el viaje al bajar del coche. No hace falta, porque la app termina el viaje sola tras 10 minutos parada.
-
-CarPlay está entre las automatizaciones personales que se ejecutan sin pedir confirmación (https://support.apple.com/es-es/guide/shortcuts/apd602971e63/ios).
-
-### Las tres formas de empezar
-
-1. **La automatización de CarPlay** de arriba: lo normal en un coche con CarPlay.
-2. **El control "Conducir"**: añádelo al Centro de control, a la pantalla bloqueada o al botón de Acción (Ajustes → Botón de Acción → Controles → Conducir). Un toque inicia el aviso y la tarjeta.
-3. **Abrir la app** antes de salir.
-
-Sin ninguna de las tres, la app sigue avisando por voz y con la notificación cuando iOS la despierta al empezar a conducir, pero la tarjeta no aparece en el coche en ese viaje. Estado lo indica con "Pantalla del coche no iniciada en el último viaje".
-
-Con el permiso de ubicación "Mientras se usa" y sin "Siempre", la ubicación no puede empezar desde la automatización. La tarjeta dice "Abre la app" y hay que abrirla.
+Con el permiso de ubicación "Mientras se usa" y sin "Siempre", abrir la app es además la única forma de empezar el viaje.
 
 ## English
 
-### The Shortcuts automation (once)
+If you want the card on the car screen, leave the app open on screen when you set off: it appears as soon as the app notices you are driving. If you lock the iPhone first, the app still warns by voice and with the notification when iOS wakes it at the start of a drive, but the card does not appear in the car for that drive. Estado says so ("Pantalla del coche no iniciada en el último viaje: deja la app en pantalla al salir", Spanish for "Car screen not started on the last drive: leave the app on screen when you set off").
 
-With it the card appears on the car screen every time CarPlay connects, without touching the iPhone.
-
-1. Open **Shortcuts** and go to the **Automation** tab.
-2. Tap **+** (New Automation).
-3. Choose **CarPlay**, tick **Connects** and untick **Disconnects**.
-4. Choose **Run Immediately**, not "Run After Confirmation", and turn off **Notify When Run** if you do not want a banner each time.
-5. Tap **Next**, search for **Radares Anunciados** and pick the action **Start radar warnings** (Iniciar aviso de radares).
-6. Tap **Done**.
-
-Optional: a second automation, **CarPlay → Disconnects → Run Immediately → Stop radar warnings**, ends the drive when you leave the car. You don't need it, because the app ends the drive by itself after 10 minutes stopped.
-
-CarPlay is one of the personal automations that run without asking (https://support.apple.com/guide/shortcuts/apd602971e63/ios).
-
-### The three starters
-
-1. **The CarPlay automation** above: the normal case in a car with CarPlay.
-2. **The "Drive" control** (Conducir): add it to Control Center, the Lock Screen or the Action button (Settings → Action Button → Controls → Drive). One tap starts the warnings and the card.
-3. **Opening the app** before setting off.
-
-Without any of the three, the app still warns by voice and with the notification when iOS wakes it at the start of a drive, but the card does not appear in the car for that drive. Estado says so ("Pantalla del coche no iniciada en el último viaje").
-
-With "While Using" location permission and no "Always", location cannot start from the automation. The card says "Abre la app", Spanish for "Open the app", and the app has to be opened.
+With "While Using" location permission and no "Always", opening the app is also the only way a drive can start.
 
 ## Later: a CarPlay driving-task app (optional, never the only path)
 
-A CarPlay app would add a "next radar" screen and notifications on the car display. It needs the entitlement `com.apple.developer.carplay-driving-task`, which the maintainer requests at https://developer.apple.com/contact/carplay together with the CarPlay Entitlement Addendum (https://developer.apple.com/documentation/carplay/requesting-carplay-entitlements).
+A CarPlay app would add a "next radar" screen and notifications on the car display. It needs the entitlement `com.apple.developer.carplay-driving-task`, which the maintainer requests at https://developer.apple.com/contact/carplay together with the CarPlay Entitlement Addendum (https://developer.apple.com/documentation/carplay/requesting-carplay-entitlements). The request was filed on 2026-10-07; the notification work (the three rules below) starts when Apple answers.
 
 ### Entitlement request text (paste into the form)
 
