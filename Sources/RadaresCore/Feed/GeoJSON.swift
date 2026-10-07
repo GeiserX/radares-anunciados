@@ -1,7 +1,8 @@
 // Lane: core
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// Decodable shapes of feed.geojson (design 5.5). Unknown kinds and properties are ignored by the decoder.
+// Decodable shapes of feed.geojson (design 5.5). Unknown kinds and properties are ignored by the decoder;
+// an unknown geometry type decodes as `.unsupported` so one odd feature never fails the whole file.
 
 import Foundation
 
@@ -20,9 +21,23 @@ public struct GeoJSONFeature: Decodable, Sendable {
 public enum GeoJSONGeometry: Decodable, Sendable {
     case point([Double])
     case lineString([[Double]])
+    case unsupported(String)
+
+    private enum CodingKeys: String, CodingKey {
+        case type, coordinates
+    }
 
     public init(from decoder: any Decoder) throws {
-        fatalError("lane: core")
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try c.decode(String.self, forKey: .type)
+        switch type {
+        case "Point":
+            self = .point(try c.decode([Double].self, forKey: .coordinates))
+        case "LineString":
+            self = .lineString(try c.decode([[Double]].self, forKey: .coordinates))
+        default:
+            self = .unsupported(type)
+        }
     }
 }
 
