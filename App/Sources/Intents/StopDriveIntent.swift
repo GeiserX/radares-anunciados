@@ -2,19 +2,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // "Parar aviso de radares": ends the drive (design 3.1, drive end). Compiled into the app and the widget extension.
+// A LiveActivityIntent (it ends the Live Activity), so it runs in the app process like StartDriveIntent.
 
 import AppIntents
-import os
 
-public struct StopDriveIntent: AppIntent {
-    public static let title: LocalizedStringResource = "Parar aviso de radares"
+public struct StopDriveIntent: LiveActivityIntent {
+    public static let title: LocalizedStringResource = LocalizedStringResource("Parar aviso de radares", table: "Surfaces")
+    public static let description = IntentDescription(
+        LocalizedStringResource("Termina el viaje: deja de avisar hasta el próximo y quita la tarjeta.", table: "Surfaces")
+    )
 
     public init() {}
 
-    /// Stub: logs and returns. The shortcut is user-facing, so the stub must not crash the app.
     public func perform() async throws -> some IntentResult {
-        Logger(subsystem: "io.github.geiserx.radares", category: "intents")
-            .warning("lane: surfaces: StopDriveIntent not implemented")
+        await DriveIntentBridge.stopDrive()
         return .result()
     }
 }

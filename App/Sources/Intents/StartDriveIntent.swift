@@ -4,21 +4,21 @@
 // "Iniciar aviso de radares": a LiveActivityIntent, so the system launches the app process without opening the
 // app and the Live Activity may start from it (design 4.2). Exposed by the "Conducir" control, Atajos, Siri and
 // the CarPlay automation. Compiled into the app AND the widget extension (a control's action must exist in the
-// extension), so this file must not reference app-only types directly: hand the work to the app through a hook
-// the app installs at launch, or an `#if` on the target.
+// extension), so this file references no app-only type: the work is `DriveIntentBridge.startDrive()`, which the
+// app target defines in Intents/DriveIntentBridge.swift and the widget target in Widgets/DriveIntentBridge.swift.
 
 import AppIntents
-import os
 
 public struct StartDriveIntent: LiveActivityIntent {
-    public static let title: LocalizedStringResource = "Iniciar aviso de radares"
+    public static let title: LocalizedStringResource = LocalizedStringResource("Iniciar aviso de radares", table: "Surfaces")
+    public static let description = IntentDescription(
+        LocalizedStringResource("Empieza a avisar de los radares anunciados y muestra la tarjeta en la pantalla bloqueada y en CarPlay.", table: "Surfaces")
+    )
 
     public init() {}
 
-    /// Stub: logs and returns. The control and the shortcut are user-facing, so the stub must not crash the app.
     public func perform() async throws -> some IntentResult {
-        Logger(subsystem: "io.github.geiserx.radares", category: "intents")
-            .warning("lane: surfaces: StartDriveIntent not implemented")
+        await DriveIntentBridge.startDrive()
         return .result()
     }
 }
