@@ -204,7 +204,8 @@ public final class CurrentFeed: Sendable {
         }
         do {
             let store = try RadarStore.load(geojson: data)
-            shared.state.withLock { $0.store = store }
+            // A download that finished first already installed a newer store; keep it.
+            shared.state.withLock { if $0.store == nil { $0.store = store } }
             var meta = files.readMeta()
             if copied || meta.featureCount == 0 {
                 // A fresh install: the feed's age is the snapshot's, and no ETag, so the first download gets a body.

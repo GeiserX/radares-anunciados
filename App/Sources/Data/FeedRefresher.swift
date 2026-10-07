@@ -112,6 +112,8 @@ public final class FeedRefresher {
 
     /// Conditional GET, validate, atomic replace, swap the in-memory store, log. A failure keeps the old file.
     nonisolated private static func download() async {
+        // The first-launch snapshot copy and its meta must be done before a download writes over them.
+        await CurrentFeed.shared.loadIfNeeded()
         let files = FileStore.shared
         var meta = files.readMeta()
         let now = Date()
