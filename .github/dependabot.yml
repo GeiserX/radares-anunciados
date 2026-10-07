@@ -1,0 +1,34 @@
+version: 2
+updates:
+  - package-ecosystem: swift
+    directories: ["**/*"]
+    schedule:
+      interval: weekly
+    labels: ["dependencies", "automated"]
+    # Version updates stay on minor and patch. An allow rule, not an ignore rule:
+    # ignore rules also block security updates, so a fix shipped only in a major
+    # release would never be proposed.
+    allow:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
+    cooldown:
+      default-days: 3
+    groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
+      minor-and-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels: ["ci", "automated"]
+    cooldown:
+      default-days: 3
+    groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
+      minor-and-patch:
+        update-types: [minor, patch]
