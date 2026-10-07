@@ -11,15 +11,9 @@ import SwiftUI
 
 struct MapView: View {
     @Environment(AppModel.self) private var model
-    @State private var position: MapCameraPosition = .userLocation(
-        fallback: .region(MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 40.4168, longitude: -3.7038),
-            latitudinalMeters: 12_000,
-            longitudinalMeters: 12_000
-        ))
-    )
-    @State private var center = Coordinate(latitude: 40.4168, longitude: -3.7038)
-    @State private var me: Coordinate?
+    @State private var position: MapCameraPosition = Self.around(Self.lastKnown ?? Self.madrid)
+    @State private var center = Self.lastKnown ?? Self.madrid
+    @State private var me = Self.lastKnown
 
     var body: some View {
         VStack(spacing: 0) {
@@ -57,6 +51,22 @@ struct MapView: View {
         }
         .navigationTitle("Mapa")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.visible, for: .navigationBar)
+    }
+
+    private static let madrid = Coordinate(latitude: 40.4168, longitude: -3.7038)
+
+    private static var lastKnown: Coordinate? {
+        CLLocationManager().location.map { Coordinate($0.coordinate) }
+    }
+
+    /// The map opens on the radius the radars are shown for, not on street level.
+    private static func around(_ point: Coordinate) -> MapCameraPosition {
+        .region(MKCoordinateRegion(
+            center: point.cl,
+            latitudinalMeters: Thresholds.mapRadiusM * 2,
+            longitudinalMeters: Thresholds.mapRadiusM * 2
+        ))
     }
 
     /// Radars inside a box of Thresholds.mapRadiusM around the map centre. A box, not a circle: cheaper, and the
