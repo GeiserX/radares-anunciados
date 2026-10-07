@@ -249,6 +249,25 @@ final class AlertEngineVectorTests: XCTestCase {
         XCTAssertEqual(fixes[passedIndex].speed, 0, "the first fix under 30 m is the stopped one")
     }
 
+    /// Two radars armed ahead, the nearer one changing as the car moves: the card keeps the radar it shows until it
+    /// fires or drops out, so a city does not flip the card (and spend a Live Activity update) every few fixes.
+    func testSnapshotKeepsTheArmedRadarItShowsWhileItStaysArmed() throws {
+        let origin = Coordinate.at(41.3, -1.9)
+        // A on the line 940 m ahead; B 700 m ahead and 600 m beside (922 m away, 41° off the course): B is nearer
+        // for the first fixes, A from the sixth, and neither is in range (warn 750 m at 30 m/s) before the eighth.
+        let a = makeRadar(id: "A", start: Geo.destination(from: origin, bearingDegrees: 90, metres: 940))
+        let b = makeRadar(id: "B", start: Geo.destination(from: Geo.destination(from: origin, bearingDegrees: 90, metres: 700), bearingDegrees: 0, metres: 600))
+        let engine = AlertEngine(store: RadarStore(radars: [a, b]), ledger: PassLedger(), locale: Fixtures.es)
+        var shown: [String] = []
+        for i in 0..<7 {
+            let fix = makeFix(Geo.destination(from: origin, bearingDegrees: 90, metres: Double(i) * 30), t: Date(timeIntervalSince1970: 1_800_000_000 + Double(i)), speed: 30, course: 90)
+            XCTAssertTrue(engine.ingest(fix).isEmpty, "fix \(i) must not fire")
+            shown.append(engine.snapshot.next?.id ?? "-")
+        }
+        XCTAssertEqual(shown.first, "B", "B is the nearer armed radar at the start")
+        XCTAssertEqual(Set(shown).count, 1, "the card stays on B while B stays armed: \(shown)")
+    }
+
     func testSnapshotShowsTheNearestRadarAsCercaWithoutACourse() throws {
         let vector = try Vector.load("a2-no-course-2mps")
         let engine = AlertEngine(store: try store(), ledger: PassLedger(), locale: Fixtures.es)
