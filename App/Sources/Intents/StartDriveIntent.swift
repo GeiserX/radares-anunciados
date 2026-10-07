@@ -8,13 +8,17 @@
 // the app installs at launch, or an `#if` on the target.
 
 import AppIntents
+import os
 
 public struct StartDriveIntent: LiveActivityIntent {
     public static let title: LocalizedStringResource = "Iniciar aviso de radares"
 
     public init() {}
 
+    /// Stub: logs and returns. The control and the shortcut are user-facing, so the stub must not crash the app.
     public func perform() async throws -> some IntentResult {
-        fatalError("lane: surfaces")
+        Logger(subsystem: "io.github.geiserx.radares", category: "intents")
+            .warning("lane: surfaces: StartDriveIntent not implemented")
+        return .result()
     }
 }

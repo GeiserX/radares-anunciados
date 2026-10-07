@@ -41,4 +41,12 @@ public struct GeoJSONProperties: Decodable, Sendable {
     public let road: String?
     public let kmFrom: Double?
     public let kmTo: Double?
+
+    enum CodingKeys: String, CodingKey {
+        case kind, name, source, active, maxspeed, direction, province, url, attribution, road
+        case validFrom = "valid_from"
+        case validTo = "valid_to"
+        case kmFrom = "km_from"
+        case kmTo = "km_to"
+    }
 }

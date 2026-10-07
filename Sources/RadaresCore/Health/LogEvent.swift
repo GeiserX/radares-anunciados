@@ -129,8 +129,10 @@ public enum LogEvent: Sendable, Codable, Hashable {
     case speech(route: String, setActiveError: String?, finished: Bool, launchContext: LaunchContext)
     case monitorEvent(identifier: String, state: String, flags: [String])
     case protectionVerified(ok: Bool)
-    /// From `applicationWillTerminate`: the user swiped the app away.
-    case userTerminated
+    /// From `applicationWillTerminate`: the process was ended while running, by the user swiping it away or by the
+    /// system terminating a running background app. Either way the chain was cut, and no background launch is
+    /// possible until something restarts the app; the health rule reads it as that, not as proof of a swipe.
+    case willTerminate
 }
 
 /// One line of the log: the time and the event. `EventLog.recent` returns these, so health rules can reason about time.

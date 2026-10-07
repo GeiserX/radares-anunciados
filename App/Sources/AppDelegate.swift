@@ -50,7 +50,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
-        // The user swiped the app away: Estado turns red (design 6, "Arranques solos").
-        AppLog.shared.post(.userTerminated)
+        // The process is being ended while running (a swipe in the switcher, or the system ending a running
+        // background app): Estado turns red until the next launch (design 6, "Arranques solos").
+        AppLog.shared.post(.willTerminate)
     }
 }

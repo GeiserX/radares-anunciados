@@ -89,7 +89,8 @@ public struct HealthInputs: Sendable, Codable, Hashable {
     public var backgroundLaunches: Int
     public var intentLaunches: Int
     public var drives: Int
-    public var lastEventWasUserTerminated: Bool
+    /// The last log row is `willTerminate`: the process was ended while running (design 6, "Arranques solos").
+    public var lastEventWasWillTerminate: Bool
 
     // Valla de aparcamiento
     public var parkedFenceFlags: [String]
@@ -145,7 +146,7 @@ public struct HealthInputs: Sendable, Codable, Hashable {
         backgroundLaunches: Int = 0,
         intentLaunches: Int = 0,
         drives: Int = 0,
-        lastEventWasUserTerminated: Bool = false,
+        lastEventWasWillTerminate: Bool = false,
         parkedFenceFlags: [String] = [],
         parkedFenceIdentifierPresent: Bool = false,
         slcStarted: Bool = false,
@@ -179,7 +180,7 @@ public struct HealthInputs: Sendable, Codable, Hashable {
         self.backgroundLaunches = backgroundLaunches
         self.intentLaunches = intentLaunches
         self.drives = drives
-        self.lastEventWasUserTerminated = lastEventWasUserTerminated
+        self.lastEventWasWillTerminate = lastEventWasWillTerminate
         self.parkedFenceFlags = parkedFenceFlags
         self.parkedFenceIdentifierPresent = parkedFenceIdentifierPresent
         self.slcStarted = slcStarted

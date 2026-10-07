@@ -40,7 +40,7 @@ struct DriveCard: View {
     static func distanceText(_ state: DriveAttributes.ContentState) -> String {
         guard let metres = state.distanceMetres else { return "" }
         return metres >= 1000
-            ? String(format: "%.1f km", Double(metres) / 1000)
+            ? String(format: "%.1f km", locale: .current, Double(metres) / 1000)
             : "\(metres) m"
     }
 
