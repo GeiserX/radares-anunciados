@@ -73,7 +73,7 @@ public struct MotionGate: Sendable {
 
     private static func query(from start: Date, to end: Date) async -> MotionSummary? {
         let manager = CMMotionActivityManager()
-        return await withCheckedContinuation { (continuation: CheckedContinuation<MotionSummary?, Never>) in
+        let result = await withCheckedContinuation { (continuation: CheckedContinuation<MotionSummary?, Never>) in
             manager.queryActivityStarting(from: start, to: end, to: .main) { activities, error in
                 guard error == nil, let activities else {
                     continuation.resume(returning: nil)
@@ -87,8 +87,10 @@ public struct MotionGate: Sendable {
                 }
                 continuation.resume(returning: MotionSummary(automotive: automotive, walking: walking, samples: activities.count))
             }
-            // The manager must outlive the query; the handler captures nothing else, so keep it here.
-            withExtendedLifetime(manager) {}
         }
+        // The handler captures nothing but the continuation, so the manager must be kept alive across the await:
+        // a released manager cancels its query and the handler never runs.
+        withExtendedLifetime(manager) {}
+        return result
     }
 }

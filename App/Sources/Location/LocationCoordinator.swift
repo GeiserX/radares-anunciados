@@ -474,11 +474,20 @@ public actor LocationCoordinator {
         let now = Date()
         if let last = lastPausedMotionCheck, now.timeIntervalSince(last) < Self.pausedMotionCheckSeconds { return }
         lastPausedMotionCheck = now
-        if let motion = await motionGate.recentActivity(window: Thresholds.motionWindowSeconds), motion.walking, !motion.automotive {
-            logger.info("walking while paused, no automotive: drive end")
-            await endDrive()
-            await goIdle(rearmAt: fix.coordinate)
+        // Off the fix loop: a slow Core Motion query must not hold up the next update.
+        let gate = motionGate
+        Task { [weak self] in
+            let motion = await gate.recentActivity(window: Thresholds.motionWindowSeconds)
+            await self?.walkingResult(motion, at: fix.coordinate, pausedSince: since)
         }
+    }
+
+    private func walkingResult(_ motion: MotionSummary?, at coordinate: Coordinate, pausedSince since: Date) async {
+        guard case .paused(let current) = state, current == since else { return }
+        guard let motion, motion.walking, !motion.automotive else { return }
+        logger.info("walking while paused, no automotive: drive end")
+        await endDrive()
+        await goIdle(rearmAt: coordinate)
     }
 
     private func resumeDrive(since: Date, at date: Date) async {

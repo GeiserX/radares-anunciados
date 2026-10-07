@@ -122,7 +122,14 @@ DURATION=$(python3 -c "print(int($LENGTH / $MPS) + $SETTLE)")
 echo "target $TARGET, $SIDE, heading $HEADING_USED, $KMH km/h ($MPS m/s), route $LENGTH m, about $DURATION s"
 echo "waypoints: $WAYPOINTS"
 
+# Mute for the run and put the Mac back the way it was, on success and on an early exit; the route stops too.
+WAS_MUTED=$(osascript -e 'output muted of (get volume settings)' 2>/dev/null || echo true)
 osascript -e 'set volume output muted true' >/dev/null 2>&1 || true
+cleanup() {
+  xcrun simctl location "$UDID" clear >/dev/null 2>&1 || true
+  osascript -e "set volume output muted $WAS_MUTED" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
 xcrun simctl bootstatus "$UDID" -b >/dev/null
 
 if [ -n "$APP" ]; then
@@ -143,6 +150,10 @@ if [ "$SMO" -eq 1 ]; then
 else
   xcrun simctl spawn "$UDID" defaults delete "$PREFS" StateMachineOnlyForTest >/dev/null 2>&1 || true
 fi
+# A probe run starts from idle: a drive persisted by an earlier run would be resumed at launch instead.
+if [ "$PROBE" -eq 1 ]; then
+  xcrun simctl spawn "$UDID" defaults delete "$PREFS" drive.persisted >/dev/null 2>&1 || true
+fi
 
 ARGS=()
 [ "$PROBE" -eq 1 ] || ARGS+=(-StartDriveForTest 1)
@@ -150,7 +161,7 @@ ARGS=()
 START_EPOCH=$(date +%s)
 # Launch first, then place the car: a simulated position set before the launch makes the system launch the app in
 # the background for significant change, and that process would not see the launch arguments.
-xcrun simctl launch "$UDID" "$BUNDLE" "${ARGS[@]}" >/dev/null
+xcrun simctl launch "$UDID" "$BUNDLE" ${ARGS[@]+"${ARGS[@]}"} >/dev/null
 sleep 2
 xcrun simctl location "$UDID" set "$(echo "$WAYPOINTS" | cut -d' ' -f1)"
 sleep 2
