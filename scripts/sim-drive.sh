@@ -133,12 +133,15 @@ xcrun simctl location "$UDID" clear >/dev/null 2>&1 || true
 xcrun simctl privacy "$UDID" grant location-always "$BUNDLE"
 # Onboarding sets wantsAlways; the script stands in for it so the session and the wake-ups come up. The
 # state-machine flag goes into the app's defaults too, not only the launch arguments: the Simulator relaunches the
-# app on its own for a significant-change delivery, and a system launch carries no arguments.
-xcrun simctl spawn "$UDID" defaults write "$BUNDLE" wantsAlways -bool true
+# app on its own for a significant-change delivery, and a system launch carries no arguments. The app reads the
+# plist inside its data container; `defaults write <bundle id>` lands in a file the app ignores, so write the path.
+CONTAINER=$(xcrun simctl get_app_container "$UDID" "$BUNDLE" data)
+PREFS="$CONTAINER/Library/Preferences/$BUNDLE.plist"
+xcrun simctl spawn "$UDID" defaults write "$PREFS" wantsAlways -bool true
 if [ "$SMO" -eq 1 ]; then
-  xcrun simctl spawn "$UDID" defaults write "$BUNDLE" StateMachineOnlyForTest -bool true
+  xcrun simctl spawn "$UDID" defaults write "$PREFS" StateMachineOnlyForTest -bool true
 else
-  xcrun simctl spawn "$UDID" defaults delete "$BUNDLE" StateMachineOnlyForTest >/dev/null 2>&1 || true
+  xcrun simctl spawn "$UDID" defaults delete "$PREFS" StateMachineOnlyForTest >/dev/null 2>&1 || true
 fi
 
 ARGS=()
@@ -158,7 +161,6 @@ echo "driving for $DURATION s..."
 sleep "$DURATION"
 xcrun simctl location "$UDID" clear >/dev/null 2>&1 || true
 
-CONTAINER=$(xcrun simctl get_app_container "$UDID" "$BUNDLE" data)
 EVENTS="$CONTAINER/Library/Application Support/Radares/events.jsonl"
 echo
 echo "== events.jsonl: alert and state rows"

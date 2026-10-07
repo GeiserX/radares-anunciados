@@ -52,8 +52,6 @@ public actor LocationCoordinator {
 
     /// UserDefaults: the user granted Always and wants warnings; the session is re-taken at every launch while set.
     public static let wantsAlwaysKey = "wantsAlways"
-    /// Launch argument `-StartDriveForTest 1`: a foreground launch starts a drive at once (scripts/sim-drive.sh).
-    public static let startDriveForTestArgument = "StartDriveForTest"
     private static let fenceCenterKey = "fence.center"
     /// While paused and not stationary, the walking check runs at most this often.
     private static let pausedMotionCheckSeconds: Double = 30
@@ -159,9 +157,9 @@ public actor LocationCoordinator {
         } else if launchedInBackground {
             // Launched in the background for any reason while idle: probe, stream first (design 3.1, 3.3).
             await beginProbe(wake: nil, at: launchedAt)
-        } else if defaults.bool(forKey: Self.startDriveForTestArgument) {
-            await startDrive(reason: .foreground)
         }
+        // `-StartDriveForTest 1` (scripts/sim-drive.sh) is the app lane's: it starts the drive when the scene
+        // becomes active, where the Live Activity can be requested too.
     }
 
     /// The app lane calls this when a scene connects, so a user launch gets its reason (design 3.3, step 6).

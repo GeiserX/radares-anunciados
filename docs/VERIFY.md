@@ -1,7 +1,7 @@
 # Device verification
 
-Owned by the location lane. The design (`docs/DESIGN.md`, sections 3, 4 and 10) makes claims that only a real
-iPhone can settle: when the parked fence wakes the app, whether a cold background launch can speak, what a Driving
+Owned by the location lane. The design ([docs/DESIGN.md](DESIGN.md), sections 3, 4 and 10) makes claims that only a
+real iPhone can settle: when the parked fence wakes the app, whether a cold background launch can speak, what a Driving
 Focus lets through, how many Live Activity updates the system delivers, and how the card looks on a car screen.
 This file is the checklist. Each row has an expectation written before the drive and a result column filled in
 after it, with the log rows that prove it (Estado exports `events.jsonl`). A row whose result cannot be read from
@@ -13,14 +13,14 @@ lines that back it. Keep failed rows: they are the reason a design decision chan
 ## Rules this checklist enforces
 
 - **The Always session is re-taken within the first second of every launch, from the launch path, never from a
-  view.** DTS, thread 799094: an explicit session must be recreated "asap upon launch in the background, otherwise
+  view.** DTS, [thread 799094](https://developer.apple.com/forums/thread/799094): an explicit session must be recreated "asap upon launch in the background, otherwise
   your app will be assumed to no longer have interest in location updates". The coordinator takes it in its own
   `init`, which the app delegate touches as the first statement of `didFinishLaunching`. Proof: in every background
   launch `sessionTaken` precedes `probe` in the log.
 - **A `CLBackgroundActivitySession` (While-Using mode) is rejoined from every launch path and never invalidated
-  there.** DTS, thread 770063, names the two failures: invalidating the session after the app was killed, and not
+  there.** DTS, [thread 770063](https://developer.apple.com/forums/thread/770063), names the two failures: invalidating the session after the app was killed, and not
   rejoining it from a non-UI launch. It is invalidated only at drive end, by the code that ended the drive.
-- **A force-quit app may never come back on iOS 26.** Forum thread 826964 reports that an app the user swiped away
+- **A force-quit app may never come back on iOS 26.** [Forum thread 826964](https://developer.apple.com/forums/thread/826964) reports that an app the user swiped away
   on iOS 26.4.2 was never relaunched by significant change or a region exit, where iOS 18 relaunched it. Onboarding
   says never to swipe the app away, Estado turns red on `willTerminate`, and the "Conducir" control restarts the
   chain. The row below records what the test device does.
@@ -52,7 +52,7 @@ v1.1 adds radar rings (design 11, risk 7).
 | W9 | Park and walk away | `drivePaused`, then `driveEnded` within a minute of walking, no further GPS (Settings > Privacy > Location: the arrow goes grey) | pending |
 | W10 | Relaunch after a system kill (leave the phone a day with other apps open, then drive) | The `launch` row of the drive has `state: background`; `sessionTaken` precedes `probe` | pending |
 | W11 | Reboot, unlock, drive | Same rows as W10; nothing arrives before the first unlock | pending |
-| W12 | Force-quit from the switcher, then drive (iOS 26 behaviour, thread 826964) | Record whether a `launch` row appears at all. Either outcome is written here; `willTerminate` was logged at the swipe | pending |
+| W12 | Force-quit from the switcher, then drive (iOS 26 behaviour, thread 826964 above) | Record whether a `launch` row appears at all. Either outcome is written here; `willTerminate` was logged at the swipe | pending |
 | W13 | Toggle "Avisos" off, drive 5 km, toggle on, drive | Off: no `wakeup`, no `probe`, Settings shows no location use. On: the next drive starts from a wake-up again | pending |
 
 ### Speech
@@ -91,8 +91,9 @@ Whatever F1 and F2 say, the voice is the surface that arrives: onboarding says s
 ### CarPlay (iOS 26)
 
 First with the iPhone on USB to a Mac running CarPlay Simulator (Additional Tools for Xcode), then on the real head
-unit. Live Activities in CarPlay use the small activity family (WWDC25 216; CarPlay App Programming Guide, "Live
-Activities in CarPlay"); without it CarPlay shows the compact Dynamic Island views.
+unit. Live Activities in CarPlay use the small activity family ([WWDC25 216](https://developer.apple.com/videos/play/wwdc2025/216/);
+[CarPlay App Programming Guide](https://developer.apple.com/carplay/documentation/CarPlay-App-Programming-Guide.pdf),
+"Live Activities in CarPlay"); without it CarPlay shows the compact Dynamic Island views.
 
 | # | Size or mode | Expectation | Result |
 |---|---|---|---|
@@ -122,7 +123,7 @@ comes from one of these drives.
 
 ## Simulator
 
-`scripts/sim-drive.sh <udid> <target> <km/h> <same|opposite> [--probe] [--state-machine-only] [--app <path>]`
+[`scripts/sim-drive.sh`](../scripts/sim-drive.sh) `<udid> <target> <km/h> <same|opposite> [--probe] [--state-machine-only] [--app <path>]`
 drives a booted simulator along a route built from a fixture feature (or a `lat,lon` pair): 3 km before the gate
 to 1 km past it (past the far gate for a stretch), grants `location-always`, sets `wantsAlways` in the app's
 defaults as onboarding would, launches with `-StartDriveForTest 1` (or without it under `--probe`, so the
