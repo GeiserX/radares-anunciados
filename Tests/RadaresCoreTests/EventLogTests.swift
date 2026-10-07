@@ -22,7 +22,7 @@ final class EventLogTests: XCTestCase {
         log.append(.sessionTaken, at: t0.addingTimeInterval(1))
         log.append(.alert(id: "r", level: .full, distance: 820.5, speedMps: 33.3, late: false, crossTrackMetres: 2.5, suppressedByDirection: false, coordinate: .at(41.3, -1.9), sinks: [SinkOutcome(sink: .speech, ok: true)]), at: t0.addingTimeInterval(2))
         let all = log.recent(10)
-        XCTAssertEqual(all.count, 3)
+        guard all.count == 3 else { return XCTFail("expected 3 entries, got \(all.count)") }
         XCTAssertEqual(all[0], LogEntry(t: t0, event: .launch(reason: .slc, state: .background)))
         XCTAssertEqual(all[2].t, t0.addingTimeInterval(2))
         guard case .alert(let id, let level, let distance, _, _, _, _, let coordinate, let sinks) = all[2].event else { return XCTFail("\(all[2])") }
@@ -41,7 +41,7 @@ final class EventLogTests: XCTestCase {
         log.append(.willTerminate, at: t0)
         let text = try XCTUnwrap(String(data: XCTUnwrap(log.export()), encoding: .utf8))
         let lines = text.split(separator: "\n")
-        XCTAssertEqual(lines.count, 2)
+        guard lines.count == 2 else { return XCTFail("expected 2 lines, got \(lines.count): \(text)") }
         XCTAssertTrue(lines[0].hasPrefix("{\"event\":{\"feedUpdated\":{"), String(lines[0]))
         XCTAssertTrue(lines[0].contains("\"t\":\"2026-10-07T"), String(lines[0]))
         XCTAssertEqual(String(lines[1]), "{\"event\":{\"willTerminate\":{}},\"t\":\"2026-10-07T10:00:00Z\"}")

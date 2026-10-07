@@ -223,7 +223,7 @@ final class AlertEngineVectorTests: XCTestCase {
         XCTAssertNotNil(engine.snapshot.stretch)
         let events = engine.endDrive()
         XCTAssertEqual(events.map(\.kind), [.stretchExited, .driveEnded])
-        XCTAssertNil(events[0].phrase)
+        XCTAssertNil(events.first?.phrase)
         XCTAssertEqual(engine.lastStretchExitReason, .driveEnd)
         XCTAssertNil(engine.snapshot.stretch)
         XCTAssertEqual(engine.snapshot.content.phase, .watching)
@@ -238,13 +238,13 @@ final class AlertEngineVectorTests: XCTestCase {
         var fixes = straightFixes(gate: a2.start, course: 60, speed: 25, metresBefore: 1010, metresAfter: 0)
         fixes.removeLast()
         let stop = Geo.destination(from: a2.start, bearingDegrees: 240, metres: 10)
-        let last = fixes.last!.timestamp
+        let last = try XCTUnwrap(fixes.last).timestamp
         for i in 1...5 { fixes.append(makeFix(stop, t: last.addingTimeInterval(Double(i)), speed: 0, course: nil)) }
         var kinds: [AlertEvent.Kind] = []
         for fix in fixes { kinds.append(contentsOf: engine.ingest(fix).map(\.kind)) }
         XCTAssertEqual(kinds, [.warn(.full), .passed])
-        let passedIndex = fixes.firstIndex { Geo.distance($0.coordinate, a2.start) < Thresholds.passedBelowM }!
-        XCTAssertTrue(fixes[passedIndex].speed == 0, "the first fix under 30 m is the stopped one")
+        let passedIndex = try XCTUnwrap(fixes.firstIndex { Geo.distance($0.coordinate, a2.start) < Thresholds.passedBelowM })
+        XCTAssertEqual(fixes[passedIndex].speed, 0, "the first fix under 30 m is the stopped one")
     }
 
     func testSnapshotShowsTheNearestRadarAsCercaWithoutACourse() throws {

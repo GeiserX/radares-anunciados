@@ -59,10 +59,9 @@ final class StretchTrackerTests: XCTestCase {
         let fixes = straightFixes(gate: west, course: into, speed: 25, metresBefore: 1000, metresAfter: chord + 100)
         let (changes, tracker) = run(corridor(), fixes: fixes)
         XCTAssertEqual(changes.count, 2)
-        guard case .exited(_, let reason)? = changes.last?.1 else { return XCTFail("no exit") }
+        guard let (exitIndex, last) = changes.last, case .exited(_, let reason) = last else { return XCTFail("no exit") }
         XCTAssertEqual(reason, .farGate)
         XCTAssertNil(tracker.inside)
-        let exitIndex = changes.last!.0
         XCTAssertEqual(Geo.distance(fixes[exitIndex].coordinate, east), 300, accuracy: 30)
     }
 
@@ -74,9 +73,9 @@ final class StretchTrackerTests: XCTestCase {
         for f in fixes {
             _ = tracker.ingest(f, courseDegrees: f.course, warnDistance: 694, speedMps: 27.78, candidates: [section], now: f.timestamp)
         }
-        let inside = try! XCTUnwrap(tracker.inside)
-        XCTAssertEqual(try! XCTUnwrap(inside.avgKmh), 100, accuracy: 2)
-        XCTAssertEqual(try! XCTUnwrap(inside.remainingMetres), Geo.distance(west, east) - 3000, accuracy: 60)
+        guard let inside = tracker.inside, let avg = inside.avgKmh, let remaining = inside.remainingMetres else { return XCTFail("not inside with an average") }
+        XCTAssertEqual(avg, 100, accuracy: 2)
+        XCTAssertEqual(remaining, Geo.distance(west, east) - 3000, accuracy: 60)
         guard case .exited(_, let reason)? = tracker.endDrive() else { return XCTFail("drive end must exit") }
         XCTAssertEqual(reason, .driveEnd)
         XCTAssertNil(tracker.inside)
