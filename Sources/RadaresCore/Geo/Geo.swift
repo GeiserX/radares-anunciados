@@ -54,14 +54,31 @@ public enum Geo {
     public static func projection(point: Coordinate, from: Coordinate, to: Coordinate) -> Double {
         let chord = distance(from, to)
         guard chord > 0 else { return 0 }
+        return min(chord, max(0, alongChord(point: point, from: from, to: to)))
+    }
+
+    /// Metres along the line through `from` and `to` of the projection of `point`, signed: negative behind `from`,
+    /// beyond the chord length past `to`.
+    public static func alongChord(point: Coordinate, from: Coordinate, to: Coordinate) -> Double {
         let d13 = distance(from, point)
-        guard d13 > 0 else { return 0 }
+        guard d13 > 0, distance(from, to) > 0 else { return 0 }
         let course = bearing(from: from, to: to)
         let xt = crossTrack(point: point, from: from, courseDegrees: course) / earthRadiusM
         let ratio = min(1, max(-1, cos(d13 / earthRadiusM) / cos(xt)))
         var along = acos(ratio) * earthRadiusM
         if angleDiff(course, bearing(from: from, to: point)) > 90 { along = -along }
-        return min(chord, max(0, along))
+        return along
+    }
+
+    /// Metres from `point` to the chord `from`->`to`: the lateral distance while the projection falls between the
+    /// ends, else the distance to the nearer end.
+    public static func distanceToChord(point: Coordinate, from: Coordinate, to: Coordinate) -> Double {
+        let chord = distance(from, to)
+        guard chord > 0 else { return distance(point, from) }
+        let along = alongChord(point: point, from: from, to: to)
+        if along <= 0 { return distance(point, from) }
+        if along >= chord { return distance(point, to) }
+        return abs(crossTrack(point: point, from: from, courseDegrees: bearing(from: from, to: to)))
     }
 
     /// The coordinate `metres` away from `from` along `bearingDegrees`. Used by tests and the self-test to build a target ahead.

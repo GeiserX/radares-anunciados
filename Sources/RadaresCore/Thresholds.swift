@@ -39,12 +39,19 @@ public enum Thresholds {
     public static let passedFixes: Int = 3
     /// Passed as well when the distance drops under this, whatever the trend.
     public static let passedBelowM: Double = 30
+    /// An increase counts toward passedFixes only when it is at least closingMinM, and the pass also needs the distance
+    /// this far (or the fix's horizontal accuracy, whichever is larger) above the minimum: GPS wander while stopped
+    /// before a fired radar is not a pass.
+    public static let passedMinRiseM: Double = 3
     /// The card shows "Radar superado" for this long, then goes back to watching.
     public static let passedCardSeconds: Double = 4
     /// Below this speed the reported course wanders, so the course comes from the last two fixes instead. Our own threshold, tuned from logged drives.
     public static let courseMinSpeedMps: Double = 3
     /// The two fixes used to derive a course when the platform course is invalid must be at least this far apart.
     public static let courseFallbackMinM: Double = 15
+    /// The baseline of a derived course is the most recent fix at least courseFallbackMinM behind within this many
+    /// seconds: 15 m in 5 s is courseMinSpeedMps, the same floor as the platform course; slower, the heading wanders.
+    public static let courseFallbackWindowSeconds: Double = 5
 
     // MARK: Once per pass and pacing (design 2.6)
 
@@ -107,6 +114,12 @@ public enum Thresholds {
     public static let stretchExitSlackM: Double = 1000
     /// Silent exit after this many times the traverse time expected at entry speed.
     public static let stretchExitTraverseFactor: Double = 2
+    /// A car that joins a stretch between its gates (an on-ramp, a side road) is inside after this many consecutive fixes
+    /// that project onto the chord between the gate margins, within stretchMidJoinCrossTrackM of it, with the course along it.
+    public static let stretchMidJoinFixes: Int = 3
+    /// Max lateral distance from the chord for a mid-stretch join. The chord is not the road (median 0.91 of its length),
+    /// so a bowed stretch can be missed; wider would take a parallel road for the stretch.
+    public static let stretchMidJoinCrossTrackM: Double = 150
 
     // MARK: Feed (design 5)
 

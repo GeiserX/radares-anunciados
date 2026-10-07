@@ -100,6 +100,44 @@ final class DriveSessionTests: XCTestCase {
         XCTAssertFalse(active)
     }
 
+    /// Design 2.6: the ledger is written on warn and pass (and stretch entry and exit, and drive end), never on a
+    /// quiet fix. Dropping the write on warn would repeat the voice after a kill between the warning and the pass.
+    func testLedgerIsPersistedOnWarnAndPassNotOnAQuietFix() {
+        XCTAssertTrue(DriveSession.persistsLedger(after: [.warn(.full)], force: false))
+        XCTAssertTrue(DriveSession.persistsLedger(after: [.warn(.visual)], force: false))
+        XCTAssertTrue(DriveSession.persistsLedger(after: [.passed], force: false))
+        XCTAssertTrue(DriveSession.persistsLedger(after: [.stretchEntered], force: false))
+        XCTAssertTrue(DriveSession.persistsLedger(after: [.stretchExited(.farGate)], force: false))
+        XCTAssertFalse(DriveSession.persistsLedger(after: [], force: false), "a quiet fix writes nothing")
+        XCTAssertFalse(DriveSession.persistsLedger(after: [.driveEnded], force: false), "the drive end writes through force")
+        XCTAssertTrue(DriveSession.persistsLedger(after: [.driveEnded], force: true))
+    }
+
+    /// The surfaces run off the fix loop: enqueue returns at once, jobs run in order, drain waits for the last one.
+    func testSurfaceQueueRunsInOrderWithoutHoldingTheCaller() async {
+        let queue = SerialTaskQueue()
+        let order = Order()
+        let clock = ContinuousClock()
+        let start = clock.now
+        await queue.enqueue {
+            try? await Task.sleep(for: .milliseconds(300))
+            await order.add(1)
+        }
+        await queue.enqueue { await order.add(2) }
+        let elapsed = clock.now - start
+        XCTAssertLessThan(elapsed, .milliseconds(200), "enqueue must not wait for the slow job")
+        let before = await order.seen
+        XCTAssertEqual(before, [], "nothing has run before the slow job ends")
+        await queue.drain()
+        let after = await order.seen
+        XCTAssertEqual(after, [1, 2], "in order, the second after the first")
+    }
+
+    private actor Order {
+        var seen: [Int] = []
+        func add(_ n: Int) { seen.append(n) }
+    }
+
     func testMetresIsHaversine() {
         // 0.01 degrees of longitude at 41.3 degrees north is about 836 m.
         let d = DriveSession.metres(Coordinate(latitude: 41.3, longitude: -1.90), Coordinate(latitude: 41.3, longitude: -1.91))

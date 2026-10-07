@@ -52,6 +52,23 @@ final class HealthReportTests: XCTestCase {
         healthReport(inputs).first { $0.title == title }!
     }
 
+    /// English phone: every title and detail is English; the Spanish titles stay the row ids.
+    func testEnglishLocaleTranslatesEveryRow() {
+        var i = healthy()
+        i.locationAuthorization = .whenInUse
+        let en = healthReport(i, locale: Fixtures.en)
+        XCTAssertEqual(en.map(\.title), ["Location", "Always session", "Background launches", "Parked fence", "Significant change", "Data", "Background refresh", "Notifications", "Car screen", "Motion", "Voice", "Files", "Last drive"])
+        XCTAssertEqual(en[0].detail, "While Using only: open the app before you drive, or grant Always")
+        XCTAssertEqual(en[5].detail, "4500 radars, 1 h ago")
+        let spanishWords = ["hace", "Siempre", "Sin ", "Valla", "viajes", "Voz", "Datos", "Última"]
+        for row in en {
+            XCTAssertFalse(spanishWords.contains { row.detail.contains($0) }, "\(row.title): \(row.detail)")
+        }
+        XCTAssertEqual(healthReport(i)[0].title, HealthTitles.location, "Spanish by default")
+        XCTAssertEqual(HealthTitles.localized(HealthTitles.lastDrive, locale: Fixtures.en), "Last drive")
+        XCTAssertEqual(HealthTitles.localized(HealthTitles.lastDrive, locale: Fixtures.es), HealthTitles.lastDrive)
+    }
+
     func testAHealthyPhoneIsAllGreenWithThirteenRows() {
         let report = healthReport(healthy())
         XCTAssertEqual(report.count, 13)

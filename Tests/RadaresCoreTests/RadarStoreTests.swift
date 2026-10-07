@@ -18,14 +18,22 @@ final class RadarStoreTests: XCTestCase {
         XCTAssertEqual(store.candidates(near: from2km, within: 2100, on: t0).map(\.id), ["dgt-CABINACINEMOMETRO_120001"])
     }
 
-    func testALineIsFoundByItsNearerGate() throws {
+    /// A line is a candidate by its nearer gate or by its chord (design 2.5: a car that joined between the gates
+    /// must see the stretch); a point 2 km beside the chord is not.
+    func testALineIsFoundByItsNearerGateOrByItsChord() throws {
         let store = try Fixtures.store()
         let corridor = try Fixtures.radar("dgt_invive-Tramo_Invive_344")
         let east = try XCTUnwrap(corridor.end)
         let nearEast = Geo.destination(from: east, bearingDegrees: 90, metres: 500)
         XCTAssertEqual(store.candidates(near: nearEast, within: 800, on: t0).map(\.id), [corridor.id])
-        let middle = Geo.destination(from: corridor.start, bearingDegrees: Geo.bearing(from: corridor.start, to: east), metres: 4800)
-        XCTAssertTrue(store.candidates(near: middle, within: 1200, on: t0).isEmpty, "the middle of a chord is far from both gates")
+        let into = Geo.bearing(from: corridor.start, to: east)
+        let middle = Geo.destination(from: corridor.start, bearingDegrees: into, metres: 4800)
+        XCTAssertEqual(store.candidates(near: middle, within: 1200, on: t0).map(\.id), [corridor.id], "the middle of the chord is on the stretch")
+        XCTAssertEqual(RadarStore.distance(from: middle, to: corridor), 0, accuracy: 1)
+        XCTAssertGreaterThan(RadarStore.gateDistance(from: middle, to: corridor), 4000, "the gates are still far")
+        let beside = Geo.destination(from: middle, bearingDegrees: into + 90, metres: 2000)
+        XCTAssertTrue(store.candidates(near: beside, within: 1200, on: t0).isEmpty, "2 km beside the chord is not on it")
+        XCTAssertEqual(RadarStore.distance(from: beside, to: corridor), 2000, accuracy: 5)
     }
 
     func testInactiveAndReportedAreNeverCandidates() throws {

@@ -33,6 +33,24 @@ final class PhrasingTests: XCTestCase {
         XCTAssertEqual(Phrasing.make(event(makeRadar(kind: .mobileRecurring), distance: 800), locale: Fixtures.en).spoken, "Usual mobile radar 800 metres ahead.")
     }
 
+    /// The idle card follows the phone's language like every other title the core writes.
+    func testIdleCardTitleFollowsTheLocale() {
+        XCTAssertEqual(DriveContent.watching(at: t0, locale: Fixtures.es).title, "Sin radares cerca")
+        XCTAssertEqual(DriveContent.watching(at: t0, locale: Fixtures.en).title, "No radars nearby")
+        XCTAssertEqual(DriveSnapshot.empty(at: t0, locale: Fixtures.en).content.title, "No radars nearby")
+    }
+
+    /// A stretch joined between its gates says what is left, not the whole length.
+    func testStretchJoinedBetweenTheGates() {
+        let corridor = makeRadar(kind: .stretch, role: .mobileCorridor, end: .at(41.3, -1.8), road: "N-232", kmFrom: 20.81, kmTo: 30.91, bidirectional: true, source: "dgt_invive")
+        let joined = Phrasing.makeJoined(event(corridor, kind: .stretchEntered, distance: 4591), remainingMetres: 4591, locale: Fixtures.es)
+        XCTAssertEqual(joined.spoken, "Tramo de radar móvil, N-232, quedan 5 kilómetros.")
+        XCTAssertEqual(joined.title, "Tramo de radar móvil · quedan 5 kilómetros")
+        XCTAssertEqual(Phrasing.makeJoined(event(corridor, kind: .stretchEntered, distance: 800), remainingMetres: 800, locale: Fixtures.en).spoken, "Mobile radar stretch, N-232, 800 metres left.")
+        let section = makeRadar(kind: .stretch, role: .averageSpeedSection, end: .at(41.3, -1.8), road: "Z-40", kmFrom: 26.6, kmTo: 29.7, maxspeed: 100, directionText: "MADRID")
+        XCTAssertEqual(Phrasing.makeJoined(event(section, kind: .stretchEntered, distance: 2600), remainingMetres: 2600, locale: Fixtures.es).spoken, "Radar de tramo, quedan 3 kilómetros, sentido Madrid. Límite 100.")
+    }
+
     func testStretchEntriesAndExit() {
         let corridor = makeRadar(kind: .stretch, role: .mobileCorridor, end: .at(41.3, -1.8), road: "N-232", kmFrom: 20.81, kmTo: 30.91, bidirectional: true, source: "dgt_invive")
         XCTAssertEqual(Phrasing.make(event(corridor, kind: .stretchEntered, distance: 610), locale: Fixtures.es).spoken, "Tramo de radar móvil, N-232, 10 kilómetros.")

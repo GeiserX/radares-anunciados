@@ -7,6 +7,11 @@
 // recreated by name and the parked condition re-added when `identifiers` lost it (the system keeps the condition
 // across relaunches, but not across every reinstall or reboot before first unlock).
 //
+// Significant change delivers the cached position right after `startMonitoringSignificantLocationChanges()` on
+// every launch ("the first event to be delivered is usually the most recently cached location event"). On a launch
+// the user made that delivery is not movement: it is handed over as the initial fix (for the fence), never as a
+// wake-up. On a launch iOS made for a location event it is the event and wakes as usual.
+//
 // A main-actor class, not an actor: CLLocationManager delivers its delegate callbacks on the thread that created
 // it, and that thread needs a run loop, so the manager lives on the main thread. CLMonitor is an actor of its own.
 
@@ -32,12 +37,15 @@ public final class WakeUps {
     private let logger = Logger(subsystem: "io.github.geiserx.radares", category: "wakeups")
     private let onMonitorEvent: @Sendable (MonitorEvent) async -> Void
     private let onSignificantChange: @Sendable (Fix) async -> Void
+    private let onInitialFix: @Sendable (Fix) async -> Void
     private let onAuthorizationChange: @Sendable (CLAuthorizationStatus) async -> Void
 
     private let slcManager = CLLocationManager()
     private let slcDelegate: SLCDelegate
     private var monitor: CLMonitor?
     private var monitorTask: Task<Void, Never>?
+    /// The next significant-change delivery is the cached position of a user launch: an initial fix, not a wake.
+    private var initialDeliveryPending = false
 
     /// Health inputs (design 6, rows "Valla de aparcamiento" and "Cambio significativo").
     public private(set) var slcStarted = false
@@ -49,13 +57,34 @@ public final class WakeUps {
     public init(
         onMonitorEvent: @escaping @Sendable (MonitorEvent) async -> Void,
         onSignificantChange: @escaping @Sendable (Fix) async -> Void,
+        onInitialFix: @escaping @Sendable (Fix) async -> Void = { _ in },
         onAuthorizationChange: @escaping @Sendable (CLAuthorizationStatus) async -> Void
     ) {
         self.onMonitorEvent = onMonitorEvent
         self.onSignificantChange = onSignificantChange
+        self.onInitialFix = onInitialFix
         self.onAuthorizationChange = onAuthorizationChange
-        slcDelegate = SLCDelegate(onLocations: onSignificantChange, onAuthorization: onAuthorizationChange)
+        slcDelegate = SLCDelegate(onAuthorization: onAuthorizationChange)
+        slcDelegate.onLocations = { [weak self] fix in await self?.significantChange(fix) }
         slcManager.delegate = slcDelegate
+    }
+
+    /// The next delivery is the cached position of a start on a user launch, not movement.
+    func expectInitialDelivery() {
+        initialDeliveryPending = true
+    }
+
+    /// Every delivery of the significant-change manager. The first one after a start on a user launch is the
+    /// cached position (`initialDeliveryPending`): kept as the initial fix, not logged or probed as a wake-up.
+    func significantChange(_ fix: Fix) async {
+        if initialDeliveryPending {
+            initialDeliveryPending = false
+            logger.info("significant change: initial cached delivery, kept as the first fix, not a wake-up")
+            await onInitialFix(fix)
+            return
+        }
+        lastSlcDelivery = fix.timestamp
+        await onSignificantChange(fix)
     }
 
     // MARK: Authorization (design 7, screen 1)
@@ -81,12 +110,14 @@ public final class WakeUps {
 
     /// Every launch: recreate the monitor by name, iterate its events, re-add the parked condition if it was lost,
     /// start significant change. `fenceCenter` is the last persisted fence position (nil before the first fix).
-    public func start(fenceCenter: Coordinate?) async {
+    /// `expectCachedDelivery` is true on a launch the user made: the first delivery is then the cached position.
+    public func start(fenceCenter: Coordinate?, expectCachedDelivery: Bool = false) async {
         self.fenceCenter = fenceCenter
         if !slcStarted {
+            if expectCachedDelivery { expectInitialDelivery() }
             slcManager.startMonitoringSignificantLocationChanges()
             slcStarted = true
-            logger.info("significant change started")
+            logger.info("significant change started, initial delivery \(expectCachedDelivery ? "expected" : "is a wake", privacy: .public)")
         }
         guard monitor == nil else { return }
         let monitor = await CLMonitor(Self.monitorName)
@@ -119,6 +150,7 @@ public final class WakeUps {
     public func stop() async {
         slcManager.stopMonitoringSignificantLocationChanges()
         slcStarted = false
+        initialDeliveryPending = false
         monitorTask?.cancel()
         monitorTask = nil
         if let monitor, await monitor.identifiers.contains(Self.parkedIdentifier) {
@@ -163,10 +195,6 @@ public final class WakeUps {
         }
     }
 
-    func noteSlcDelivery(at date: Date) {
-        lastSlcDelivery = date
-    }
-
     private static func describe(_ state: CLMonitor.Event.State) -> String {
         switch state {
         case .unknown: "unknown"
@@ -197,15 +225,12 @@ public final class WakeUps {
 /// The significant-change delegate. Not isolated: Core Location calls it on the main thread (the manager was
 /// created there) and the callbacks hand values, never Core Location objects, to the coordinator.
 private final class SLCDelegate: NSObject, CLLocationManagerDelegate, @unchecked Sendable {
-    private let onLocations: @Sendable (Fix) async -> Void
+    /// Set by `WakeUps` right after its init (it needs `self`); every delivery goes through it.
+    var onLocations: @Sendable (Fix) async -> Void = { _ in }
     private let onAuthorization: @Sendable (CLAuthorizationStatus) async -> Void
     var chainToAlways = false
 
-    init(
-        onLocations: @escaping @Sendable (Fix) async -> Void,
-        onAuthorization: @escaping @Sendable (CLAuthorizationStatus) async -> Void
-    ) {
-        self.onLocations = onLocations
+    init(onAuthorization: @escaping @Sendable (CLAuthorizationStatus) async -> Void) {
         self.onAuthorization = onAuthorization
     }
 

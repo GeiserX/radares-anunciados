@@ -4,8 +4,10 @@
 // The one owner of location state (design 3): idle, probing, driving, paused(since:). Holds the Always
 // CLServiceSession, re-taken in `init` so that touching `shared` as the first statement of didFinishLaunching
 // re-takes it within the first second of every launch; the wake-ups; the motion gate; the drive session.
-// `bootstrap(state:)` runs from didFinishLaunching: a persisted drive resumes its loop, a background launch while
-// idle starts the stream first and then probes, a foreground launch waits for the user or an intent.
+// `bootstrap(launchedInBackground:)` runs from didFinishLaunching: the persisted drive sets the state at once, the
+// rest runs in `bootstrapTask`; a persisted drive resumes its loop, a background launch while idle starts the stream
+// first and then probes, a foreground launch waits for the user or an intent (under Always) or starts the drive from
+// the scene (the degraded While-Using mode, `foregroundDriveWanted`). The public controls wait for the bootstrap.
 //
 // What the app and surfaces lanes call: `startDrive(reason:)` (the intent, the UI, "Probar aviso"), `stopDrive()`,
 // `setWarningsEnabled(_:)` (onboarding after the Always grant, and the "Avisos" switch), `requestAuthorization()`
@@ -85,6 +87,9 @@ public actor LocationCoordinator {
     private var launchState: LaunchState = .active
     private var launchedAt = Date()
     private var bootstrapped = false
+    /// The rest of the launch path after the persisted state is set; the controls await it so an intent that
+    /// launched a dead process cannot run between the state and the resumed stream.
+    private var bootstrapTask: Task<Void, Never>?
     private var lastFix: Fix?
     private var slowSince: Date?
     private var lastPausedMotionCheck: Date?
@@ -119,7 +124,8 @@ public actor LocationCoordinator {
 
     /// `launchedInBackground` is the app delegate's verdict from the location launch key (the one rule for a
     /// background wake; `applicationState` at launch is `.background` on every launch and decides nothing).
-    public func bootstrap(launchedInBackground: Bool) async {
+    /// Returns once the persisted state is set; the wake-ups and the resumed stream follow in `bootstrapTask`.
+    public func bootstrap(launchedInBackground: Bool) {
         guard !bootstrapped else { return }
         bootstrapped = true
         launchedAt = Date()
@@ -128,39 +134,53 @@ public actor LocationCoordinator {
         if let alwaysSession {
             watchDiagnostics(alwaysSession)
         }
-        // The persisted drive decides the state before anything can arrive: significant change delivers its
-        // first position as soon as it starts, and a wake-up that found `.idle` here would start a probe over a
-        // drive that is still on.
+        // The persisted drive decides the state before anything can arrive: a wake-up that found `.idle` here
+        // would start a probe over a drive that is still on.
         let saved = PersistedDrive.load(from: defaults)
         if let saved {
             lastFix = saved.lastFix
             setState(saved.pausedSince.map { .paused(since: $0) } ?? .driving)
         }
+        bootstrapTask = Task { [weak self] in
+            await self?.finishBootstrap(saved: saved, launchedInBackground: launchedInBackground)
+        }
+    }
+
+    private func finishBootstrap(saved: PersistedDrive?, launchedInBackground: Bool) async {
         let wakeUps = await MainActor.run {
             WakeUps(
                 onMonitorEvent: { [weak self] event in await self?.monitorEvent(event) },
                 onSignificantChange: { [weak self] fix in await self?.significantChange(fix) },
+                onInitialFix: { [weak self] fix in await self?.initialFix(fix) },
                 onAuthorizationChange: { [weak self] status in await self?.authorizationChanged(status) }
             )
         }
         self.wakeUps = wakeUps
         if wantsAlways {
-            await wakeUps.start(fenceCenter: loadFenceCenter())
+            // A launch the user made gets significant change's cached position first; that is not movement.
+            await wakeUps.start(fenceCenter: loadFenceCenter(), expectCachedDelivery: !launchedInBackground)
         }
         logger.info("bootstrap: launch state \(self.launchState.rawValue, privacy: .public), wantsAlways \(self.wantsAlways, privacy: .public)")
 
-        if let saved {
+        // The state may have moved while the wake-ups were created: an intent that stopped the drive, a wake-up.
+        // Only a drive still on is resumed, from the persisted copy as it stands now.
+        if let saved, state.isDriveOn {
             // A relaunch mid-drive: the loop continues, same drive, same ledger (design 3.1, 3.4).
-            await driveSession.resume(saved)
+            await driveSession.resume(PersistedDrive.load(from: defaults) ?? saved)
             startStream()
             logger.info("persisted drive resumed")
-        } else if launchedInBackground, !pausedToday {
+        } else if saved == nil, launchedInBackground, !pausedToday {
             // Launched in the background for a location event while idle: probe, stream first (design 3.1, 3.3).
             // (A Live Activity left by the previous process was ended at launch step 5: no drive, no card.)
             await beginProbe(wake: nil, at: launchedAt)
         }
         // `-StartDriveForTest 1` (scripts/sim-drive.sh) is the app lane's: it starts the drive when the scene
         // becomes active, where the Live Activity can be requested too.
+    }
+
+    /// The controls wait for the launch path, so a stop or a start cannot interleave with the resumed drive.
+    private func awaitBootstrap() async {
+        await bootstrapTask?.value
     }
 
     /// The app lane calls this when a scene connects, so a user launch gets its reason (design 3.3, step 6).
@@ -172,6 +192,7 @@ public actor LocationCoordinator {
 
     /// The intent, the UI or "Probar aviso" start a drive now; a probe in progress becomes the drive.
     public func startDrive(reason: DriveReason) async {
+        await awaitBootstrap()
         switch reason {
         case .intent: noteLaunchReason(.intent)
         case .foreground, .test: noteLaunchReason(.scene)
@@ -193,6 +214,7 @@ public actor LocationCoordinator {
 
     /// `StopDriveIntent` and the UI: drive end, fence re-armed at the last fix, stream cancelled.
     public func stopDrive() async {
+        await awaitBootstrap()
         switch state {
         case .idle:
             return
@@ -208,6 +230,7 @@ public actor LocationCoordinator {
     /// The "Avisos" switch (design 7): on takes the Always session (foreground) and arms the wake-ups; off
     /// invalidates the session, stops significant change, removes the fence and ends a drive in progress.
     public func setWarningsEnabled(_ on: Bool) async {
+        await awaitBootstrap()
         wantsAlways = on
         defaults.set(on, forKey: Self.wantsAlwaysKey)
         if on {
@@ -219,7 +242,8 @@ public actor LocationCoordinator {
                 watchDiagnostics(session)
                 logger.info("Always session taken")
             }
-            await wakeUps?.start(fenceCenter: loadFenceCenter())
+            // Switched on from the foreground: the first delivery is the cached position, not a wake.
+            await wakeUps?.start(fenceCenter: loadFenceCenter(), expectCachedDelivery: true)
         } else {
             switch state {
             case .idle: break
@@ -316,6 +340,31 @@ public actor LocationCoordinator {
         get async { await driveSession.snapshot }
     }
 
+    /// The card for a Live Activity started while the drive is paused (design 3.1: 15 min stale, "En pausa").
+    public var pausedContent: DriveContent {
+        get async { await driveSession.pausedContent() }
+    }
+
+    /// The degraded While-Using mode (design 3.4): the only start iOS allows is from the foreground, so opening the
+    /// app starts the drive. Never under Always (a foreground launch waits for the user or an intent), never while
+    /// warnings are off or "Pausar hoy" is on, never over a drive or a probe already running.
+    public func startForegroundDriveIfWanted() async {
+        await awaitBootstrap()
+        var whenInUse = false
+        if let wakeUps {
+            whenInUse = await MainActor.run { wakeUps.authorizationStatus == .authorizedWhenInUse }
+        }
+        guard Self.foregroundDriveWanted(whenInUseOnly: whenInUse, wantsAlways: wantsAlways, pausedToday: pausedToday, state: state) else { return }
+        logger.info("foreground start: While Using only, the scene starts the drive")
+        await startDrive(reason: .foreground)
+    }
+
+    /// The rule of `startForegroundDriveIfWanted`, pure so it is tested.
+    nonisolated static func foregroundDriveWanted(whenInUseOnly: Bool, wantsAlways: Bool, pausedToday: Bool, state: DriveState) -> Bool {
+        guard whenInUseOnly, wantsAlways, !pausedToday else { return false }
+        return state == .idle
+    }
+
     // MARK: Wake-ups (design 3.1, idle)
 
     private func monitorEvent(_ event: WakeUps.MonitorEvent) async {
@@ -327,9 +376,20 @@ public actor LocationCoordinator {
 
     private func significantChange(_ fix: Fix) async {
         noteLaunchReason(.slc)
-        await wakeUps?.noteSlcDelivery(at: fix.timestamp)
         if lastFix == nil { lastFix = fix }
         await wake(source: .slc, flags: [], at: fix.timestamp)
+    }
+
+    /// The cached position significant change delivers right after it starts on a user launch: the fence gets a
+    /// centre when it had none, and nothing else moves (no wake-up row, no probe, no launch reason).
+    private func initialFix(_ fix: Fix) async {
+        if lastFix == nil { lastFix = fix }
+        guard case .idle = state, let wakeUps else { return }
+        let fencePresent = await MainActor.run { wakeUps.parkedConditionPresent }
+        if !fencePresent {
+            await rearmFence(at: fix.coordinate)
+            logger.info("parked fence armed at the initial position")
+        }
     }
 
     private func wake(source: WakeSource, flags: [String], at date: Date) async {

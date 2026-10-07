@@ -16,13 +16,20 @@ public struct DriveSnapshot: Sendable, Codable, Hashable {
         public var remainingMetres: Double?
         /// Average-speed sections only: path length since entry over elapsed time, km/h.
         public var avgKmh: Double?
+        /// The speed at entry, for the silent time exit; kept so a relaunch mid-stretch restores it.
+        public var entrySpeedMps: Double?
+        /// Where the car was at entry (the warn distance before the gate): after a relaunch the path driven since
+        /// is estimated from here.
+        public var entryCoordinate: Coordinate?
 
-        public init(radar: Radar, enteredAt: Date, entryGate: Coordinate, remainingMetres: Double? = nil, avgKmh: Double? = nil) {
+        public init(radar: Radar, enteredAt: Date, entryGate: Coordinate, remainingMetres: Double? = nil, avgKmh: Double? = nil, entrySpeedMps: Double? = nil, entryCoordinate: Coordinate? = nil) {
             self.radar = radar
             self.enteredAt = enteredAt
             self.entryGate = entryGate
             self.remainingMetres = remainingMetres
             self.avgKmh = avgKmh
+            self.entrySpeedMps = entrySpeedMps
+            self.entryCoordinate = entryCoordinate
         }
     }
 
@@ -73,7 +80,7 @@ public struct DriveSnapshot: Sendable, Codable, Hashable {
     }
 
     /// Before the first fix.
-    public static func empty(at date: Date) -> DriveSnapshot {
-        DriveSnapshot(content: .watching(at: date))
+    public static func empty(at date: Date, locale: Locale = .autoupdatingCurrent) -> DriveSnapshot {
+        DriveSnapshot(content: .watching(at: date, locale: locale))
     }
 }

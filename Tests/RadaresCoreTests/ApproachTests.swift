@@ -53,6 +53,14 @@ final class ApproachTests: XCTestCase {
         XCTAssertFalse(evaluate(fix(metres: 600), bearing: 240).directionMatch)
     }
 
+    /// The two angles are inclusive edges (design 2.3 and 2.4 say "≤"): exactly 60° is ahead, exactly 90° matches.
+    func testTheConeAndTheHalfPlaneAreInclusiveAtTheirEdges() {
+        XCTAssertTrue(ApproachEvaluator.isAhead(angleOff: Thresholds.aheadDeg))
+        XCTAssertFalse(ApproachEvaluator.isAhead(angleOff: Thresholds.aheadDeg.nextUp))
+        XCTAssertTrue(ApproachEvaluator.matchesDirection(angleOff: Thresholds.bearingToleranceDeg))
+        XCTAssertFalse(ApproachEvaluator.matchesDirection(angleOff: Thresholds.bearingToleranceDeg.nextUp))
+    }
+
     func testLateWhenFirstSeenInsideTheBand() {
         XCTAssertFalse(evaluate(fix(metres: 600), previous: [800, 640], warn: 625).late, "first seen at 800, outside warn - 100")
         XCTAssertTrue(evaluate(fix(metres: 400), previous: [500, 450], warn: 625).late, "first seen at 500, inside 525")

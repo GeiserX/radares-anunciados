@@ -1,7 +1,8 @@
 // Lane: core
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// passes.json: what fired when and how far the car has been since, so a relaunch cannot repeat the voice (design 2.6).
+// passes.json: what fired when and how far the car has been since, so a relaunch cannot repeat the voice (design 2.6),
+// and the stretch the car is inside, so a relaunch mid-stretch still says "Fin de tramo" (design 2.5).
 
 import Foundation
 
@@ -30,9 +31,12 @@ public struct PassLedger: Codable, Sendable, Hashable {
     }
 
     public var entries: [Entry]
+    /// The stretch the car was inside when the ledger was written; nil outside one. Written on entry, cleared on exit.
+    public var stretch: DriveSnapshot.StretchState?
 
-    public init(entries: [Entry] = []) {
+    public init(entries: [Entry] = [], stretch: DriveSnapshot.StretchState? = nil) {
         self.entries = entries
+        self.stretch = stretch
     }
 
     public func entry(for id: String) -> Entry? {

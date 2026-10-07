@@ -39,6 +39,9 @@ public struct DriveAttributes: ActivityAttributes {
         /// "Datos de hace 3 días", "Abre la app".
         public var note: String?
         public var updatedAt: Date
+        /// Set by the app on every update it sends, increasing: the read-back tells a dropped update from one a
+        /// later update of the same second replaced. The widget never reads it.
+        public var seq: Int
 
         public init(
             phase: Phase,
@@ -52,7 +55,8 @@ public struct DriveAttributes: ActivityAttributes {
             stretchRemainingMetres: Int? = nil,
             avgKmh: Int? = nil,
             note: String? = nil,
-            updatedAt: Date
+            updatedAt: Date,
+            seq: Int = 0
         ) {
             self.phase = phase
             self.kindSymbol = kindSymbol
@@ -66,6 +70,7 @@ public struct DriveAttributes: ActivityAttributes {
             self.avgKmh = avgKmh
             self.note = note
             self.updatedAt = updatedAt
+            self.seq = seq
         }
     }
 

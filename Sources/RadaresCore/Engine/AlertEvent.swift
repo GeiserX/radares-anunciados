@@ -62,7 +62,7 @@ public struct DriveContent: Sendable, Codable, Hashable {
     public var stretchRemainingMetres: Int?
     /// Inside an average-speed section: path length since entry over elapsed time.
     public var avgKmh: Int?
-    /// "Datos de hace 3 días", "Abre la app".
+    /// "Datos de hace 3 días", "Abre la app". The "aprox." of the stretch remainder is the surfaces' caption, not a note.
     public var note: String?
     public var updatedAt: Date
 
@@ -94,9 +94,10 @@ public struct DriveContent: Sendable, Codable, Hashable {
         self.updatedAt = updatedAt
     }
 
-    /// The idle card: nothing ahead.
-    public static func watching(at date: Date) -> DriveContent {
-        DriveContent(phase: .watching, kindSymbol: "car.fill", title: "Sin radares cerca", subtitle: "", updatedAt: date)
+    /// The idle card: nothing ahead. English by phone locale, like every other title the core writes.
+    public static func watching(at date: Date, locale: Locale = .autoupdatingCurrent) -> DriveContent {
+        let title = Phrasing.isEnglish(locale) ? "No radars nearby" : "Sin radares cerca"
+        return DriveContent(phase: .watching, kindSymbol: "car.fill", title: title, subtitle: "", updatedAt: date)
     }
 }
 
@@ -115,7 +116,7 @@ public struct AlertEvent: Sendable, Codable, Hashable {
     public let kind: Kind
     /// Nil only for `.driveEnded`.
     public let radar: Radar?
-    /// Metres to the gate when the event fired.
+    /// Metres to the gate when the event fired; for a stretch joined between its gates, the metres left to the far gate.
     public let distance: Double?
     /// Fired inside `warnDistance - Thresholds.lateBandM` (late wake-up, GPS warm-up).
     public let late: Bool

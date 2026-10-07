@@ -18,8 +18,8 @@ import os
 public final class DriveActivityController {
     public static let shared = DriveActivityController()
 
-    /// The sound of a Live Activity alert: a 150 ms tick, so it does not stack with the voice.
-    public static let alertSoundName = "radar-tick.caf"
+    /// The sound of a Live Activity alert and of the radar notification: a 150 ms tick, so it does not stack with the voice.
+    public nonisolated static let alertSoundName = "radar-tick.caf"
 
     /// The id of the running activity, kept across launches so `reattach()` can adopt it.
     private static let activityIDKey = "surfaces.activityID"
@@ -27,6 +27,8 @@ public final class DriveActivityController {
     private let logger = Logger(subsystem: "io.github.geiserx.radares", category: "activity")
     private var currentID: String?
     private var cadence = ActivityCadence()
+    /// Stamped on every content state sent, so two updates of one fix (one second) are told apart by the read-back.
+    private var seq = 0
 
     private init() {}
 
@@ -49,10 +51,11 @@ public final class DriveActivityController {
         let shown = ActivityCadence.display(content)
         do {
             guard activitiesEnabled else { throw ActivityStartError.disabled }
+            seq += 1
             let activity = try Activity.request(
                 attributes: DriveAttributes(startedAt: now),
                 content: ActivityContent(
-                    state: DriveAttributes.ContentState(shown),
+                    state: DriveAttributes.ContentState(shown, seq: seq),
                     staleDate: ActivityCadence.staleDate(for: shown, now: now)
                 ),
                 pushType: nil
@@ -88,9 +91,10 @@ public final class DriveActivityController {
                 sound: .named(Self.alertSoundName)
             )
         }
+        seq += 1
         let sent = await Self.send(
             id: id,
-            state: DriveAttributes.ContentState(shown),
+            state: DriveAttributes.ContentState(shown, seq: seq),
             staleDate: ActivityCadence.staleDate(for: shown, now: now),
             alert: alertConfiguration
         )
@@ -104,7 +108,9 @@ public final class DriveActivityController {
         guard let id = currentID else { return }
         currentID = nil
         UserDefaults.standard.removeObject(forKey: Self.activityIDKey)
-        let state = (content.map(ActivityCadence.display) ?? cadence.lastSent).map(DriveAttributes.ContentState.init)
+        seq += 1
+        let last = seq
+        let state = (content.map(ActivityCadence.display) ?? cadence.lastSent).map { DriveAttributes.ContentState($0, seq: last) }
         cadence = ActivityCadence()
         let dismissal = Date().addingTimeInterval(Thresholds.activityDismissMinutes * 60)
         await Self.finish(id: id, state: state, policy: .after(dismissal))
@@ -175,11 +181,17 @@ public final class DriveActivityController {
         let deadline = clock.now.advanced(by: readBackWindow)
         while clock.now < deadline {
             guard let activity = live(id: id) else { return true }
-            let shown = activity.content.state
-            if shown == state { return false }
-            if shown.updatedAt > state.updatedAt { return false }
+            if !stillWaiting(shown: activity.content.state, sent: state) { return false }
             try? await Task.sleep(for: .milliseconds(100))
         }
+        return true
+    }
+
+    /// The read-back keeps polling only while the system shows neither the state sent nor a later one. Two updates
+    /// of one fix share a second, so "later" is the sequence number, never the timestamp.
+    nonisolated static func stillWaiting(shown: DriveAttributes.ContentState, sent: DriveAttributes.ContentState) -> Bool {
+        if shown == sent { return false }
+        if shown.seq > sent.seq { return false }
         return true
     }
 
@@ -207,7 +219,7 @@ public enum ActivityStartError: Error, CustomStringConvertible {
 
 extension DriveAttributes.ContentState {
     /// Field by field from the core's `DriveContent`; the phases share raw values.
-    init(_ content: DriveContent) {
+    init(_ content: DriveContent, seq: Int = 0) {
         let updatedAt = Date(timeIntervalSinceReferenceDate: content.updatedAt.timeIntervalSinceReferenceDate.rounded(.down))
         self.init(
             phase: DriveAttributes.Phase(rawValue: content.phase.rawValue) ?? .degraded,
@@ -221,7 +233,8 @@ extension DriveAttributes.ContentState {
             stretchRemainingMetres: content.stretchRemainingMetres,
             avgKmh: content.avgKmh,
             note: content.note,
-            updatedAt: updatedAt
+            updatedAt: updatedAt,
+            seq: seq
         )
     }
 }

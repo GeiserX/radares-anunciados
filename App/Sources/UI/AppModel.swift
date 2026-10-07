@@ -103,12 +103,14 @@ final class AppModel {
         await reload()
     }
 
-    /// Every time the scene becomes active: the foreground refresh (design 5.2), the test drive argument once, and
-    /// the Live Activity for a drive that is already running (design 4.2, way 2).
+    /// Every time the scene becomes active: the foreground refresh (design 5.2), the test drive argument once, the
+    /// drive itself under While Using only (design 3.4: the foreground is the one start iOS allows there), and the
+    /// Live Activity for a drive that is already running (design 4.2, way 2).
     func didBecomeActive() async {
         // A scene is up: this launch was the user's (design 3.3, step 6), unless an event already named it.
         await LocationCoordinator.shared.noteSceneConnected()
         watchDriveState()
+        await LocationCoordinator.shared.startForegroundDriveIfWanted()
         if LaunchFlags.provisionalNotifications,
            await UNUserNotificationCenter.current().notificationSettings().authorizationStatus == .notDetermined {
             _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .provisional])
@@ -143,15 +145,22 @@ final class AppModel {
 
     func ensureActivityIfDriving() async {
         guard !LaunchFlags.noLiveActivity, DriveActivityController.shared.current == nil else { return }
-        switch await LocationCoordinator.shared.state {
-        case .driving, .paused:
-            do {
-                try DriveActivityController.shared.start(content: .watching(at: Date()))
-            } catch {
-                logger.error("Live Activity: \(error.localizedDescription, privacy: .public)")
-            }
-        case .idle, .probing:
-            break
+        let state = await LocationCoordinator.shared.state
+        guard let content = Self.activityStartContent(for: state, paused: { await LocationCoordinator.shared.pausedContent }) else { return }
+        do {
+            try DriveActivityController.shared.start(content: await content())
+        } catch {
+            logger.error("Live Activity: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// The first card of a Live Activity started from the foreground: the idle card while driving, the paused card
+    /// (phase `.paused`, 15 min stale, "En pausa") while paused, since nothing updates the card until the car moves.
+    nonisolated static func activityStartContent(for state: DriveState, paused: @escaping @Sendable () async -> DriveContent) -> (@Sendable () async -> DriveContent)? {
+        switch state {
+        case .driving: { .watching(at: Date()) }
+        case .paused: paused
+        case .idle, .probing: nil
         }
     }
 

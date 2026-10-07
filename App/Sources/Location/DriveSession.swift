@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // The liveUpdates(.automotiveNavigation) loop the probe and the drive share (`DriveSession.stream`), and the drive
-// itself: CLLocationUpdate -> Fix -> AlertEngine.ingest -> AlertDispatcher.handle(_:at:), the card handed to the
+// itself: CLLocationUpdate -> Fix -> AlertEngine.ingest -> AlertDispatcher.handle(_:at:) on a serial queue off the
+// fix loop (an audio session activation never holds the next fix), the card handed to the
 // Live Activity after every fix (the controller's cadence decides what reaches the system), the passed, stretch
 // and driveEnded log rows, the drive counters that end up in the driveEnded row, the pass ledger persisted on
 // warn, pass and drive end (never per fix), the drive state persisted in UserDefaults on every change so a relaunch
@@ -73,6 +74,27 @@ public struct StreamUpdate: Sendable, Hashable {
     public var receivedAt: Date
 }
 
+/// Work for the surfaces, run in order, off the caller: each job starts after the previous one ends, and `drain`
+/// waits for the last one. `AVAudioSession.setActive` can take seconds on a route change; the fix loop must not.
+public actor SerialTaskQueue {
+    private var last: Task<Void, Never>?
+
+    public init() {}
+
+    /// Returns at once; `job` runs after every job enqueued before it.
+    public func enqueue(_ job: @escaping @Sendable () async -> Void) {
+        let previous = last
+        last = Task {
+            await previous?.value
+            await job()
+        }
+    }
+
+    public func drain() async {
+        await last?.value
+    }
+}
+
 public actor DriveSession {
     /// Launch argument `-StateMachineOnlyForTest 1`, or the same key in the app defaults (a system relaunch carries
     /// no arguments): the stream and the state machine run, but no fix reaches the
@@ -90,6 +112,8 @@ public actor DriveSession {
     private var backgroundSession: CLBackgroundActivitySession?
     /// The surfaces were told the drive started, once per process (a relaunch mid-drive tells them again).
     private var surfacesStarted = false
+    /// Every surface call of the drive, in fix order, off the fix loop.
+    private let surfaces = SerialTaskQueue()
 
     // Counters for the driveEnded row (design 6).
     private var fixes = 0
@@ -245,15 +269,17 @@ public actor DriveSession {
         if engineEnabled, !surfacesStarted {
             // The first fix of the drive in this process: the once-per-drive audio fallback takes its session here.
             surfacesStarted = true
-            await AlertDispatcher.shared.driveDidStart()
+            await surfaces.enqueue { await AlertDispatcher.shared.driveDidStart() }
         }
         let events = engine.ingest(fix)
         if !events.isEmpty {
             await dispatch(events, ledger: engine.ledger, at: fix)
         } else if engineEnabled {
             // Every quiet fix: the controller's milestone cadence decides whether the system hears about it (design
-            // 4.2). A fix with events already put the event's card on the activity through the dispatcher.
-            await DriveActivityController.shared.update(engine.snapshot.content, alert: nil)
+            // 4.2). A fix with events already put the event's card on the activity through the dispatcher. Queued
+            // behind the events so a quiet fix never overwrites the card of an event still being delivered.
+            let content = engine.snapshot.content
+            await surfaces.enqueue { await DriveActivityController.shared.update(content, alert: nil) }
         }
         return events
     }
@@ -268,6 +294,8 @@ public actor DriveSession {
             let events = engine.endDrive()
             await dispatch(events, ledger: engine.ledger, at: nil, force: true)
         }
+        // The drive end waits for the surfaces: the activity must end after the last card, not before it.
+        await surfaces.drain()
         if engineEnabled {
             await DriveActivityController.shared.end()
         }
@@ -305,7 +333,8 @@ public actor DriveSession {
     /// Hands the paused card to the Live Activity (staleDate is the controller's: 15 min while paused, design 3.1).
     public func showPaused(now: Date = Date()) async {
         guard engineEnabled else { return }
-        await DriveActivityController.shared.update(pausedContent(now: now), alert: nil)
+        let content = pausedContent(now: now)
+        await surfaces.enqueue { await DriveActivityController.shared.update(content, alert: nil) }
     }
 
     // MARK: Private
@@ -342,36 +371,44 @@ public actor DriveSession {
         return AlertEngine(store: store, ledger: ledger)
     }
 
-    /// Hands the events to the surfaces with the fix they were decided on, writes this lane's rows (`passed`,
-    /// `stretchEntered`, `stretchExited`; `driveEnded` is the coordinator's), persists the ledger on warn and pass.
+    /// Hands the events to the surfaces with the fix they were decided on (queued, in order, off the fix loop),
+    /// writes this lane's rows (`passed`, `stretchEntered`, `stretchExited`; `driveEnded` is the coordinator's),
+    /// persists the ledger on warn, pass, stretch entry and exit.
     private func dispatch(_ events: [AlertEvent], ledger: PassLedger, at fix: Fix?, force: Bool = false) async {
-        var persistLedger = force
         for event in events {
             switch event.kind {
             case .warn(let level):
-                persistLedger = true
                 if level == .full {
                     alerts += 1
                     if firstWarnAfterWakeM == nil { firstWarnAfterWakeM = metresSinceFirstFix }
                 }
             case .passed:
-                persistLedger = true
                 AppLog.shared.post(.passed(id: event.radar?.id ?? ""))
             case .stretchEntered:
-                persistLedger = true
                 alerts += 1
                 if firstWarnAfterWakeM == nil { firstWarnAfterWakeM = metresSinceFirstFix }
                 AppLog.shared.post(.stretchEntered(id: event.radar?.id ?? ""))
             case .stretchExited(let reason):
-                persistLedger = true
                 AppLog.shared.post(.stretchExited(id: event.radar?.id ?? "", reason: reason))
             case .driveEnded:
                 break
             }
-            await AlertDispatcher.shared.handle(event, at: fix)
+            await surfaces.enqueue { await AlertDispatcher.shared.handle(event, at: fix) }
         }
-        if persistLedger {
+        if Self.persistsLedger(after: events.map(\.kind), force: force) {
             Self.persist(ledger)
+        }
+    }
+
+    /// Design 2.6: the ledger is written on fire, on pass, on a stretch entry or exit, and at drive end (`force`),
+    /// never on a quiet fix. A kill between the warning and the pass must find the entry on disk, or the voice repeats.
+    static func persistsLedger(after kinds: [AlertEvent.Kind], force: Bool) -> Bool {
+        if force { return true }
+        return kinds.contains { kind in
+            switch kind {
+            case .warn, .passed, .stretchEntered, .stretchExited: true
+            case .driveEnded: false
+            }
         }
     }
 
