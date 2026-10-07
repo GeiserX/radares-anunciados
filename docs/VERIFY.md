@@ -149,6 +149,17 @@ Measured limits of the Simulator (Xcode 26.6, iOS 26.5, 2026-10-07):
   what the relaunch test below relies on.
 - `CLMonitor` refuses a name with a dot (`Monitor Name contains non-alphanumeric character`, an assertion in
   `CLMonitor.mm`); the monitor is `RadaresWake`, not the design's `radares.wake`.
+- A fresh Simulator speaks English: its language is `en-US`, and the sentence follows the phone's language. Set
+  `AppleLanguages` to `es-ES` in the Simulator's global domain and reboot it before a run whose evidence is the
+  Spanish sentence.
+- `application.applicationState` is `.background` inside `didFinishLaunching` on every launch, a user's included;
+  the background-wake rule is the location launch key (design 3.3), and a user launch is named by its scene.
+- The Lock Screen cannot be reached from a headless run: locking needs the Simulator app and an Accessibility grant
+  an ssh session cannot obtain. The milestone screenshots show the Live Activity in the Dynamic Island with the app
+  in the background (Settings opened over it) and the in-app card; the Lock Screen itself is a device row (L1).
+- Right after a route, the next launch gets a significant-change delivery for the last simulated position before
+  the scene is up, so the probe, not `-StartDriveForTest`, starts that drive (`driveStarted(reason: wakeup(slc))`).
+  Both paths are the design's; the Live Activity still starts because the app watches the drive state while open.
 
 State-machine run (what `scripts/sim-drive.sh --probe --state-machine-only` plus a few `simctl location` commands
 show; the rows come from the unified log, subsystem `io.github.geiserx.radares`, and from `events.jsonl` once the

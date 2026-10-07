@@ -27,9 +27,6 @@ public final class DriveActivityController {
     private let logger = Logger(subsystem: "io.github.geiserx.radares", category: "activity")
     private var currentID: String?
     private var cadence = ActivityCadence()
-    /// `reattach()` adopted an activity from the previous process. The location lane ends it when its relaunch finds
-    /// no live drive; an activity started in this process (the intent, the foreground) is never that one.
-    public private(set) var adoptedAtLaunch = false
 
     private init() {}
 
@@ -61,7 +58,6 @@ public final class DriveActivityController {
                 pushType: nil
             )
             currentID = activity.id
-            adoptedAtLaunch = false
             UserDefaults.standard.set(activity.id, forKey: Self.activityIDKey)
             cadence = ActivityCadence()
             cadence.record(shown, at: now)
@@ -107,7 +103,6 @@ public final class DriveActivityController {
     public func end(content: DriveContent? = nil) async {
         guard let id = currentID else { return }
         currentID = nil
-        adoptedAtLaunch = false
         UserDefaults.standard.removeObject(forKey: Self.activityIDKey)
         let state = (content.map(ActivityCadence.display) ?? cadence.lastSent).map(DriveAttributes.ContentState.init)
         cadence = ActivityCadence()
@@ -116,13 +111,14 @@ public final class DriveActivityController {
         logger.notice("activity ended \(id, privacy: .public)")
     }
 
-    /// Launch step 5 (design 3.3): adopt the activity this app started if it is still alive, end every other one.
-    /// The location lane ends the adopted one (`end()`) when the relaunch finds no live drive.
-    public func reattach() {
+    /// Launch step 5 (design 3.3): adopt the activity this app started if it is still alive and a drive is still on
+    /// (`driveIsOn`: the location lane's persisted drive), end every other one. Decided synchronously at launch, before
+    /// any scene or intent can ask for an activity, so nothing races with the end of a stale one.
+    public func reattach(driveIsOn: Bool) {
         let savedID = UserDefaults.standard.string(forKey: Self.activityIDKey)
         currentID = nil
         for activity in Activity<DriveAttributes>.activities {
-            if activity.id == savedID, Self.isLive(activity.activityState) {
+            if driveIsOn, activity.id == savedID, Self.isLive(activity.activityState) {
                 currentID = activity.id
             } else {
                 let id = activity.id
@@ -132,9 +128,8 @@ public final class DriveActivityController {
         if currentID == nil {
             UserDefaults.standard.removeObject(forKey: Self.activityIDKey)
         }
-        adoptedAtLaunch = currentID != nil
         cadence = ActivityCadence()
-        logger.notice("reattach: \(self.currentID ?? "none", privacy: .public)")
+        logger.notice("reattach: \(self.currentID ?? "none", privacy: .public), drive on \(driveIsOn)")
     }
 
     // MARK: ActivityKit, kept off the main actor's state (Activity is not Sendable)

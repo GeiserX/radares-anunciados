@@ -154,16 +154,10 @@ public actor LocationCoordinator {
             await driveSession.resume(saved)
             startStream()
             logger.info("persisted drive resumed")
-        } else {
-            // No live drive: a Live Activity adopted from the previous process belongs to a drive that is over.
-            if await DriveActivityController.shared.adoptedAtLaunch {
-                await DriveActivityController.shared.end()
-                logger.info("stale activity from the previous process ended")
-            }
-            if launchedInBackground, !pausedToday {
-                // Launched in the background for a location event while idle: probe, stream first (design 3.1, 3.3).
-                await beginProbe(wake: nil, at: launchedAt)
-            }
+        } else if launchedInBackground, !pausedToday {
+            // Launched in the background for a location event while idle: probe, stream first (design 3.1, 3.3).
+            // (A Live Activity left by the previous process was ended at launch step 5: no drive, no card.)
+            await beginProbe(wake: nil, at: launchedAt)
         }
         // `-StartDriveForTest 1` (scripts/sim-drive.sh) is the app lane's: it starts the drive when the scene
         // becomes active, where the Live Activity can be requested too.

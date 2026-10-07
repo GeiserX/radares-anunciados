@@ -63,6 +63,7 @@ final class AppModel {
 
     private var startedTestDrive = false
     private var ranLaunchSelfTest = false
+    private var stateWatcher: Task<Void, Never>?
     private let logger = Logger(subsystem: "io.github.geiserx.radares", category: "ui")
 
     private init() {}
@@ -107,6 +108,7 @@ final class AppModel {
     func didBecomeActive() async {
         // A scene is up: this launch was the user's (design 3.3, step 6), unless an event already named it.
         await LocationCoordinator.shared.noteSceneConnected()
+        watchDriveState()
         if LaunchFlags.provisionalNotifications,
            await UNUserNotificationCenter.current().notificationSettings().authorizationStatus == .notDetermined {
             _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .provisional])
@@ -124,6 +126,19 @@ final class AppModel {
         }
         await FeedRefresher.shared.refreshIfNeeded(trigger: .foreground)
         await reload()
+    }
+
+    /// A drive that begins while the app is open (a wake-up's probe that was already running when the user opened
+    /// the app, the "Conducir" control) gets its Live Activity from the foreground (design 4.2, way 2). The
+    /// coordinator's stream has one consumer: this one.
+    private func watchDriveState() {
+        guard stateWatcher == nil else { return }
+        stateWatcher = Task { [weak self] in
+            for await state in LocationCoordinator.shared.stateChanges {
+                guard state.isDriveOn, UIApplication.shared.applicationState == .active else { continue }
+                await self?.ensureActivityIfDriving()
+            }
+        }
     }
 
     func ensureActivityIfDriving() async {

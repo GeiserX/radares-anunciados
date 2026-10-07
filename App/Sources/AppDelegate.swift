@@ -44,8 +44,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             await CurrentFeed.shared.loadIfNeeded()
         }
 
-        // 5. Adopt a Live Activity that survived a relaunch, end anything older.
-        DriveActivityController.shared.reattach()
+        // 5. Adopt a Live Activity that survived a relaunch while its drive is still on; end anything else.
+        DriveActivityController.shared.reattach(driveIsOn: PersistedDrive.load() != nil)
 
         // The surfaces' own launch-argument self-test (-SurfacesSelfTest), a no-op on a normal launch.
         AlertDispatcher.runSelfTestIfRequested()
