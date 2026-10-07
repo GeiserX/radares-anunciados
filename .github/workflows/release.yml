@@ -1,0 +1,203 @@
+name: Release to TestFlight
+
+# Push a tag vX.Y.Z on main that matches MARKETING_VERSION in App/project.yml. Each upload needs a
+# CURRENT_PROJECT_VERSION higher than the last one App Store Connect received. Every action is pinned by SHA.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  testflight:
+    name: Archive and upload
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      TEAM_ID: 624WUVM8B4
+      APP_BUNDLE_ID: io.github.geiserx.radares
+      WIDGET_BUNDLE_ID: io.github.geiserx.radares.activity
+      APP_PROFILE_NAME: Radares App Store
+      WIDGET_PROFILE_NAME: Radares Activity App Store
+      SNAPSHOT_DATE_FILE: App/Sources/Resources/feed-snapshot.date
+      SNAPSHOT_MAX_AGE_DAYS: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Check the tag is on main and CI passed there
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::$GITHUB_REF_NAME points at $GITHUB_SHA, which is not on main"
+            exit 1
+          fi
+          conclusion=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --branch main \
+            --commit "$GITHUB_SHA" --json conclusion --jq '.[0].conclusion // "none"')
+          if [ "$conclusion" != success ]; then
+            echo "::error::CI on main for $GITHUB_SHA is '$conclusion', not success"
+            exit 1
+          fi
+
+      - name: Check the tag matches App/project.yml
+        run: |
+          VERSION=$(awk '/^ *MARKETING_VERSION:/ {print $2; exit}' App/project.yml)
+          if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match MARKETING_VERSION $VERSION in App/project.yml"
+            exit 1
+          fi
+
+      # Design 5.3: the bundled feed is what the first drive after install warns from, offline. Refresh it with
+      # scripts/update-snapshot.sh and commit before tagging.
+      - name: Check the bundled feed snapshot is at most 30 days old
+        run: |
+          if [ ! -s App/Sources/Resources/feed-snapshot.geojson ] || [ ! -s "$SNAPSHOT_DATE_FILE" ]; then
+            echo "::error::The feed snapshot or its date file is missing; run scripts/update-snapshot.sh"
+            exit 1
+          fi
+          generated=$(tr -d '[:space:]' < "$SNAPSHOT_DATE_FILE")
+          generated_s=$(date -j -u -f '%Y-%m-%dT%H:%M:%SZ' "$generated" +%s) || {
+            echo "::error::$SNAPSHOT_DATE_FILE holds '$generated', not an ISO 8601 UTC time"
+            exit 1
+          }
+          age_days=$(( ($(date -u +%s) - generated_s) / 86400 ))
+          if [ "$age_days" -gt "$SNAPSHOT_MAX_AGE_DAYS" ]; then
+            echo "::error::The feed snapshot is $age_days days old (generated $generated); run scripts/update-snapshot.sh"
+            exit 1
+          fi
+          echo "feed snapshot generated $generated, $age_days days old"
+
+      - name: Check the signing secrets exist
+        env:
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          DIST_CERTIFICATE_P12: ${{ secrets.DIST_CERTIFICATE_P12 }}
+          DIST_CERTIFICATE_PASSWORD: ${{ secrets.DIST_CERTIFICATE_PASSWORD }}
+          PROFILE_APP: ${{ secrets.PROFILE_APP }}
+          PROFILE_WIDGET: ${{ secrets.PROFILE_WIDGET }}
+        run: |
+          missing=0
+          for name in APPSTORE_ISSUER_ID APPSTORE_KEY_ID APPSTORE_PRIVATE_KEY DIST_CERTIFICATE_P12 \
+                      DIST_CERTIFICATE_PASSWORD PROFILE_APP PROFILE_WIDGET; do
+            if [ -z "${!name}" ]; then echo "::error::Secret $name is not set"; missing=1; fi
+          done
+          exit $missing
+
+      - name: Install the distribution certificate
+        env:
+          DIST_CERTIFICATE_P12: ${{ secrets.DIST_CERTIFICATE_P12 }}
+          DIST_CERTIFICATE_PASSWORD: ${{ secrets.DIST_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD=$(openssl rand -hex 24)
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 3600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          printf '%s' "$DIST_CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/dist.p12"
+          security import "$RUNNER_TEMP/dist.p12" -k "$KEYCHAIN" -P "$DIST_CERTIFICATE_PASSWORD" \
+            -T /usr/bin/codesign -T /usr/bin/security
+          rm -f "$RUNNER_TEMP/dist.p12"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
+          # Put the new keychain first and keep the existing ones searchable (one path per word).
+          existing=$(security list-keychains -d user | tr -d '"' | xargs)
+          # shellcheck disable=SC2086
+          security list-keychains -d user -s "$KEYCHAIN" $existing
+          security find-identity -v -p codesigning "$KEYCHAIN"
+
+      - name: Install the provisioning profiles
+        env:
+          PROFILE_APP: ${{ secrets.PROFILE_APP }}
+          PROFILE_WIDGET: ${{ secrets.PROFILE_WIDGET }}
+        run: |
+          for dir in "$HOME/Library/MobileDevice/Provisioning Profiles" \
+                     "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+            mkdir -p "$dir"
+            for var in PROFILE_APP PROFILE_WIDGET; do
+              printf '%s' "${!var}" | base64 --decode > "$RUNNER_TEMP/profile.mobileprovision"
+              uuid=$(security cms -D -i "$RUNNER_TEMP/profile.mobileprovision" | plutil -extract UUID raw -)
+              cp "$RUNNER_TEMP/profile.mobileprovision" "$dir/$uuid.mobileprovision"
+            done
+          done
+          rm -f "$RUNNER_TEMP/profile.mobileprovision"
+
+      - name: Install XcodeGen and generate the project
+        run: |
+          brew install xcodegen
+          xcodegen generate --spec App/project.yml
+
+      - name: Archive
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -project App/RadaresAnunciados.xcodeproj -scheme RadaresAnunciados -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "$RUNNER_TEMP/RadaresAnunciados.xcarchive" \
+            | grep -E "error:|warning: .*\.swift|\*\* ARCHIVE"
+
+      - name: Check the snapshot is inside the archived app
+        run: |
+          app="$RUNNER_TEMP/RadaresAnunciados.xcarchive/Products/Applications/RadaresAnunciados.app"
+          for file in feed-snapshot.geojson feed-snapshot.date; do
+            if [ ! -s "$app/$file" ]; then
+              echo "::error::$file is not in the app bundle; App/project.yml must list Sources/Resources"
+              exit 1
+            fi
+          done
+
+      - name: Export the IPA
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>export</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${APP_BUNDLE_ID}</key><string>${APP_PROFILE_NAME}</string>
+              <key>${WIDGET_BUNDLE_ID}</key><string>${WIDGET_PROFILE_NAME}</string>
+            </dict>
+            <key>uploadSymbols</key><true/>
+          </dict>
+          </plist>
+          PLIST
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/RadaresAnunciados.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export"
+          ls -la "$RUNNER_TEMP/export"
+
+      - name: Upload to TestFlight
+        env:
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+        run: |
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          KEY="$HOME/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8"
+          printf '%s\n' "$APPSTORE_PRIVATE_KEY" > "$KEY"
+          chmod 600 "$KEY"
+          xcrun altool --upload-app -t ios -f "$RUNNER_TEMP/export/RadaresAnunciados.ipa" \
+            --apiKey "$APPSTORE_KEY_ID" --apiIssuer "$APPSTORE_ISSUER_ID"
+
+      - name: Remove signing material
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/signing.keychain-db" 2>/dev/null || true
+          rm -rf "$HOME/.appstoreconnect/private_keys"
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision
+          rm -f "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles/"*.mobileprovision

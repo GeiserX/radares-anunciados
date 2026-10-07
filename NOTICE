@@ -1,0 +1,42 @@
+Radares Anunciados
+Copyright (C) 2026 The Radares Anunciados authors
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version (SPDX: GPL-3.0-or-later). The full text is in the file LICENSE.
+
+Additional permission under GNU GPL version 3 section 7
+
+As an additional permission under section 7 of the GNU General Public License,
+version 3, you may convey this program, or a covered work based on it, through
+Apple's App Store, TestFlight, or any other distribution service operated by
+Apple, even though the terms of those services (their usage rules, digital
+rights management, device limits and limits on further distribution) impose
+restrictions on recipients that the GPL would otherwise not allow.
+
+This permission does not remove any other condition of the GPL. In particular,
+everyone who receives the program through such a service must still be able to
+get the Corresponding Source under the terms of the GPL, for example from the
+public source repository named in the app's description and its sources screen.
+
+When you convey a modified version, you may remove this additional permission
+from your version, as section 7 allows; the work is then under the plain
+GPL-3.0-or-later. Contributions to this repository are accepted under the same
+terms, including this permission (see CONTRIBUTING.md).
+
+Bundled data
+
+App/Sources/Resources/feed-snapshot.geojson is a copy of the public feed of
+https://github.com/GeiserX/radares-anunciados-ha, bundled so the app works
+offline on its first drive. It is data, not part of the program, and the GPL
+does not cover it. The database is under the Open Database License (ODbL) 1.0,
+and every feature carries its source's own attribution and licence in its
+"attribution" property, among them:
+
+- Dirección General de Tráfico (DGT), CC BY 4.0
+- © OpenStreetMap contributors, ODbL 1.0
+- Redacción ILEÓN (ileon.eldiario.es), CC BY-NC 4.0
+- Policía Local de Murcia, weekly list as read in La Opinión de Murcia
+
+The app shows each attribution verbatim on its sources screen.
