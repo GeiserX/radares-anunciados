@@ -116,7 +116,7 @@ unit. Live Activities in CarPlay use the small activity family ([WWDC25 216](htt
 | E3 | A week of Settings > Battery | The app's share stays under a navigation app's for the same driving minutes; Estado's 7-day drive minutes match the real drives | pending |
 | E4 | Settings > Privacy > Analytics after a week | No jetsam report naming the app | pending |
 | E5 | `maxGapSeconds` in every `driveEnded` row of the week | Under 10 s while moving; a larger gap is a row to explain (suspension, throttling) | pending |
-| E6 | While-Using only (deny Always), app opened before the drive | The drive works with the blue pill; after `driveEnded` nothing wakes the app; Estado says "Sin permiso Siempre: abre la app antes de conducir". Measurement, not a feature: how long an outstanding `CLBackgroundActivitySession` would keep the wake-ups alive if it were never invalidated | pending |
+| E6 | While-Using only (deny Always), app opened before the drive | Opening the app starts the drive (`driveStarted(reason: foreground)`) and the blue pill shows; the "Conducir" control alone only shows the card with "Abre la app"; after `driveEnded` nothing wakes the app; Estado's Ubicación row says "Solo mientras se usa: abre la app antes de conducir, o concede Siempre" and the Sesión Siempre row "Permiso Siempre no concedido". Measurement, not a feature: how long an outstanding `CLBackgroundActivitySession` would keep the wake-ups alive if it were never invalidated | pending |
 
 The App Review recording (onboarding, Estado, "Probar aviso", a short drive past a radar with the Live Activity)
 comes from one of these drives.
@@ -142,7 +142,10 @@ Measured limits of the Simulator (Xcode 26.6, iOS 26.5, 2026-10-07):
   `DriveSession.fix(from:)` ignores the accuracies under `targetEnvironment(simulator)` only.
 - Significant change delivers the current position right after `startMonitoringSignificantLocationChanges()` and
   then about every 30 s while the position changes, so an idle app in the Simulator is woken within a minute of a
-  route starting, long before a real phone would be.
+  route starting, long before a real phone would be. The delivery right after the start is Apple's documented
+  cached-position delivery, not a Simulator quirk; on a launch the user made the app keeps it as the initial fix
+  (the parked fence is armed there) and waits for the next delivery or the fence exit to probe, so under `--probe`
+  the probe starts at the second delivery, about 30 s into the route.
 - No update ever carries `isStationary == true`; the pause path is exercised with the 120 s slow rule (a route at
   0.5 m/s) instead.
 - The system relaunches a terminated app for a significant-change delivery and for a `CLMonitor` exit, which is
@@ -167,7 +170,9 @@ core's `EventLog` is in):
 
 1. Fresh install, `wantsAlways` set, launch: `Always session re-taken at launch`, `sessionTaken`, `launch`,
    `significant change started`, `monitor RadaresWake identifiers []`, then the first significant-change delivery:
-   `launch reason slc`, `state idle -> probing`, `liveUpdates(.automotiveNavigation) started`, `motion gate: nil`
+   `significant change: initial cached delivery, kept as the first fix, not a wake-up`, `parked fence armed at the
+   initial position`; the second delivery, once the route has moved the position: `launch reason slc`,
+   `state idle -> probing`, `liveUpdates(.automotiveNavigation) started`, `motion gate: nil`
    (no Core Motion in the Simulator; the gate falls through, as designed).
 2. Route at 33 m/s: three fixes at or above 6 m/s, `probe ended: driving`, `state probing -> driving`,
    `driveStarted(reason: wakeup(slc))`; one `update` row per second in the log.

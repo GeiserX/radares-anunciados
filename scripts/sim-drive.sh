@@ -22,6 +22,10 @@
 #   --before <m>           metres before the target the route starts (default 3000)
 #   --after <m>            metres past the target the route ends (default 1000)
 #   --settle <s>           extra seconds to wait after the route ends (default 15)
+#   --expect alert|none    make the run a check: exit 1 when the drive produced no alert row (alert) or produced
+#                          one (none). Without it the script only prints, as a state-machine or a silent run
+#                          (yesterday's mobile radar, the reversed route inside 10 min) needs; the alert row count
+#                          is printed either way.
 #
 # Needs a booted simulator. Mutes the Mac first: the app may speak.
 
@@ -31,7 +35,7 @@ usage() { sed -n '4,25p' "$0"; exit 2; }
 [ $# -ge 4 ] || usage
 
 UDID=$1; TARGET=$2; KMH=$3; SIDE=$4; shift 4
-HEADING=""; APP=""; PROBE=0; SMO=0; NOLA=0; BEFORE=3000; AFTER=1000; SETTLE=15
+HEADING=""; APP=""; PROBE=0; SMO=0; NOLA=0; BEFORE=3000; AFTER=1000; SETTLE=15; EXPECT=""
 while [ $# -gt 0 ]; do
   case $1 in
     --heading) HEADING=$2; shift 2 ;;
@@ -42,10 +46,12 @@ while [ $# -gt 0 ]; do
     --before) BEFORE=$2; shift 2 ;;
     --after) AFTER=$2; shift 2 ;;
     --settle) SETTLE=$2; shift 2 ;;
+    --expect) EXPECT=$2; shift 2 ;;
     *) echo "unknown option $1" >&2; usage ;;
   esac
 done
 case $SIDE in same|opposite) ;; *) echo "fourth argument must be same or opposite" >&2; usage ;; esac
+case $EXPECT in ""|alert|none) ;; *) echo "--expect takes alert or none" >&2; usage ;; esac
 
 BUNDLE=io.github.geiserx.radares
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -179,14 +185,23 @@ xcrun simctl location "$UDID" clear >/dev/null 2>&1 || true
 EVENTS="$CONTAINER/Library/Application Support/Radares/events.jsonl"
 echo
 echo "== events.jsonl: alert and state rows"
+ALERTS=0
 if [ -s "$EVENTS" ]; then
   grep -E 'launch|sessionTaken|wakeup|probe|driveStarted|drivePaused|driveResumed|driveEnded|alert|passed|stretchEntered|stretchExited|monitorEvent|notificationPosted|speech|activityStarted|activityFailed' "$EVENTS" || echo "(no matching rows)"
+  # Rows of this run only: the file keeps earlier runs. An alert row is `"alert":{...}`; a stretch entry is its own row.
+  ALERTS=$(awk -v since="$(date -u -r "$START_EPOCH" '+%Y-%m-%dT%H:%M:%S')" '$0 ~ /"t":"/ && substr($0, index($0, "\"t\":\"") + 5, 19) >= since && ($0 ~ /"alert":/ || $0 ~ /"stretchEntered":/)' "$EVENTS" | wc -l | tr -d ' ')
 else
   echo "(empty or missing: $EVENTS)"
 fi
+echo "alert rows this run: $ALERTS"
 
 echo
 echo "== unified log, subsystem $BUNDLE, since launch (the same rows, from the process)"
 xcrun simctl spawn "$UDID" log show --start "$(date -r "$START_EPOCH" '+%Y-%m-%d %H:%M:%S')" \
   --predicate "subsystem == \"$BUNDLE\"" --style compact --info 2>/dev/null \
-  | grep -vE 'update speed' | tail -n 80
+  | grep -vE 'update speed' | tail -n 80 || true
+
+case $EXPECT in
+  alert) if [ "$ALERTS" -eq 0 ]; then echo "FAIL: expected an alert row, got none" >&2; exit 1; fi; echo "OK: $ALERTS alert row(s)" ;;
+  none) if [ "$ALERTS" -ne 0 ]; then echo "FAIL: expected no alert row, got $ALERTS" >&2; exit 1; fi; echo "OK: no alert row" ;;
+esac

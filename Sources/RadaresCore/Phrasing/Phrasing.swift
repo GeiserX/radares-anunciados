@@ -56,6 +56,31 @@ public enum Phrasing {
         }
     }
 
+    /// A stretch joined between its gates (an on-ramp, a side road): the length left, not the whole length.
+    /// *"Tramo de radar móvil, N-232, quedan 7 kilómetros."*; *"Radar de tramo, quedan 3 kilómetros, sentido Madrid. Límite 100."*
+    public static func makeJoined(_ event: AlertEvent, remainingMetres: Double, locale: Locale) -> Phrase {
+        let en = isEnglish(locale)
+        guard let radar = event.radar else {
+            return Phrase(spoken: "", title: "", body: "")
+        }
+        let title = kindTitle(radar, locale: locale)
+        let left = lengthText(remainingMetres, locale: locale)
+        let leftText = en ? "\(left) left" : "quedan \(left)"
+        var spoken: String
+        if radar.role == .mobileCorridor {
+            let road = radar.road.map { "\($0), " } ?? ""
+            spoken = "\(title), \(road)\(leftText)."
+        } else {
+            spoken = "\(title), \(leftText)"
+            if let direction = radar.directionText.map({ directionName($0, locale: locale) }) {
+                spoken += en ? ", towards \(direction)" : ", sentido \(direction)"
+            }
+            spoken += "."
+            if let limit = radar.maxspeed { spoken += en ? " Limit \(limit)." : " Límite \(limit)." }
+        }
+        return Phrase(spoken: spoken, title: "\(title) · \(leftText)", body: body(radar, locale: locale))
+    }
+
     public static func isEnglish(_ locale: Locale) -> Bool {
         locale.language.languageCode?.identifier == "en"
     }

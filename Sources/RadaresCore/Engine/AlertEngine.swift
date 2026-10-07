@@ -4,7 +4,8 @@
 // ingest(_:) -> [AlertEvent]: candidates, course, warn distance, approach, pass state, stretches, pacing (design 2).
 // Pure given the store: no I/O. The fix timestamps are the clock while driving (so a route vector replays
 // hours in milliseconds); `now` is only read where no fix is involved (endDrive, the passed card's 4 s).
-// Owned by the location lane's drive loop, which persists `ledger` on warn, passed and drive end.
+// Owned by the location lane's drive loop, which persists `ledger` on warn, passed, stretch entry and exit and drive
+// end; the ledger carries the stretch the car is inside, so an engine rebuilt after a relaunch resumes it.
 
 import Foundation
 
@@ -14,8 +15,10 @@ public final class AlertEngine {
     private let locale: Locale
 
     private var passes: PassTracker
-    private var stretches = StretchTracker()
+    private var stretches: StretchTracker
     private var previousFix: Fix?
+    /// The fixes of the last Thresholds.courseFallbackWindowSeconds, oldest first: the baseline of a derived course.
+    private var recentFixes: [Fix] = []
     /// Last valid speeds, oldest first, at most Thresholds.speedMedianFixes.
     private var speeds: [Double] = []
     /// Distances to each point candidate on earlier fixes since it entered the band (first kept, tail bounded).
@@ -41,15 +44,30 @@ public final class AlertEngine {
         self.now = now
         self.locale = locale
         passes = PassTracker(ledger: ledger)
-        current = .empty(at: now())
+        // The stretch the previous process was inside, while its pass is still open (design 2.5, relaunch).
+        let resumed = ledger.stretch.flatMap { state in ledger.entry(for: state.radar.id)?.passedAt == nil ? state : nil }
+        stretches = StretchTracker(resuming: resumed)
+        current = .empty(at: now(), locale: locale)
+        if let state = stretches.inside {
+            // The card is the stretch's from the start, not "Sin radares cerca" until the first fix after the relaunch.
+            current.stretch = state
+            current.next = state.radar
+            current.distanceMetres = state.remainingMetres
+            current.content = stretchContent(median: nil, at: now())
+        }
     }
 
-    public var ledger: PassLedger { passes.ledger }
+    /// The pass ledger plus the stretch the car is inside: what the owner persists.
+    public var ledger: PassLedger {
+        var l = passes.ledger
+        l.stretch = stretches.inside
+        return l
+    }
 
     public var snapshot: DriveSnapshot {
         var s = current
         if s.content.phase == .passed, let passed = lastPassed, now().timeIntervalSince(passed.at) >= Thresholds.passedCardSeconds {
-            s.content = .watching(at: now())
+            s.content = stretches.inside != nil ? stretchContent(median: s.speedMps, at: now()) : .watching(at: now(), locale: locale)
         }
         return s
     }
@@ -60,13 +78,9 @@ public final class AlertEngine {
         let t = fix.timestamp
         var events: [AlertEvent] = []
 
-        // Course (design 2.3): the platform course at road speed, else the heading between the last two fixes.
-        var course: Double?
-        if let c = fix.course, (fix.speed ?? 0) >= Thresholds.courseMinSpeedMps {
-            course = c
-        } else if let prev = previousFix, Geo.distance(prev.coordinate, fix.coordinate) >= Thresholds.courseFallbackMinM {
-            course = Geo.bearing(from: prev.coordinate, to: fix.coordinate)
-        }
+        recentFixes.removeAll { t.timeIntervalSince($0.timestamp) > Thresholds.courseFallbackWindowSeconds }
+        let course = courseInUse(fix)
+        recentFixes.append(fix)
         previousFix = fix
 
         if let s = fix.speed, s >= 0 {
@@ -89,14 +103,16 @@ public final class AlertEngine {
         let lines = candidates.filter { $0.isLine && passes.canFire($0.id, now: t) }
         if let change = stretches.ingest(fix, courseDegrees: course, warnDistance: warn, speedMps: median, candidates: lines, now: t) {
             switch change {
-            case .entered(let radar, _, let approach, let level):
+            case .entered(let radar, _, let approach, let level, let remaining):
                 if level == .full {
+                    // A stretch entry is spoken whatever the pacing clock says: it is the one sentence of a corridor
+                    // that can run for 30 km, and the synthesizer queues it behind a point's sentence (design 2.6).
                     passes.fire(radar.id, level: .full, now: t)
-                    let paced = lastSpokenAt.map { t.timeIntervalSince($0) < Thresholds.pacingSeconds } ?? false
-                    if !paced { lastSpokenAt = t }
-                    let content = stretchContent(fix: fix, median: median)
+                    lastSpokenAt = t
+                    let content = stretchContent(median: median, at: t)
                     let draft = AlertEvent(kind: .stretchEntered, radar: radar, distance: approach.distanceMetres, late: approach.late, crossTrackMetres: approach.crossTrackMetres, phrase: nil, content: content)
-                    events.append(withPhrase(draft, phrase: paced ? nil : Phrasing.make(draft, locale: locale)))
+                    let phrase = remaining.map { Phrasing.makeJoined(draft, remainingMetres: $0, locale: locale) } ?? Phrasing.make(draft, locale: locale)
+                    events.append(withPhrase(draft, phrase: phrase))
                 } else {
                     passes.fire(radar.id, level: .visual, now: t)
                     passing[radar.id] = PassWatch(minDistance: approach.distanceMetres, lastDistance: approach.distanceMetres, opposite: true)
@@ -106,7 +122,7 @@ public final class AlertEngine {
             case .exited(let radar, let reason):
                 passes.markPassed(radar.id, now: t)
                 lastStretchExitReason = reason
-                let draft = AlertEvent(kind: .stretchExited(reason), radar: radar, distance: nil, late: false, crossTrackMetres: nil, phrase: nil, content: .watching(at: t))
+                let draft = AlertEvent(kind: .stretchExited(reason), radar: radar, distance: nil, late: false, crossTrackMetres: nil, phrase: nil, content: .watching(at: t, locale: locale))
                 events.append(withPhrase(draft, phrase: reason == .farGate ? Phrasing.make(draft, locale: locale) : nil))
             }
         }
@@ -167,7 +183,8 @@ public final class AlertEngine {
             events.append(withPhrase(draft, phrase: isSpoken ? Phrasing.make(draft, locale: locale, alsoAt: second) : nil))
         }
 
-        // Passed (design 2.3): three increases after the minimum, or under 30 m.
+        // Passed (design 2.3): three increases of at least closingMinM after the minimum, the distance at least
+        // max(passedMinRiseM, accuracy) above it, or under 30 m. GPS wander while stopped before the radar is no pass.
         for id in passes.firedIds {
             guard let radar = store.radar(id: id), !radar.isLine else { continue }
             let distance = Geo.distance(fix.coordinate, radar.start)
@@ -181,9 +198,10 @@ public final class AlertEngine {
                 if distance < watch.minDistance {
                     watch.minDistance = distance
                     watch.increases = 0
-                } else if distance > watch.lastDistance {
+                } else if distance - watch.lastDistance >= Thresholds.closingMinM {
                     watch.increases += 1
-                    passed = watch.increases >= Thresholds.passedFixes
+                    let rise = distance - watch.minDistance
+                    passed = watch.increases >= Thresholds.passedFixes && rise >= max(Thresholds.passedMinRiseM, fix.horizontalAccuracy)
                 } else {
                     watch.increases = 0
                 }
@@ -211,18 +229,41 @@ public final class AlertEngine {
         if case .exited(let radar, let reason)? = stretches.endDrive() {
             passes.markPassed(radar.id, now: t)
             lastStretchExitReason = reason
-            events.append(AlertEvent(kind: .stretchExited(reason), radar: radar, distance: nil, late: false, crossTrackMetres: nil, phrase: nil, content: .watching(at: t)))
+            events.append(AlertEvent(kind: .stretchExited(reason), radar: radar, distance: nil, late: false, crossTrackMetres: nil, phrase: nil, content: .watching(at: t, locale: locale)))
         }
         passes.prune(now: t)
         histories = [:]
         passing = [:]
         speeds = []
         previousFix = nil
+        recentFixes = []
         lastSpokenAt = nil
         lastPassed = nil
-        current = .empty(at: t)
-        events.append(AlertEvent(kind: .driveEnded, radar: nil, distance: nil, late: false, crossTrackMetres: nil, phrase: nil, content: .watching(at: t)))
+        current = .empty(at: t, locale: locale)
+        events.append(AlertEvent(kind: .driveEnded, radar: nil, distance: nil, late: false, crossTrackMetres: nil, phrase: nil, content: .watching(at: t, locale: locale)))
         return events
+    }
+
+    // MARK: Course (design 2.3)
+
+    /// The platform course at road speed; the platform course when the platform marked the speed invalid but the car
+    /// moved at road speed since the previous fix; else the heading from the most recent fix of the last
+    /// courseFallbackWindowSeconds at least courseFallbackMinM behind; else nothing (nothing fires, the card shows
+    /// the nearest radar as "cerca").
+    private func courseInUse(_ fix: Fix) -> Double? {
+        if let c = fix.course, (fix.speed ?? 0) >= Thresholds.courseMinSpeedMps {
+            return c
+        }
+        if let c = fix.course, fix.speed == nil, let prev = previousFix {
+            let seconds = max(1, fix.timestamp.timeIntervalSince(prev.timestamp))
+            if Geo.distance(prev.coordinate, fix.coordinate) >= Thresholds.courseMinSpeedMps * seconds {
+                return c
+            }
+        }
+        if let baseline = recentFixes.last(where: { Geo.distance($0.coordinate, fix.coordinate) >= Thresholds.courseFallbackMinM }) {
+            return Geo.bearing(from: baseline.coordinate, to: fix.coordinate)
+        }
+        return nil
     }
 
     // MARK: Content
@@ -260,17 +301,20 @@ public final class AlertEngine {
         )
     }
 
-    private func stretchContent(fix: Fix, median: Double?) -> DriveContent {
-        guard let state = stretches.inside else { return .watching(at: fix.timestamp) }
-        var c = radarContent(state.radar, phase: .insideStretch, distance: nil, median: median, opposite: false, at: fix.timestamp)
+    /// The card inside a stretch: the remaining figure (the surfaces label it "aprox.") and, in a section, the average.
+    private func stretchContent(median: Double?, at date: Date) -> DriveContent {
+        guard let state = stretches.inside else { return .watching(at: date, locale: locale) }
+        var c = radarContent(state.radar, phase: .insideStretch, distance: nil, median: median, opposite: false, at: date)
         c.stretchRemainingMetres = state.remainingMetres.map { Int($0.rounded()) }
         c.avgKmh = state.avgKmh.map { Int($0.rounded()) }
-        c.note = "aprox."
         return c
     }
 
+    /// The card, in this order: a full-fired point not yet passed (inside a stretch too, so the milestones and
+    /// "Radar superado" of a point in a corridor reach the driver), the 4 s passed card, an armed point ahead, the
+    /// stretch the car is inside, the nearest candidate as "cerca", nothing.
     private func buildSnapshot(fix: Fix, course: Double?, median: Double?, candidates: [Radar], at t: Date) -> DriveSnapshot {
-        var s = DriveSnapshot(content: .watching(at: t))
+        var s = DriveSnapshot(content: .watching(at: t, locale: locale))
         s.speedMps = median
         s.courseDegrees = course
         s.lastFix = fix
@@ -282,15 +326,10 @@ public final class AlertEngine {
             return DriveSnapshot.VisualRow(radar: radar, distanceMetres: RadarStore.gateDistance(from: fix.coordinate, to: radar), opposite: passing[id]?.opposite ?? false)
         }.sorted { $0.distanceMetres < $1.distanceMetres }
 
-        if stretches.inside != nil {
-            s.next = stretches.inside?.radar
-            s.distanceMetres = stretches.inside?.remainingMetres
-            s.content = stretchContent(fix: fix, median: median)
-            return s
-        }
-        let fullFired = passes.ledger.entries.filter { $0.passedAt == nil && $0.level == .full }.compactMap { store.radar(id: $0.id) }
-        if let radar = fullFired.min(by: { RadarStore.gateDistance(from: fix.coordinate, to: $0) < RadarStore.gateDistance(from: fix.coordinate, to: $1) }) {
-            let d = RadarStore.gateDistance(from: fix.coordinate, to: radar)
+        // Points only: a line's entry stays "fired" until its exit, and the stretch card below shows it.
+        let fullFired = passes.ledger.entries.filter { $0.passedAt == nil && $0.level == .full }.compactMap { store.radar(id: $0.id) }.filter { !$0.isLine }
+        if let radar = fullFired.min(by: { Geo.distance(fix.coordinate, $0.start) < Geo.distance(fix.coordinate, $1.start) }) {
+            let d = Geo.distance(fix.coordinate, radar.start)
             s.next = radar
             s.distanceMetres = d
             s.content = radarContent(radar, phase: .alert, distance: d, median: median, opposite: false, at: t)
@@ -311,6 +350,12 @@ public final class AlertEngine {
             s.content = radarContent(radar, phase: .approaching, distance: d, median: median, opposite: false, at: t)
             return s
         }
+        if let state = stretches.inside {
+            s.next = state.radar
+            s.distanceMetres = state.remainingMetres
+            s.content = stretchContent(median: median, at: t)
+            return s
+        }
         if let radar = candidates.first {
             let d = RadarStore.gateDistance(from: fix.coordinate, to: radar)
             s.next = radar
@@ -320,7 +365,7 @@ public final class AlertEngine {
             s.content = c
             return s
         }
-        var c = DriveContent.watching(at: t)
+        var c = DriveContent.watching(at: t, locale: locale)
         c.speedKmh = median.map { Int(($0 * 3.6).rounded()) }
         s.content = c
         return s

@@ -3,6 +3,7 @@
 //
 // The decoded feed in memory: a linear scan with a precomputed bounding box per radar (design 5.4).
 // `candidates(near:within:on:)` applies the alertable rules: active, not reported, mobile_announced valid on `day`.
+// A line is a candidate by its nearer gate or by its chord, so a car between the gates sees the stretch (design 2.5).
 // No spatial index: 4,500 boxes compare in about 20 us; revisit at Thresholds.spatialIndexRevisitFeatures.
 
 import Foundation
@@ -43,8 +44,8 @@ public final class RadarStore: Sendable {
         return counts
     }
 
-    /// Alertable radars whose nearest gate (the point, or the nearer endpoint of a line) is within `metres` of `near`
-    /// on the Europe/Madrid calendar day of `day`. Order: nearest gate first.
+    /// Alertable radars within `metres` of `near` (the point; for a line, the nearer gate or the chord between them)
+    /// on the Europe/Madrid calendar day of `day`. Order: nearest first.
     public func candidates(near: Coordinate, within metres: Double, on day: Date) -> [Radar] {
         let dLat = metres / 111_320
         let cosLat = max(0.01, cos(near.latitude * .pi / 180))
@@ -56,7 +57,7 @@ public final class RadarStore: Sendable {
             let b = boxes[i]
             if b.maxLat < minLat || b.minLat > maxLat || b.maxLon < minLon || b.minLon > maxLon { continue }
             let r = all[i]
-            let d = Self.gateDistance(from: near, to: r)
+            let d = Self.distance(from: near, to: r)
             guard d <= metres, r.isAlertable(on: day) else { continue }
             found.append((d, r))
         }
@@ -69,6 +70,12 @@ public final class RadarStore: Sendable {
         let d = Geo.distance(point, radar.start)
         guard let end = radar.end else { return d }
         return min(d, Geo.distance(point, end))
+    }
+
+    /// Metres from `point` to the nearest part of `radar`: the point, or for a line the nearer gate or the chord.
+    public static func distance(from point: Coordinate, to radar: Radar) -> Double {
+        guard let end = radar.end else { return Geo.distance(point, radar.start) }
+        return Geo.distanceToChord(point: point, from: radar.start, to: end)
     }
 
     public func radar(id: String) -> Radar? {

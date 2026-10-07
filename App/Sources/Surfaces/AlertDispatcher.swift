@@ -47,7 +47,8 @@ public final class AlertDispatcher {
         case .warn(let level):
             await alert(event, level: level, fix: fix)
         case .stretchEntered:
-            await alert(event, level: event.content.opposite ? .visual : .full, fix: fix)
+            // The level the core meant: a paced entry carries no sentence and is a visual row, like a paced point.
+            await alert(event, level: event.phrase == nil ? .visual : .full, fix: fix)
         case .passed:
             await activity.update(event.content, alert: nil)
             if let id = event.radar?.id {
@@ -100,15 +101,24 @@ public final class AlertDispatcher {
         return await speech.speak(phrase).sink
     }
 
-    /// The Live Activity when one runs; otherwise, for a spoken-level alert, the Time Sensitive notification.
+    /// The Live Activity when one runs; otherwise, for a spoken-level alert, the Time Sensitive notification. An
+    /// activity that is gone by the time the update is sent (dismissed, the 8 h cap) hands over to the notification.
     private func showOnCard(_ event: AlertEvent, alert phrase: Phrase?) async -> SinkOutcome? {
+        var shown: Bool?
         if activity.current != nil {
-            let shown = await activity.update(event.content, alert: phrase)
-            return SinkOutcome(sink: .activity, ok: shown, detail: shown ? nil : "no activity")
+            shown = await activity.update(event.content, alert: phrase)
         }
-        guard let phrase else { return nil }
+        guard Self.notificationTakesOver(activityShown: shown), let phrase else {
+            return shown.map { SinkOutcome(sink: .activity, ok: $0, detail: $0 ? nil : "no activity") }
+        }
         let error = await notifier.post(phrase, id: notificationID(for: event))
         return SinkOutcome(sink: .notification, ok: error == nil, detail: error.map { String(describing: $0) })
+    }
+
+    /// The notification is the surface when no activity ran (`nil`) or the one that ran was gone when the update
+    /// was sent (`false`); a shown update (`true`) is the surface.
+    nonisolated static func notificationTakesOver(activityShown: Bool?) -> Bool {
+        activityShown != true
     }
 
     /// `<radarId>#<passSeq>`: unique per pass, so a later pass of the same radar is a new notification.

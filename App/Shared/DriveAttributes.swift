@@ -39,6 +39,9 @@ public struct DriveAttributes: ActivityAttributes {
         /// "Datos de hace 3 días", "Abre la app".
         public var note: String?
         public var updatedAt: Date
+        /// Set by the app on every update it sends, increasing: the read-back tells a dropped update from one a
+        /// later update of the same second replaced. The widget never reads it.
+        public var seq: Int
 
         public init(
             phase: Phase,
@@ -52,7 +55,8 @@ public struct DriveAttributes: ActivityAttributes {
             stretchRemainingMetres: Int? = nil,
             avgKmh: Int? = nil,
             note: String? = nil,
-            updatedAt: Date
+            updatedAt: Date,
+            seq: Int = 0
         ) {
             self.phase = phase
             self.kindSymbol = kindSymbol
@@ -66,6 +70,29 @@ public struct DriveAttributes: ActivityAttributes {
             self.avgKmh = avgKmh
             self.note = note
             self.updatedAt = updatedAt
+            self.seq = seq
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case phase, kindSymbol, title, subtitle, distanceMetres, limit, speedKmh, opposite, stretchRemainingMetres, avgKmh, note, updatedAt, seq
+        }
+
+        /// A content state written by a build without `seq` (an activity alive across an app update) decodes as 0.
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            phase = try c.decode(Phase.self, forKey: .phase)
+            kindSymbol = try c.decode(String.self, forKey: .kindSymbol)
+            title = try c.decode(String.self, forKey: .title)
+            subtitle = try c.decode(String.self, forKey: .subtitle)
+            distanceMetres = try c.decodeIfPresent(Int.self, forKey: .distanceMetres)
+            limit = try c.decodeIfPresent(Int.self, forKey: .limit)
+            speedKmh = try c.decodeIfPresent(Int.self, forKey: .speedKmh)
+            opposite = try c.decode(Bool.self, forKey: .opposite)
+            stretchRemainingMetres = try c.decodeIfPresent(Int.self, forKey: .stretchRemainingMetres)
+            avgKmh = try c.decodeIfPresent(Int.self, forKey: .avgKmh)
+            note = try c.decodeIfPresent(String.self, forKey: .note)
+            updatedAt = try c.decode(Date.self, forKey: .updatedAt)
+            seq = try c.decodeIfPresent(Int.self, forKey: .seq) ?? 0
         }
     }
 

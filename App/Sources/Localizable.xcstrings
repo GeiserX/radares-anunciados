@@ -541,6 +541,16 @@
         }
       }
     },
+    "Pausar hoy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause today"
+          }
+        }
+      }
+    },
     "Permitir Movimiento" : {
       "localizations" : {
         "en" : {
@@ -651,6 +661,16 @@
         }
       }
     },
+    "Radar móvil habitual" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usual mobile radar"
+          }
+        }
+      }
+    },
     "Radares" : {
       "localizations" : {
         "en" : {
@@ -731,12 +751,12 @@
         }
       }
     },
-    "Sin «Avisos» la app no se despierta ni usa el GPS." : {
+    "Sin «Avisos» la app no se despierta ni usa el GPS. «Pausar hoy» ignora los despertares hasta mañana (en autobús o tren); el control «Conducir» y el atajo siguen avisando." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "With Warnings off the app never wakes up or uses GPS."
+            "value" : "With Warnings off the app never wakes up or uses GPS. Pause today ignores wake-ups until tomorrow (on a bus or a train); the Conducir (Drive) control and the shortcut still warn."
           }
         }
       }

@@ -37,6 +37,11 @@ struct DriveLiveActivity: Widget {
                             .monospacedDigit()
                             .minimumScaleFactor(0.6)
                             .lineLimit(1)
+                        if let caption = card.figureCaption {
+                            Text(caption)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
@@ -286,6 +291,8 @@ struct CardModel {
         state.phase == .watching ? "" : figure
     }
 
+    /// "restantes aprox." under the stretch remainder: the one place the approximation is labelled (the core sends
+    /// no note for it, so the note line stays free for "Datos de hace 3 días" and "Abre la app").
     var figureCaption: String? {
         if state.phase == .insideStretch, state.stretchRemainingMetres != nil {
             return String(localized: "restantes aprox.")

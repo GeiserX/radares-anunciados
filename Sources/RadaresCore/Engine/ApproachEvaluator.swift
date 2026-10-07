@@ -45,7 +45,7 @@ public struct ApproachEvaluator: Sendable {
     ) -> Approach {
         let distance = Geo.distance(fix.coordinate, gate)
         let toGate = Geo.bearing(from: fix.coordinate, to: gate)
-        let ahead = Geo.angleDiff(courseDegrees, toGate) <= Thresholds.aheadDeg
+        let ahead = isAhead(angleOff: Geo.angleDiff(courseDegrees, toGate))
 
         var closing = false
         let n = previousDistances.count
@@ -62,7 +62,7 @@ public struct ApproachEvaluator: Sendable {
         let inRange = distance <= warnDistance
         let directionMatch: Bool
         if let bearing, !bidirectional {
-            directionMatch = Geo.angleDiff(courseDegrees, bearing) <= Thresholds.bearingToleranceDeg
+            directionMatch = matchesDirection(angleOff: Geo.angleDiff(courseDegrees, bearing))
         } else {
             directionMatch = true
         }
@@ -70,5 +70,15 @@ public struct ApproachEvaluator: Sendable {
         let late = firstSeen < warnDistance - Thresholds.lateBandM
         let crossTrack = Geo.crossTrack(point: gate, from: fix.coordinate, courseDegrees: courseDegrees)
         return Approach(ahead: ahead, closing: closing, inRange: inRange, directionMatch: directionMatch, late: late, distanceMetres: distance, crossTrackMetres: crossTrack)
+    }
+
+    /// The cone of design 2.3 is inclusive: exactly aheadDeg off is still ahead.
+    public static func isAhead(angleOff: Double) -> Bool {
+        angleOff <= Thresholds.aheadDeg
+    }
+
+    /// The half-plane of design 2.4 is inclusive: exactly bearingToleranceDeg off still matches.
+    public static func matchesDirection(angleOff: Double) -> Bool {
+        angleOff <= Thresholds.bearingToleranceDeg
     }
 }

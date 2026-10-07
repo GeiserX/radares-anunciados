@@ -125,8 +125,11 @@ def predict_fire(fixes, gate, speed, start_index=0):
     raise AssertionError("no fire predicted")
 
 
-def predict_pass(fixes, gate, from_index):
-    """First fix after `from_index` with distance under 30 m, or three increases after the minimum."""
+def predict_pass(fixes, gate, from_index, min_step=1.0, min_rise=3.0):
+    """First fix after `from_index` with distance under 30 m, or three consecutive increases of at least
+    `min_step` after the minimum with the distance at least max(min_rise, accuracy) above it (design 2.3).
+    Returns None when no pass is predicted. `min_step=0, min_rise=None` is the rule before the jitter fix,
+    used only to prove a control vector would have passed under it."""
     mn, ups, last = None, 0, None
     for i in range(from_index + 1, len(fixes)):
         d = hav((fixes[i]["lat"], fixes[i]["lon"]), gate)
@@ -134,14 +137,14 @@ def predict_pass(fixes, gate, from_index):
             return i, d
         if mn is None or d < mn:
             mn, ups = d, 0
-        elif last is not None and d > last:
+        elif last is not None and d - last >= min_step:
             ups += 1
-            if ups >= 3:
+            if ups >= 3 and (min_rise is None or d - mn >= max(min_rise, fixes[i]["accuracy"])):
                 return i, d
         else:
             ups = 0
         last = d
-    raise AssertionError("no pass predicted")
+    return None
 
 
 def kind_title(p):
@@ -179,6 +182,12 @@ def corridor_sentence(rid):
     p = RADARS[rid]["p"]
     road = f"{p['road']}, " if p.get("road") else ""
     return f"Tramo de radar móvil, {road}{km_text(stretch_length(rid))}."
+
+
+def corridor_joined_sentence(rid, remaining):
+    p = RADARS[rid]["p"]
+    road = f"{p['road']}, " if p.get("road") else ""
+    return f"Tramo de radar móvil, {road}quedan {km_text(remaining)}."
 
 
 def section_sentence(rid, d):
@@ -240,7 +249,7 @@ for tag, course in (("ne", 60.0), ("sw", 240.0)):
     r = straight_approach(A2, course, 120 / 3.6, 3020)
     i, d = predict_fire(r.fixes, RADARS[A2]["start"], 120 / 3.6)
     assert abs(d - 833) <= 40, d
-    j, _ = predict_pass(r.fixes, RADARS[A2]["start"], i)
+    assert predict_pass(r.fixes, RADARS[A2]["start"], i) is not None
     vector(
         f"a2-120kmh-{tag}",
         f"120 km/h toward the A-2 radar heading {int(course)}: one full warning at 833 +- 40 m with the direction text spoken, then passed. The feed gives a town name, not a bearing, so both ways warn.",
@@ -311,6 +320,19 @@ for f in r.fixes:
     f["course"] = None
 i, d = predict_fire(r.fixes, RADARS[A2]["start"], 20.0)
 vector("a2-no-course-20mps", "Twin: 20 m/s with no platform course; the course comes from the last two fixes (20 m apart) and the warning fires at 500 +- 40 m.", r, [warn_event(A2, "full", d, spoken=point_sentence(p, d)), passed_event(A2)])
+# 6 m/s with no platform course: fixes 6 m apart, so the course comes from the most recent fix at least 15 m back
+# (three fixes, 18 m) inside the 5 s window; at 2 m/s the window holds 10 m and nothing fires (a2-no-course-2mps).
+r = straight_approach(A2, 60.0, 6.0, 700, past_m=100)
+for f in r.fixes:
+    f["course"] = None
+i, d = predict_fire(r.fixes, RADARS[A2]["start"], 6.0)
+vector("a2-no-course-6mps", "6 m/s with no platform course and fixes 6 m apart: the course comes from the most recent earlier fix at least 15 m back (three fixes, inside the 5 s window), and the warning fires at the 300 m floor.", r, [warn_event(A2, "full", d, spoken=point_sentence(p, d)), passed_event(A2)])
+# A valid platform course with the speed marked invalid (negative speed accuracy): the displacement stands in for the speed.
+r = straight_approach(A2, 60.0, 10.0, 700, past_m=100)
+for f in r.fixes:
+    f["speed"] = None
+i, d = predict_fire(r.fixes, RADARS[A2]["start"], 0.0)
+vector("a2-speed-nil-course-10mps", "10 m/s with the speed marked invalid on every fix and a valid platform course: the car moves 10 m per fix, so the platform course is used and the warning fires at the 300 m floor.", r, [warn_event(A2, "full", d, spoken=point_sentence(p, d)), passed_event(A2)])
 
 # ---- 8. Late wake at 150 m: full, flagged late; first seen at 40 m: card only ----
 r = straight_approach(A2, 60.0, 90 / 3.6, 150, past_m=200)
@@ -321,6 +343,24 @@ r = straight_approach(A2, 60.0, 30 / 3.6, 40, past_m=100)
 i, d = predict_fire(r.fixes, RADARS[A2]["start"], 30 / 3.6)
 assert d < NO_VOICE
 vector("a2-first-seen-40m", "First fix 40 m before the radar at 30 km/h: under 60 m and closing, so the card shows it (visual, late) and nothing is spoken.", r, [warn_event(A2, "visual", d, tol=10, late=True), passed_event(A2)])
+
+# ---- 8b. Stopped before a fired radar: GPS wander is not a pass ----
+r = straight_approach(A2, 60.0, 90 / 3.6, 2010, past_m=0)
+i, d = predict_fire(r.fixes, RADARS[A2]["start"], 90 / 3.6)
+del r.fixes[next(k for k in range(i, len(r.fixes)) if hav((r.fixes[k]["lat"], r.fixes[k]["lon"]), RADARS[A2]["start"]) < 200):]
+stop = r.coords()[-1]
+# A red light 200 m before the radar: the car reports speed 0 and no course, the position wanders. The first five
+# fixes are the wander the old rule took for a pass (three increases of under a metre); then two minutes of
+# seeded jitter of up to 2 m with a 10 m accuracy.
+rng = __import__("random").Random(7)
+offsets = [0.0, -0.5, 0.2, 0.6, 0.9] + [rng.uniform(-2.0, 2.0) for _ in range(120)]
+for off in offsets:
+    r.pos = dest(stop, 240.0, off)  # positive: away from the radar
+    r.t += timedelta(seconds=1)
+    r.fixes.append(r.fix(None, 0.0, 10.0, False))
+assert predict_pass(r.fixes, RADARS[A2]["start"], i, min_step=0.0, min_rise=None) is not None, "the old rule must see a pass here, or the vector proves nothing"
+assert predict_pass(r.fixes, RADARS[A2]["start"], i) is None
+vector("a2-stopped-jitter-200m", "90 km/h toward the A-2 radar, fired at 625 m, then stopped at a red light 200 m before it with the position wandering up to 2 m (accuracy 10 m): the warning, and no pass while the car is stopped.", r, [warn_event(A2, "full", d, spoken=point_sentence(p, d))])
 
 # ---- 9. U-turn inside 5 min: one pass; after 11 min and 3 km: a new pass ----
 def uturn_route(gap_seconds, away_m):
@@ -391,7 +431,21 @@ for tag, near, far in (("west", W, E), ("east", E, W)):
         snapshots=[{"fixIndex": mid, "stretch": COR, "remainingMetres": round(remaining), "tolerance": 60, "phase": "insideStretch"}],
     )
 
+# Joined between the gates (an on-ramp 5 km in): inside after three fixes on the chord, the length left spoken.
 course = bearing(W, E)
+r = Route(dest(W, course, 5000)).leg(course, chord - 5000 + 500, 90 / 3.6)
+join = 2  # the third fix
+remaining_at_join = chord - hav(W, (r.fixes[join]["lat"], r.fixes[join]["lon"]))
+mid = join + 100
+remaining_mid = chord - hav(W, (r.fixes[mid]["lat"], r.fixes[mid]["lon"]))
+vector(
+    "corridor-n232-mid-join",
+    "The N-232 corridor joined 5 km in from a side road at 90 km/h: no gate is crossed, so the car is inside after three fixes on the chord heading along it, the remaining length is spoken, and Fin de tramo comes at the far gate.",
+    r,
+    [entered(COR, remaining_at_join, corridor_joined_sentence(COR, remaining_at_join), tol=60), exited(COR, "farGate", "Fin de tramo.")],
+    snapshots=[{"fixIndex": mid, "stretch": COR, "remainingMetres": round(remaining_mid), "tolerance": 60, "phase": "insideStretch"}],
+)
+
 r = Route(dest(W, (course + 180) % 360, 2010)).leg(course, 2010 + 2000, 90 / 3.6)
 i, d = predict_fire(r.fixes, W, 90 / 3.6)
 r.leg((course + 270) % 360, 11200, 90 / 3.6)  # turn left, drive away until farther than length + 1000 m from the entry gate

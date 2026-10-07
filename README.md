@@ -20,7 +20,7 @@ Radares Anunciados is an iPhone app that warns a driver before the speed radars 
 
 ## Quick start
 
-The app is in beta on TestFlight: https://testflight.apple.com/join/TESTFLIGHT_CODE (link coming with the first build). It needs an iPhone with iOS 18 or later; the CarPlay card needs iOS 26.
+A TestFlight beta is coming with the first build; the link will be here. The app needs an iPhone with iOS 18 or later; the CarPlay card needs iOS 26.
 
 To build it yourself on a Mac with Xcode 26 and [XcodeGen](https://github.com/yonaskolb/XcodeGen):
 
@@ -48,6 +48,14 @@ The app warns from published positions only. Spain's Reglamento General de Circu
 Sources and licences: DGT (CC BY 4.0), the local police weekly lists of León (ILEÓN, CC BY-NC 4.0) and Murcia (La Opinión de Murcia), and © OpenStreetMap contributors (ODbL 1.0); the database is under ODbL 1.0. Every radar keeps its source's attribution, and the app shows them on its sources screen. See [NOTICE](NOTICE).
 
 Your location never leaves the phone; the only network request is the download of the public radar list. Details in [PRIVACY.md](PRIVACY.md).
+
+## Releasing
+
+`.github/workflows/release.yml` archives and uploads to TestFlight on a `vX.Y.Z` tag that matches `MARKETING_VERSION` in `App/project.yml`. Before tagging, bump `CURRENT_PROJECT_VERSION` (every upload needs a higher one) and refresh the bundled feed with `scripts/update-snapshot.sh` if it is older than 30 days. The workflow needs:
+
+- Seven repository secrets: `APPSTORE_ISSUER_ID`, `APPSTORE_KEY_ID`, `APPSTORE_PRIVATE_KEY` (an App Store Connect API key with App Manager access), `DIST_CERTIFICATE_P12` and `DIST_CERTIFICATE_PASSWORD` (the Apple Distribution certificate, base64), `PROFILE_APP` and `PROFILE_WIDGET` (the two provisioning profiles, base64).
+- Two App Store provisioning profiles named exactly `Radares App Store` (App ID `io.github.geiserx.radares`) and `Radares Activity App Store` (App ID `io.github.geiserx.radares.activity`).
+- The app's App ID must have the **Time Sensitive Notifications** capability enabled before its profile is generated: `App/project.yml` writes `com.apple.developer.usernotifications.time-sensitive` into the entitlements, and `xcodebuild archive` fails with "doesn't include the Time Sensitive Notifications capability" against a profile made without it. The widget's App ID needs no capability beyond App Groups. Regenerate and re-upload `PROFILE_APP` after enabling it, and again at every profile renewal.
 
 ## Documentation
 

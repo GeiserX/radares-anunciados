@@ -86,8 +86,10 @@ public final class FeedRefresher {
     private func postHealthNoticeIfRed() async {
         guard UIApplication.shared.applicationState != .active else { return }
         let inputs = await HealthMonitor().collect()
-        guard let red = healthReport(inputs).first(where: { $0.status == .fail }) else { return }
-        Notifier.shared.postHealthNotice("Radares: \(red.title.lowercased()), \(red.detail). Abre la app.")
+        let locale = Locale.autoupdatingCurrent
+        guard let red = healthReport(inputs, locale: locale).first(where: { $0.status == .fail }) else { return }
+        let open = Phrasing.isEnglish(locale) ? "Open the app." : "Abre la app."
+        Notifier.shared.postHealthNotice("Radares: \(red.title.lowercased()), \(red.detail). \(open)")
     }
 
     /// Runs on every foreground (6 h), at drive start (24 h) and from the background task (6 h).

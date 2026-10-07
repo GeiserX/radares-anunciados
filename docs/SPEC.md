@@ -78,9 +78,12 @@ One position per second while driving: coordinate, timestamp, speed in m/s (null
 invalid), course in degrees (null when the platform marks it invalid), horizontal accuracy in metres, and a
 stationary flag. The engine's clock is the fix timestamp.
 
-Course in use: the platform course when it is non-null and the fix's speed is at least 3 m/s; otherwise the bearing
-from the previous fix to this one when they are at least 15 m apart; otherwise none. With no course nothing fires
-and the card shows the nearest radar as "cerca".
+Course in use: the platform course when it is non-null and the fix's speed is at least 3 m/s; the platform course
+when it is non-null, the speed is null (marked invalid) and the car moved at least 3 m per second since the previous
+fix; otherwise the bearing from the most recent fix of the last 5 s that is at least 15 m behind this one (so from
+3 m/s up: fixes 2 m apart derive nothing); otherwise none. With no course nothing fires and the card shows the
+nearest radar as "cerca". Vectors `a2-no-course-2mps` (silent), `a2-no-course-6mps`, `a2-no-course-20mps` and
+`a2-speed-nil-course-10mps`.
 
 Speed for the warn distance: the median of the last three valid speeds (two values: their mean; none: 0).
 
@@ -89,9 +92,10 @@ Speed for the warn distance: the median of the last three valid speeds (two valu
 `warn = clamp(25 s × speed, 300 m, 1,000 m)`: 50 km/h 347 m, 80 556 m, 90 625 m, 100 694 m, 120 833 m, 144 and
 above 1,000 m.
 
-Candidates: alertable radars whose nearest gate (the point, or the nearer endpoint of a line) is within `warn + 200 m`
-of the fix, nearest first. For each candidate the distance to its gate is recorded on every fix while it stays a
-candidate (the history restarts when it leaves the band).
+Candidates: alertable radars within `warn + 200 m` of the fix, nearest first: a point by its position, a line by its
+nearer endpoint or by the straight line between its endpoints (so a car between the gates sees the stretch,
+section 5). For each candidate the distance to its gate is recorded on every fix while it stays a candidate (the
+history restarts when it leaves the band).
 
 A point fires on the first fix where all four hold:
 
@@ -105,8 +109,10 @@ A point fires on the first fix where all four hold:
 **full**. **Late** when the first recorded distance was under `warn − 100 m`; late warnings still fire. Under 60 m
 and closing: fires as visual (card only, the sentence would end after the radar).
 
-Passed: on a later fix, distance under 30 m, or three consecutive increases after the minimum (a non-increase
-resets the count). The card shows "Radar superado" for 4 s.
+Passed: on a later fix, distance under 30 m, or three consecutive increases of at least 1 m after the minimum (a
+smaller step or a decrease resets the count) with the distance at least `max(3 m, accuracy)` above that minimum, so
+GPS wander while stopped before the radar is not a pass. The card shows "Radar superado" for 4 s. Vector
+`a2-stopped-jitter-200m`.
 
 Only points, corridors and sections fire. `reported`, inactive and expired entries are never candidates.
 
@@ -119,7 +125,9 @@ passedAt) is persisted on fire, on pass and at drive end, never per fix, pruned 
 must survive a process restart mid-drive: the voice never repeats. Vectors `a2-uturn-5min` (same pass) and
 `a2-uturn-11min-3km` (new pass).
 
-Pacing: one spoken warning per 8 s; a full warning inside the gap becomes visual. Two full warnings on one fix are
+Pacing: one spoken warning per 8 s; a full point warning inside the gap becomes visual. A stretch entry is always
+spoken (it is the one sentence of a stretch that can run for 30 km, and the synthesizer queues it behind the point's
+sentence) and resets the clock, so a point firing within 8 s after it is visual. Two full warnings on one fix are
 one sentence, nearest first: *"Radar fijo a 500 metros, y otro a 600."*; the second event is visual. Vectors
 `pair-123m-pacing` and `pair-123m-same-fix`.
 
@@ -134,9 +142,22 @@ from either end. An average-speed section with an OSM bearing follows the direct
 visual warning and the car is not inside. Spoken at entry: corridor *"Tramo de radar móvil, {road}, {length}."*;
 section *"Radar de tramo a {d} metros, {length}[, sentido {Name}].[ Límite {max}.]"*.
 
-Inside: remaining = straight-line gate distance minus the projection of the car onto it, labelled "aprox.", shown in
-500 m steps; for an average-speed section also the average = path length since entry / elapsed time. No second voice
-prompt. The stretch is "fired" in the ledger from entry, so it is one pass.
+Entry between the gates (a car that joined from a side road and crosses no gate): the car is inside after 3
+consecutive fixes whose projection onto the chord falls between the gates with a 300 m margin at each end, within
+150 m of the chord, with the course within 60° of the chord in either direction (a section with an OSM bearing
+follows the direction gate; a mismatch is no entry). The entry gate is the one behind, the remaining length is the
+chord ahead, the event's `distance` is that remaining length, and the sentence says what is left: corridor
+*"Tramo de radar móvil, {road}, quedan {length}."*; section *"Radar de tramo, quedan {length}[, sentido {Name}].[ Límite {max}.]"*.
+Vector `corridor-n232-mid-join`.
+
+Inside: remaining = straight-line gate distance minus the projection of the car onto it, captioned "aprox." by the
+surfaces, shown in 500 m steps; for an average-speed section also the average = path length since entry / elapsed
+time. No second voice prompt. The stretch is "fired" in the ledger from entry, so it is one pass. A point inside the
+stretch fires as any point does and owns the card while ahead and for its 4 s "Radar superado"; the stretch card
+returns afterwards. The ledger carries the stretch the car is inside (radar, entry gate, entry position, time and
+speed), written at entry and cleared at exit: a process restarted mid-stretch resumes it (a resumed drive only, never a new one) and still says
+*"Fin de tramo."* at the far gate, estimating the path before the restart as the straight distance from the entry
+position.
 
 Exit, whichever comes first: within 300 m of the far gate (spoken *"Fin de tramo."*); straight-line distance from the
 entry gate over `max(roadMetres, chordMetres) + 1,000 m` (silent); elapsed time over 2× the traverse time expected
@@ -171,7 +192,9 @@ else the name; then the limit, then `sentido Zaragoza`).
 
 Every surface renders the same content: `phase` (watching, approaching, alert, passed, insideStretch, paused,
 degraded), a kind symbol, title ("Radar fijo"), subtitle (road and km, or the name, or "cerca"), distance in metres,
-limit, speed in km/h, `opposite`, remaining metres and average km/h inside a stretch, a note, and the time. Updates
+limit, speed in km/h, `opposite`, remaining metres and average km/h inside a stretch, a note (never "aprox.": that is
+the surfaces' caption on the remaining figure), and the time. The idle title is "Sin radares cerca" / "No radars
+nearby" by locale. Updates
 go out at milestones only: every phase change, the distance crossings 1,000 / 750 / 500 / 250 / 100 m while a radar
 is ahead, 500 m steps inside a stretch, else every 60 s. The voice carries the exact distance.
 
