@@ -107,7 +107,7 @@ final class AppModel {
         await LocationCoordinator.shared.startForegroundDriveIfWanted()
         if LaunchFlags.provisionalNotifications,
            await UNUserNotificationCenter.current().notificationSettings().authorizationStatus == .notDetermined {
-            _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .provisional])
+            _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: Notifier.authorizationOptions.union(.provisional))
         }
         if !startedTestDrive, LaunchFlags.startDriveForTest {
             startedTestDrive = true

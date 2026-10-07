@@ -2,12 +2,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // Time Sensitive local notifications, the visual surface of every warning (design 4.3): one on the Lock Screen at
-// a time, drawn by iOS on the phone and, once the CarPlay entitlement exists, on the car screen. Also the daily
-// red-health notice and the UNUserNotificationCenterDelegate the app delegate installs at launch.
+// a time, drawn by iOS on the phone and, on iOS 18.4 or later with the app's icon on the CarPlay Home Screen, on
+// the car screen (design 4.5). Also the daily red-health notice and the UNUserNotificationCenterDelegate the app
+// delegate installs at launch.
 //
-// Authorization is asked by onboarding with `[.alert, .sound]` (the `.timeSensitive` option is deprecated; the
-// level comes from the entitlement). A driver with Driving Focus may not see these: speech is the surface that
-// always arrives.
+// Authorization is asked with `authorizationOptions` (`[.alert, .sound, .carPlay]`; the `.timeSensitive` option is
+// deprecated, the level comes from the entitlement). Every radar notification carries the `radar` category,
+// registered with `allowInCarPlay`: the two things iOS requires before it mirrors a notification on the car
+// screen. A driver with Driving Focus may not see these: speech is the surface that always arrives.
 
 import RadaresCore
 import UIKit
@@ -19,8 +21,12 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     public static let shared = Notifier()
 
     /// Every radar notification shares this thread, so removing "the previous one" survives a relaunch.
-    public static let radarThread = "radar"
-    public static let healthThread = "health"
+    public nonisolated static let radarThread = "radar"
+    public nonisolated static let healthThread = "health"
+    /// The category of every radar notification, registered with `allowInCarPlay` so iOS draws it on the car screen.
+    public nonisolated static let radarCategory = "radar"
+    /// What every authorization request asks for: `.carPlay` is what lets the warning reach the CarPlay screen.
+    public nonisolated static let authorizationOptions: UNAuthorizationOptions = [.alert, .sound, .carPlay]
     /// The sound of the radar notification beside the voice: a 150 ms tick, so it does not stack with the sentence.
     public nonisolated static let alertSoundName = "radar-tick.caf"
     private static let healthNoticeKey = "surfaces.healthNoticePostedAt"
@@ -29,6 +35,31 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
 
     private override init() {
         super.init()
+    }
+
+    /// The radar category, with the one option that matters: "Apps must be approved for CarPlay overall and then
+    /// you must enable CarPlay for the notification types you want displayed".
+    public nonisolated static func radarNotificationCategory() -> UNNotificationCategory {
+        UNNotificationCategory(identifier: radarCategory, actions: [], intentIdentifiers: [], options: [.allowInCarPlay])
+    }
+
+    /// Registered at launch, before any warning can post.
+    public func registerCategories() {
+        UNUserNotificationCenter.current().setNotificationCategories([Self.radarNotificationCategory()])
+    }
+
+    /// The content of a radar notification: Time Sensitive, on the radar thread, in the CarPlay-enabled category,
+    /// with the sound `sound(voiceEnabled:silent:)` decides.
+    public nonisolated static func radarContent(_ phrase: Phrase, voiceEnabled: Bool, silent: Bool) -> UNMutableNotificationContent {
+        let content = UNMutableNotificationContent()
+        content.title = phrase.title
+        content.body = phrase.body
+        content.interruptionLevel = .timeSensitive
+        content.relevanceScore = 1
+        content.threadIdentifier = radarThread
+        content.categoryIdentifier = radarCategory
+        content.sound = sound(voiceEnabled: voiceEnabled, silent: silent)
+        return content
     }
 
     /// Posts `phrase` as `<radarId>#<passSeq>` and removes the previous radar's delivered notification. Nil on success.
@@ -42,13 +73,7 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
         if status == .denied || status == .notDetermined {
             error = NotifierError.notAuthorized(status.rawValue)
         } else {
-            let content = UNMutableNotificationContent()
-            content.title = phrase.title
-            content.body = phrase.body
-            content.interruptionLevel = .timeSensitive
-            content.relevanceScore = 1
-            content.threadIdentifier = Self.radarThread
-            content.sound = Self.sound(voiceEnabled: AlertDispatcher.shared.voiceEnabled, silent: silent)
+            let content = Self.radarContent(phrase, voiceEnabled: AlertDispatcher.shared.voiceEnabled, silent: silent)
             await removeRadarNotifications(except: id)
             do {
                 try await center.add(UNNotificationRequest(identifier: id, content: content, trigger: nil))

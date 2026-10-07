@@ -88,13 +88,21 @@ Whatever F1 and F2 say, the voice is the surface that arrives: onboarding says s
 
 ### CarPlay
 
-Nothing reaches the car screen until Apple grants the driving-task entitlement (requested 2026-10-07,
-[CARPLAY.md](CARPLAY.md)); the voice reaches the car's speakers today. Once granted:
+The driving-task entitlement is granted and in the build since 0.1.2 ([CARPLAY.md](CARPLAY.md)). What iOS draws on
+the car screen is device-only evidence: CarPlay Simulator (the Mac app) connects to a real iPhone over USB, and a
+head unit to the phone. The phone must run iOS 18.4 or later and the app's icon must be on the CarPlay Home Screen.
 
 | # | Test | Expectation | Result |
 |---|---|---|---|
-| C1 | CarPlay Simulator over USB, iOS 18.4 or later, app icon on the CarPlay Home Screen | The warning's notification appears on the car display at the warn distance | pending |
-| C2 | Real head unit | Same; note the car model and head unit software | pending |
+| C1 | Connect to CarPlay Simulator with the app installed | The app icon is on the CarPlay Home Screen without adding it by hand | pending |
+| C2 | Open the app on the car screen, no drive | One screen titled "Radares Anunciados" with "Esperando a que arranque el viaje" and the "Probar aviso" button; no Estado line while everything is green | pending |
+| C3 | "Probar aviso" on the car screen | The voice and, within a second, the notification banner "Radar fijo a 600 m" on the car screen; the Estado tab's `alert` row shows `notification=ok` | pending |
+| C4 | Drive past a radar, phone locked, app not opened | The notification banner on the car screen at the warn distance, drawn by iOS; the car screen's information template shows the radar with the distance rounded to 100 m and the limit, updating no faster than every 10 s | pending |
+| C5 | Pass the radar | The banner leaves the car screen within a few seconds of `passed`; the template goes back to "Sin radares cerca" | pending |
+| C6 | Opposite carriageway | The silent "…, sentido contrario" banner on the car screen; the template's kind line says "sentido contrario" | pending |
+| C7 | A red Estado row (deny Always) | The template shows "Estado · Sesión Siempre" | pending |
+| C8 | Phone on iOS 18.0 to 18.3 | The template shows, no banner on the car screen, the voice and the phone's notification as before | pending |
+| C9 | Real head unit | C3 to C6 again; note the car model and head unit software | pending |
 
 ### Everything else
 
@@ -123,7 +131,7 @@ Mac first: the app may speak. Run it on a build Mac, never on the laptop.
 What the Simulator proves: the state machine, the fix flow, the engine's decisions on a straight route and the
 notification post (`alert` rows with `notification=ok`, `notificationPosted` rows, under provisional authorization).
 What it cannot prove: the radio, the scheduler, suspension, the region cushion and dwell, the audio route, the Lock
-Screen banner itself, CarPlay (CarPlay Simulator connects to a real iPhone over USB, not to the iOS Simulator).
+Screen banner itself, the notification on a car screen (the iOS Simulator's CarPlay window shows the icon and the information template; CarPlay Simulator connects to a real iPhone over USB, not to the iOS Simulator).
 
 Measured limits of the Simulator (Xcode 26.6, iOS 26.5, 2026-10-07):
 

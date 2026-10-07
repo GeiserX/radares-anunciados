@@ -36,8 +36,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         // 2. Must be registered before launch finishes.
         FeedRefresher.shared.registerBackgroundTask()
 
-        // 3.
+        // 3. The delegate, and the radar category with `allowInCarPlay` before any warning can post (design 4.5).
         UNUserNotificationCenter.current().delegate = Notifier.shared
+        Notifier.shared.registerCategories()
 
         // 4. The store loads off the main thread; the bundled snapshot is copied in when no feed exists yet.
         Task.detached(priority: .utility) {

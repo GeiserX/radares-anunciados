@@ -13,6 +13,7 @@ Radares Anunciados is an iPhone app that warns a driver before the speed radars 
 - Only radars ahead and in your direction of travel; a radar for the other carriageway is shown, not spoken.
 - Mobile-radar and average-speed stretches with the remaining distance, and "Fin de tramo" at the end.
 - Every warning is also a Time Sensitive notification on the phone, drawn by iOS; nothing to open, nothing to leave on screen.
+- In a CarPlay car the warning shows on the car screen too (iOS 18.4 or later, the app is a CarPlay driving-task app).
 - Starts on its own when you drive, like a notification app: iOS wakes it when the car moves.
 - Works offline: the radar list is on the phone, refreshed every 6 hours, with a copy bundled for the first drive.
 - An Estado screen that checks every link of the chain, and a "Probar aviso" button that runs a test warning through it.
@@ -55,14 +56,14 @@ Your location never leaves the phone; the only network request is the download o
 
 - Six repository secrets: `APPSTORE_ISSUER_ID`, `APPSTORE_KEY_ID`, `APPSTORE_PRIVATE_KEY` (an App Store Connect API key with App Manager access), `DIST_CERTIFICATE_P12` and `DIST_CERTIFICATE_PASSWORD` (the Apple Distribution certificate, base64), and `PROFILE_APP` (the provisioning profile, base64).
 - One App Store provisioning profile named exactly `Radares App Store` (App ID `io.github.geiserx.radares`).
-- The App ID must have the **Time Sensitive Notifications** capability enabled before the profile is generated: `App/project.yml` writes `com.apple.developer.usernotifications.time-sensitive` into the entitlements, and `xcodebuild archive` fails with "doesn't include the Time Sensitive Notifications capability" against a profile made without it. Regenerate and re-upload `PROFILE_APP` after enabling it, and again at every profile renewal.
+- The App ID must have the **Time Sensitive Notifications** and **CarPlay Driving Task** capabilities enabled before the profile is generated: `App/project.yml` writes `com.apple.developer.usernotifications.time-sensitive` and `com.apple.developer.carplay-driving-task` into the entitlements, and `xcodebuild archive` fails with "doesn't include the … capability" against a profile made without them. Regenerate and re-upload `PROFILE_APP` after enabling them, and again at every profile renewal.
 
 ## Documentation
 
 - [Design](docs/DESIGN.md): the alert model, location strategy, surfaces, data and health checks
 - [Spec](docs/SPEC.md): the platform-neutral rules and the route vectors, the contract for Android
 - [Device verification](docs/VERIFY.md): what only a real iPhone and a real drive can prove
-- [CarPlay](docs/CARPLAY.md): what reaches the car today and the rules once the entitlement exists
+- [CarPlay](docs/CARPLAY.md): the driving-task scene, the notification on the car screen and its rules
 - [Contributing](CONTRIBUTING.md) and [Security](SECURITY.md)
 
 ## License
