@@ -1,0 +1,56 @@
+{
+  "sourceLanguage": "es",
+  "strings": {
+    "Avísame de los radares con ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warn me about radars with ${applicationName}"
+          }
+        }
+      }
+    },
+    "Conducir con ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drive with ${applicationName}"
+          }
+        }
+      }
+    },
+    "Deja de avisar de radares con ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop warning about radars with ${applicationName}"
+          }
+        }
+      }
+    },
+    "Iniciar aviso de radares en ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start radar warnings in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Parar aviso de radares en ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop radar warnings in ${applicationName}"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
