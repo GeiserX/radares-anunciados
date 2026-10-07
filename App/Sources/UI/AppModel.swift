@@ -12,8 +12,12 @@ import os
 
 /// Launch arguments for the simulator scripts (`scripts/sim-drive.sh`): `-StartDriveForTest 1` starts a test drive
 /// in the foreground so the Live Activity exists, `-NoLiveActivity 1` keeps the Live Activity off so the Time
-/// Sensitive notification is the visible surface.
+/// Sensitive notification is the visible surface. `-InitialTab mapa` (or `ajustes`) opens on that tab, so a script
+/// can screenshot every tab without tapping, and `-RunSelfTest 1` presses "Probar aviso" once.
 enum LaunchFlags {
+    static var initialTab: String? { UserDefaults.standard.string(forKey: "InitialTab") }
+    /// `-RunSelfTest 1` runs "Probar aviso" on the first foreground, as the button would.
+    static var runSelfTest: Bool { UserDefaults.standard.bool(forKey: "RunSelfTest") }
     static var startDriveForTest: Bool { UserDefaults.standard.bool(forKey: "StartDriveForTest") }
     static var noLiveActivity: Bool { UserDefaults.standard.bool(forKey: "NoLiveActivity") }
 }
@@ -40,9 +44,9 @@ final class AppModel {
     private(set) var selfTestRunning = false
     var showOnboarding = !UserDefaults.standard.bool(forKey: SettingsKey.onboardingDone)
     var showRecipe = false
-    var selectedTab = Tab.estado
+    var selectedTab = LaunchFlags.initialTab.flatMap(Tab.init(rawValue:)) ?? .estado
 
-    enum Tab: Hashable { case estado, mapa, ajustes }
+    enum Tab: String, Hashable { case estado, mapa, ajustes }
 
     /// One retained manager for reading the last known position (map, nearest radar, self-test); it never
     /// starts a location service.
@@ -53,6 +57,7 @@ final class AppModel {
     }
 
     private var startedTestDrive = false
+    private var ranLaunchSelfTest = false
     private let logger = Logger(subsystem: "io.github.geiserx.radares", category: "ui")
 
     private init() {}
@@ -96,6 +101,10 @@ final class AppModel {
         }
         await ensureActivityIfDriving()
         await reload()
+        if !ranLaunchSelfTest, LaunchFlags.runSelfTest {
+            ranLaunchSelfTest = true
+            await runSelfTest()
+        }
         await FeedRefresher.shared.refreshIfNeeded(trigger: .foreground)
         await reload()
     }

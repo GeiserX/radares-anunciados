@@ -88,7 +88,9 @@ enum SelfTest {
             logger.error("self-test: the engine did not warn")
             return .silent
         }
-        return .warned(spoken: warning.phrase?.spoken ?? "")
+        let spoken = warning.phrase?.spoken ?? ""
+        logger.notice("self-test: warned \(spoken, privacy: .public)")
+        return .warned(spoken: spoken)
     }
 
     /// The point `metres` away from `start` on `bearing` (degrees), on a sphere: plenty for a few hundred metres.
