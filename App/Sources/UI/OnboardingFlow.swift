@@ -163,7 +163,7 @@ final class Permissions: NSObject, CLLocationManagerDelegate {
     }
 
     func requestNotifications() async {
-        _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
+        _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: Notifier.authorizationOptions)
         notifications = HealthMonitor.map(await UNUserNotificationCenter.current().notificationSettings().authorizationStatus)
     }
 

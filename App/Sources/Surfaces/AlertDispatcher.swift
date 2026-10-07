@@ -150,7 +150,7 @@ extension AlertDispatcher {
         // Onboarding asks for real; a self-test on a fresh install takes provisional authorization so it runs
         // unattended (no prompt to tap). Provisional notifications are delivered quietly to the Notification Center.
         if await center.notificationSettings().authorizationStatus == .notDetermined {
-            let granted = (try? await center.requestAuthorization(options: [.alert, .sound, .provisional])) ?? false
+            let granted = (try? await center.requestAuthorization(options: Notifier.authorizationOptions.union(.provisional))) ?? false
             logger.notice("self-test: provisional notification authorization \(granted)")
         }
 

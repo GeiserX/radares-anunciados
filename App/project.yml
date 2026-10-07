@@ -14,8 +14,8 @@ options:
 settings:
   base:
     # Version and build number live only here. Bump CURRENT_PROJECT_VERSION for every TestFlight upload.
-    MARKETING_VERSION: 0.1.1
-    CURRENT_PROJECT_VERSION: 2
+    MARKETING_VERSION: 0.1.2
+    CURRENT_PROJECT_VERSION: 3
     DEVELOPMENT_TEAM: 624WUVM8B4
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
@@ -61,8 +61,14 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         LSRequiresIPhoneOS: true
         UILaunchScreen: {}
+        # The CarPlay driving-task scene (design 4.5): its icon on the CarPlay Home Screen is what lets iOS mirror the
+        # warning's notification on the car screen. The phone's window scene stays SwiftUI's own (no entry here).
         UIApplicationSceneManifest:
-          UIApplicationSupportsMultipleScenes: false
+          UIApplicationSupportsMultipleScenes: true
+          UISceneConfigurations:
+            CPTemplateApplicationSceneSessionRoleApplication:
+              - UISceneConfigurationName: CarPlay
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).CarPlaySceneDelegate
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         # Design 3.2: location keeps the drive loop alive, audio lets the warning speak from the background,
@@ -78,6 +84,8 @@ targets:
       path: Sources/Radares.entitlements
       properties:
         com.apple.developer.usernotifications.time-sensitive: true
+        # Granted by Apple on 2026-10-07; the App ID and the App Store profile carry the capability (docs/CARPLAY.md).
+        com.apple.developer.carplay-driving-task: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.geiserx.radares

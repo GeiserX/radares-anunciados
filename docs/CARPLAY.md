@@ -1,48 +1,105 @@
 # CarPlay
 
-Radares Anunciados v1 is not a CarPlay app. The design is in [DESIGN.md](DESIGN.md), sections 4.2 and 4.5. The app reaches the car today through one path that needs no CarPlay entitlement:
+Radares Anunciados is a CarPlay driving-task app since 0.1.2. Apple granted the entitlement
+`com.apple.developer.carplay-driving-task` on 2026-10-07, the day it was requested. The design is in
+[DESIGN.md](DESIGN.md), sections 4.3 and 4.5.
 
-- **Voice** through the car's audio (`AVAudioSession` mode `.voicePrompt`), which works on any iOS version and through any Focus.
-
-Every warning is also a **Time Sensitive notification** on the phone. iOS draws it on the Lock Screen. Once the CarPlay driving-task entitlement below is granted and the app adds the three pieces the rules below list (the `.carPlay` authorization option, the `allowInCarPlay` category, the app icon on the CarPlay Home Screen), iOS draws the same notification on the car screen; how the app warns does not change. There is no card to start and nothing to leave on screen: the app wakes itself when the car moves, like the Home Assistant app, and warns.
+The experience is the one of a notification app, on the car screen as on the phone: nothing to start and nothing
+to keep on screen. The app wakes itself when the car moves, warns by voice through the car's audio, and posts a Time
+Sensitive notification; on iOS 18.4 or later iOS draws that same notification on the CarPlay screen. The CarPlay
+scene exists so the app's icon is on the CarPlay Home Screen, which is what iOS requires before it mirrors the
+notification; the driver never has to open it.
 
 ## Español
 
-No hay nada que abrir ni que dejar en pantalla: la app se despierta sola al empezar a conducir y avisa por voz y con una notificación urgente en el iPhone. Cuando Apple conceda el permiso de CarPlay y la app añada lo que ese permiso exige (la opción `.carPlay`, la categoría `allowInCarPlay` y el icono en la pantalla de inicio de CarPlay), esa misma notificación aparecerá en la pantalla del coche.
+No hay nada que abrir ni que dejar en pantalla: la app se despierta sola al empezar a conducir y avisa por voz y
+con una notificación urgente. En un coche con CarPlay (iOS 18.4 o posterior) esa misma notificación aparece en la
+pantalla del coche, siempre que el icono de la app esté en la pantalla de inicio de CarPlay (lo está por defecto
+cuando CarPlay conoce la app; si lo quitaste, vuelve a añadirlo en Ajustes › General › CarPlay › tu coche).
+
+Si abres la app en CarPlay ves una sola pantalla: el próximo radar anunciado (tipo, carretera o nombre, distancia
+redondeada como la dice la voz, límite si está publicado), «Sin radares cerca» cuando conduces sin nada por delante,
+«Esperando a que arranque el viaje» cuando no hay viaje, y una línea «Estado» solo si algo está en rojo. Un botón
+«Probar aviso» lanza el mismo aviso de prueba que el de la pestaña Estado, para ver la notificación llegar a la
+pantalla del coche. Nada más: ningún ajuste se cambia desde el coche.
 
 Con el permiso de ubicación "Mientras se usa" y sin "Siempre", abrir la app es la única forma de empezar el viaje.
 
 ## English
 
-There is nothing to open and nothing to leave on screen: the app wakes on its own when you start driving and warns by voice and with a Time Sensitive notification on the iPhone. Once Apple grants the CarPlay entitlement and the app adds what it requires (the `.carPlay` option, the `allowInCarPlay` category and the icon on the CarPlay Home Screen), that same notification appears on the car screen.
+There is nothing to open and nothing to leave on screen: the app wakes on its own when you start driving and warns
+by voice and with a Time Sensitive notification. In a CarPlay car on iOS 18.4 or later that notification also
+appears on the car screen, as long as the app's icon is on the CarPlay Home Screen (it is by default once CarPlay
+knows the app; if you removed it, add it back in Settings › General › CarPlay › your car).
+
+Opening the app in CarPlay shows one screen: the next announced radar (kind, road or name, distance rounded as the
+voice says it, limit when published), "No radars nearby" while driving with nothing ahead, "Waiting for the drive to
+start" when there is no drive, and a "Status" line only when something is red. A "Test warning" button runs the
+same self-test as the Estado tab, so you can watch the notification reach the car screen. Nothing else: no setting
+changes from the car.
 
 With "While Using" location permission and no "Always", opening the app is the only way a drive can start.
 
-## Later: a CarPlay driving-task app (optional, never the only path)
+## What the scene shows
 
-A CarPlay app would add a "next radar" screen and notifications on the car display. It needs the entitlement `com.apple.developer.carplay-driving-task`, which the maintainer requests at https://developer.apple.com/contact/carplay together with the CarPlay Entitlement Addendum (https://developer.apple.com/documentation/carplay/requesting-carplay-entitlements). The request was filed on 2026-10-07; the notification work (the three rules below) starts when Apple answers.
+`App/Sources/Surfaces/CarPlayScene.swift`: a `CPTemplateApplicationScene` declared in the Info.plist manifest
+(role `CPTemplateApplicationSceneSessionRoleApplication`, delegate `CarPlaySceneDelegate`), with one
+`CPInformationTemplate` titled "Radares Anunciados". `CarPlayContent.make(snapshot:report:locale:)` builds its rows
+from the engine's `DriveSnapshot` and the Estado report, and is unit-tested:
 
-### Entitlement request text (paste into the form)
+| State | Rows |
+|---|---|
+| No drive (`snapshot == nil`) | "Esperando a que arranque el viaje" |
+| Driving, nothing ahead | "Sin radares cerca" |
+| Driving, a radar ahead | kind (", sentido contrario" for the other carriageway) with the road and km or the name; "Distancia" rounded to the voice's step (`Phrasing.roundedDistance`, 812 m shows "800 m"); "Límite" when the feed publishes one |
+| Inside a stretch | "Quedan · aprox. 3 kilómetros" instead of the distance |
+| Any state with a red Estado row | "Estado" with the first failing row's title |
 
-> **App name:** Radares Anunciados
->
-> **Bundle ID:** io.github.geiserx.radares
->
-> **Requested entitlement:** CarPlay Driving Task (com.apple.developer.carplay-driving-task)
->
-> **Description:** Radares Anunciados warns drivers in Spain before the speed cameras whose positions are published in advance by public bodies (the Dirección General de Tráfico, regional and municipal police) and by OpenStreetMap. It never detects, receives or interferes with any radar signal: Spanish law (Reglamento General de Circulación, art. 18.3) expressly allows "mecanismos de aviso que informan de la posición de los sistemas de vigilancia del tráfico" and bans detectors, and the app is the allowed kind. Today the app warns by voice through the car audio and with a Time Sensitive notification on the iPhone. In CarPlay we would show one screen, a CPInformationTemplate with the next announced camera (type, road and kilometre point, speed limit when published), refreshed no more than once every 10 seconds, and the same notification on the car display when the driver approaches a camera, so the warning is visible without the iPhone. The app has no account, no server, no ads and no tracking; the only network request is a public GeoJSON file. It is free and open source (GPL-3.0-or-later): https://github.com/GeiserX/radares-anunciados
->
-> **Driving task:** The app supports the driving task by telling the driver, ahead of time and hands-free, that a published speed-control point is coming and what the limit is, so the driver can adjust speed safely. All interaction is glanceable; there is no browsing, text entry or media.
+The items refresh at most once every 10 seconds (`CarPlayRefreshThrottle`, driving-task guideline 4: "Do not
+periodically refresh data items in the CarPlay UI more than once every 10 seconds"), and only when something
+changed. It is never a live countdown; the voice carries the exact moment. The Estado report is re-collected once a
+minute. The phone's own scene is SwiftUI's and keeps working with no CarPlay connected.
 
-### Rules that apply once the entitlement exists
+## The three notification rules
 
-From the CarPlay App Programming Guide (https://developer.apple.com/carplay/documentation/CarPlay-App-Programming-Guide.pdf) and Apple's answers on the developer forums:
+From the CarPlay App Programming Guide (https://developer.apple.com/carplay/documentation/CarPlay-App-Programming-Guide.pdf)
+and Apple's answers on the developer forums (https://developer.apple.com/forums/thread/795990). All three are in
+the app:
 
-- **Authorization option.** Add `.carPlay` to the notification request: `requestAuthorization(options: [.alert, .sound, .carPlay])`. Today the request is `[.alert, .sound]`; `.carPlay` is added only after the entitlement is granted.
-- **Category.** Register the radar notification's category with `UNNotificationCategoryOptions.allowInCarPlay`. "Apps must be approved for CarPlay overall and then you must enable CarPlay for the notification types you want displayed."
-- **iOS 18.4 floor.** "Starting in iOS 18.4, notifications are also supported in CarPlay driving task apps." An Apple Frameworks Engineer confirms the floor (https://developer.apple.com/forums/thread/795990); a device on iOS 18.0 to 18.3 never shows them, while the app's deployment target stays iOS 18.0.
-- **App icon on the CarPlay Home Screen.** Per Apple on the same thread, "Notifications on CarPlay requires the app icon present on the CarPlay Home Screen".
-- **10 second refresh rule.** Driving-task guideline 4: "Do not periodically refresh data items in the CarPlay UI more than once every 10 seconds." The `CPInformationTemplate` is a static next-radar screen, never a live countdown; the voice carries the exact distance.
-- **Scene.** A `CPTemplateApplicationScene` with its own scene delegate; the phone app keeps working with no CarPlay scene connected.
+1. **Authorization option.** Every notification request asks `Notifier.authorizationOptions`,
+   `[.alert, .sound, .carPlay]` (onboarding, and the provisional path of the self-test and the simulator scripts
+   adds `.provisional`).
+2. **Category.** `Notifier.registerCategories()` registers the `radar` category with
+   `UNNotificationCategoryOptions.allowInCarPlay` at launch, and every radar notification carries that category
+   identifier ("Apps must be approved for CarPlay overall and then you must enable CarPlay for the notification
+   types you want displayed"). The daily health notice has no category and stays on the phone.
+3. **App icon on the CarPlay Home Screen.** "Notifications on CarPlay requires the app icon present on the CarPlay
+   Home Screen": the scene above is what puts it there.
 
-None of this changes the v1 surfaces: voice and the notification keep working with or without a CarPlay app.
+## The iOS 18.4 floor
+
+"Starting in iOS 18.4, notifications are also supported in CarPlay driving task apps." An Apple Frameworks Engineer
+confirms the floor on the same thread. The deployment target stays iOS 18.0: on 18.0 to 18.3 the voice and the
+phone's notification work as before and the car screen shows the information template only.
+
+## Entitlement and signing
+
+The App ID `io.github.geiserx.radares` has the CarPlay Driving Task capability enabled, and the App Store
+provisioning profile `Radares App Store` was regenerated with it (together with Time Sensitive Notifications).
+`App/project.yml` writes `com.apple.developer.carplay-driving-task: true` into the entitlements; `xcodebuild
+archive` fails against a profile made before the capability was enabled, as it does for Time Sensitive. A simulator
+build carries the same entitlements file (`codesign -d --entitlements :- RadaresAnunciados.app`).
+
+## Verification
+
+Device-only rows live in [VERIFY.md](VERIFY.md), "CarPlay": CarPlay Simulator over USB and a real head unit. The
+iOS Simulator's own CarPlay window (`defaults write com.apple.iphonesimulator CarPlayExtendedDisplay -bool YES`,
+then I/O › External Displays › CarPlay) shows the icon and the information template; whether the notification is
+mirrored there is not evidence for a device.
+
+## History
+
+- 2026-10-07: entitlement requested at https://developer.apple.com/contact/carplay with the CarPlay Entitlement
+  Addendum (https://developer.apple.com/documentation/carplay/requesting-carplay-entitlements), and granted the
+  same day.
+- 0.1.2: the scene, the `.carPlay` option and the `allowInCarPlay` category.
