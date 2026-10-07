@@ -5,9 +5,12 @@ updates:
     schedule:
       interval: weekly
     labels: ["dependencies", "automated"]
-    ignore:
+    # Version updates stay on minor and patch. An allow rule, not an ignore rule:
+    # ignore rules also block security updates, so a fix shipped only in a major
+    # release would never be proposed.
+    allow:
       - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
     cooldown:
       default-days: 3
     groups:
