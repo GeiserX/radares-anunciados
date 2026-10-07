@@ -5,8 +5,8 @@
 // back after every update (activityUpdated(dropped:)), staleDate 120 s (15 min paused), end .after(5 min).
 //
 // Callers: the location lane sends the engine's card after every fix through `update(_:alert:)` and this class
-// decides what reaches the system (ActivityCadence); AlertDispatcher sends alerts and the drive end; the intents
-// and the foreground start the activity. `Activity` is not Sendable, so it never leaves the static helpers below:
+// decides what reaches the system (ActivityCadence); AlertDispatcher sends alerts and the drive end; the
+// foreground starts the activity. `Activity` is not Sendable, so it never leaves the static helpers below:
 // this class keeps only the activity id.
 
 import ActivityKit
@@ -43,7 +43,7 @@ public final class DriveActivityController {
         ActivityAuthorizationInfo().areActivitiesEnabled
     }
 
-    /// Foreground or LiveActivityIntent only: `Activity.request` refuses the background with `.visibility`.
+    /// Foreground only: `Activity.request` refuses the background with `.visibility`.
     /// Does nothing when an activity already runs.
     public func start(content: DriveContent) throws {
         if current != nil { return }
@@ -119,7 +119,7 @@ public final class DriveActivityController {
 
     /// Launch step 5 (design 3.3): adopt the activity this app started if it is still alive and a drive is still on
     /// (`driveIsOn`: the location lane's persisted drive), end every other one. Decided synchronously at launch, before
-    /// any scene or intent can ask for an activity, so nothing races with the end of a stale one.
+    /// any scene can ask for an activity, so nothing races with the end of a stale one.
     public func reattach(driveIsOn: Bool) {
         let savedID = UserDefaults.standard.string(forKey: Self.activityIDKey)
         currentID = nil
