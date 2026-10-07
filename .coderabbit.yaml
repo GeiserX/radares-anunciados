@@ -33,7 +33,7 @@ reviews:
     - path: "**/Tests/**"
       instructions: |
         Tests must run offline against fixtures, never against the live feed.
-    - path: "project.yml"
+    - path: "**/project.yml"
       instructions: |
         This is the source of truth for the Xcode project. The generated
         .xcodeproj is never committed.

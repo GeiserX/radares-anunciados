@@ -18,9 +18,9 @@ Every radar shown keeps the source and attribution the feed gives it.
 
 - Swift, with a Swift package for the core (feed parsing, distances, alert logic) and a SwiftUI app plus a
   widget extension for the Live Activity.
-- `project.yml` is the source of truth for the Xcode project. XcodeGen generates the `.xcodeproj`, which is
-  never committed. Change `project.yml`, then run `xcodegen generate`.
-- Package tests: `swift test` in the package folder. App tests: `xcodebuild test` against the generated project
+- `App/project.yml` is the source of truth for the Xcode project. XcodeGen generates the `.xcodeproj`, which is
+  never committed. Change `App/project.yml`, then run `xcodegen generate` in `App/`.
+- Package tests: `swift test` at the repo root. App tests: `xcodebuild test` against the generated project
   on an iOS simulator.
 - Heavy builds (full `xcodebuild`, simulator runs, repeated test loops) run on a Mac mini, never on the MacBook.
   The MacBook is for edits, git and single quick tests.
