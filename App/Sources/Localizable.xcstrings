@@ -1,6 +1,266 @@
 {
   "sourceLanguage" : "es",
   "strings" : {
+    "%lld km/h" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld km/h"
+          }
+        }
+      }
+    },
+    "%lld m" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld m"
+          }
+        }
+      }
+    },
+    "1. Abre Atajos y ve a Automatización." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Open Shortcuts and go to Automation."
+          }
+        }
+      }
+    },
+    "2. Pulsa + y elige CarPlay." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Tap + and choose CarPlay."
+          }
+        }
+      }
+    },
+    "3. Marca Conecta y Ejecutar inmediatamente." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Select Connects and Run Immediately."
+          }
+        }
+      }
+    },
+    "4. Añade la acción «Iniciar aviso de radares»." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4. Add the action “Iniciar aviso de radares” (Start radar warnings)."
+          }
+        }
+      }
+    },
+    "Abrir Ajustes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        }
+      }
+    },
+    "Acerca de" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About"
+          }
+        }
+      }
+    },
+    "Activa «Ubicación exacta»: sin ella las distancias fallan en 1 o 2 km." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn on Precise Location: without it distances are off by 1 or 2 km."
+          }
+        }
+      }
+    },
+    "Actualizados" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updated"
+          }
+        }
+      }
+    },
+    "Actualizar ahora" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update now"
+          }
+        }
+      }
+    },
+    "Ajustes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        }
+      }
+    },
+    "App: GPL-3.0-or-later" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App: GPL-3.0-or-later"
+          }
+        }
+      }
+    },
+    "Archivo de radares: radares-anunciados-ha" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Radar feed: radares-anunciados-ha"
+          }
+        }
+      }
+    },
+    "Avisa de los radares anunciados por la DGT, las listas semanales de policías locales publicadas en prensa, y OpenStreetMap. Solo posiciones anunciadas, nunca detectadas. Sin cuenta, sin servidor, sin anuncios. No cierres la app desde el selector." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warns about the radars announced by the DGT, the weekly local police lists published in the press, and OpenStreetMap. Announced positions only, never detected. No account, no server, no ads. Do not close the app from the app switcher."
+          }
+        }
+      }
+    },
+    "Avisa solo de posiciones publicadas de antemano; nunca detecta radares." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warns only about positions published in advance; it never detects radars."
+          }
+        }
+      }
+    },
+    "Avisa, con puntos por revisar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warning, with points to check"
+          }
+        }
+      }
+    },
+    "Aviso enviado" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warning sent"
+          }
+        }
+      }
+    },
+    "Avisos" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnings"
+          }
+        }
+      }
+    },
+    "Aún no hay arranques en segundo plano." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No background launches yet."
+          }
+        }
+      }
+    },
+    "Base de datos: Open Database License (ODbL) 1.0." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Database: Open Database License (ODbL) 1.0."
+          }
+        }
+      }
+    },
+    "Bien" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "Bloquea el iPhone para ver la tarjeta." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lock the iPhone to see the card."
+          }
+        }
+      }
+    },
+    "Cada radar conserva la fuente y la atribución que publica el archivo." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every radar keeps the source and attribution the feed publishes."
+          }
+        }
+      }
+    },
+    "Cerrar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        }
+      }
+    },
+    "Con iOS 26 la tarjeta del radar aparece en la pantalla de CarPlay y en la pantalla bloqueada. La tarjeta solo puede empezar si la app se abre o la inicia un atajo, así que conviene una de estas tres:" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With iOS 26 the radar card shows on the CarPlay screen and on the Lock Screen. The card can only start when the app is opened or a shortcut starts it, so set up one of these three:"
+          }
+        }
+      }
+    },
     "Conducir" : {
       "localizations" : {
         "en" : {
@@ -11,12 +271,702 @@
         }
       }
     },
+    "Cuando no hay tarjeta en la pantalla del coche, el aviso llega como notificación urgente: pasa la mayoría de los modos de concentración. Con el modo Conducción el aviso llega por voz." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When there is no card on the car screen, the warning arrives as a Time Sensitive notification, which gets through most Focus modes. With the Driving Focus the warning arrives by voice."
+          }
+        }
+      }
+    },
+    "Datos" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data"
+          }
+        }
+      }
+    },
+    "Datos: DGT (CC BY 4.0)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data: DGT (CC BY 4.0)"
+          }
+        }
+      }
+    },
+    "El motor no avisó: la app no funciona bien." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The engine did not warn: the app is not working properly."
+          }
+        }
+      }
+    },
+    "Empezar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        }
+      }
+    },
+    "En el coche" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In the car"
+          }
+        }
+      }
+    },
+    "Estado" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
+          }
+        }
+      }
+    },
+    "Exportar registro" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export log"
+          }
+        }
+      }
+    },
+    "Falla" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failing"
+          }
+        }
+      }
+    },
+    "Fuentes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sources"
+          }
+        }
+      }
+    },
+    "Fuentes del archivo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feed sources"
+          }
+        }
+      }
+    },
+    "Fuentes y licencias" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sources and licences"
+          }
+        }
+      }
+    },
+    "Hay un problema: toca para verlo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There is a problem: tap to see it"
+          }
+        }
+      }
+    },
+    "Iniciar aviso de radares" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start radar warnings"
+          }
+        }
+      }
+    },
+    "Licencias" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licences"
+          }
+        }
+      }
+    },
+    "Límite %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limit %lld"
+          }
+        }
+      }
+    },
+    "Mapa" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Map"
+          }
+        }
+      }
+    },
+    "Movimiento denegado" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motion denied"
+          }
+        }
+      }
+    },
+    "Movimiento permitido" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motion allowed"
+          }
+        }
+      }
+    },
+    "Movimiento: para saber si vas en coche y no gastar batería cuando caminas. Sin él la app funciona igual, pero gasta algo más de GPS al despertarse." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motion: to know when you are in a car and save battery while you walk. Without it the app works the same, but uses a little more GPS when it wakes up."
+          }
+        }
+      }
+    },
+    "Ningún aviso en las últimas 24 horas." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No warnings in the last 24 hours."
+          }
+        }
+      }
+    },
+    "No se pudo mostrar la tarjeta: revisa Actividades en directo en Ajustes." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The card could not be shown: check Live Activities in Settings."
+          }
+        }
+      }
+    },
+    "Notificaciones denegadas: el aviso solo llegará por voz." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications denied: warnings will arrive by voice only."
+          }
+        }
+      }
+    },
+    "Notificaciones permitidas" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications allowed"
+          }
+        }
+      }
+    },
+    "Para avisarte en el coche sin abrirla, la app necesita la ubicación «Siempre» y la «Ubicación exacta». Solo usa el GPS mientras conduces, y la ubicación nunca sale del teléfono." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To warn you in the car without being opened, the app needs Always location and Precise Location. It only uses GPS while you drive, and your location never leaves the phone."
+          }
+        }
+      }
+    },
+    "Para que la pantalla del coche se encienda sola:" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To have the car screen start on its own:"
+          }
+        }
+      }
+    },
+    "Parar aviso de radares" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop radar warnings"
+          }
+        }
+      }
+    },
+    "Pausar hoy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause today"
+          }
+        }
+      }
+    },
+    "Permitir Movimiento" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Motion"
+          }
+        }
+      }
+    },
+    "Permitir avisos" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow notifications"
+          }
+        }
+      }
+    },
+    "Permitir ubicación" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow location"
+          }
+        }
+      }
+    },
+    "Pone un radar fijo de prueba a 600 m delante y lo pasa por el mismo camino que un aviso real: voz, pantalla del coche y notificación." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Places a test fixed radar 600 m ahead and runs it through the same path as a real warning: voice, car screen and notification."
+          }
+        }
+      }
+    },
+    "Probar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try it"
+          }
+        }
+      }
+    },
+    "Probar aviso" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test warning"
+          }
+        }
+      }
+    },
+    "Prueba" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test"
+          }
+        }
+      }
+    },
+    "Radar de tramo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Average speed radar"
+          }
+        }
+      }
+    },
+    "Radar en remolque" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trailer radar"
+          }
+        }
+      }
+    },
+    "Radar fijo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fixed radar"
+          }
+        }
+      }
+    },
+    "Radar móvil anunciado" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Announced mobile radar"
+          }
+        }
+      }
+    },
+    "Radares" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Radars"
+          }
+        }
+      }
+    },
+    "Repasar la introducción" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review the introduction"
+          }
+        }
+      }
+    },
+    "Respeta siempre los límites." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Always respect the speed limits."
+          }
+        }
+      }
+    },
+    "Revisar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check"
+          }
+        }
+      }
+    },
+    "Saltar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip"
+          }
+        }
+      }
+    },
+    "Siguiente" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
+          }
+        }
+      }
+    },
+    "Sin confirmar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unconfirmed"
+          }
+        }
+      }
+    },
     "Sin radares cerca" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "No radars nearby"
+          }
+        }
+      }
+    },
+    "Sin «Avisos» la app no se despierta ni usa el GPS. «Pausar hoy» deja de avisar hasta medianoche, por ejemplo si vas en autobús." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With Warnings off the app never wakes up or uses GPS. Pause today stops warning until midnight, for example when you are on a bus."
+          }
+        }
+      }
+    },
+    "Solo pantalla" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screen only"
+          }
+        }
+      }
+    },
+    "Solo «Mientras se usa»: tendrás que abrir la app antes de conducir." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "While Using only: you will have to open the app before you drive."
+          }
+        }
+      }
+    },
+    "También puedes añadir el control «Conducir» al Centro de control o al botón de acción, o simplemente abrir la app antes de salir." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can also add the Conducir (Drive) control to Control Center or the Action button, or simply open the app before you leave."
+          }
+        }
+      }
+    },
+    "Todo listo para avisar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready to warn"
+          }
+        }
+      }
+    },
+    "Tramo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Section"
+          }
+        }
+      }
+    },
+    "Ubicación" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location"
+          }
+        }
+      }
+    },
+    "Ubicación denegada: sin ella la app no puede avisar." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location denied: without it the app cannot warn."
+          }
+        }
+      }
+    },
+    "Ubicación «Siempre» concedida" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Always location granted"
+          }
+        }
+      }
+    },
+    "Ver cómo se configura" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "See how to set it up"
+          }
+        }
+      }
+    },
+    "Versión" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        }
+      }
+    },
+    "Voz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voice"
+          }
+        }
+      }
+    },
+    "github.com/GeiserX/radares-anunciados" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "github.com/GeiserX/radares-anunciados"
+          }
+        }
+      }
+    },
+    "no" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no"
+          }
+        }
+      }
+    },
+    "notificación" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "notification"
+          }
+        }
+      }
+    },
+    "sentido contrario" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "opposite direction"
+          }
+        }
+      }
+    },
+    "sí" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "yes"
+          }
+        }
+      }
+    },
+    "tarde" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "late"
+          }
+        }
+      }
+    },
+    "tarjeta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "card"
+          }
+        }
+      }
+    },
+    "voz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "voice"
+          }
+        }
+      }
+    },
+    "© OpenStreetMap contributors" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "© OpenStreetMap contributors"
+          }
+        }
+      }
+    },
+    "Último arranque en segundo plano: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last background launch: %@"
+          }
+        }
+      }
+    },
+    "Últimos avisos" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent warnings"
           }
         }
       }

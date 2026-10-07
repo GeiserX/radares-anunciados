@@ -6,10 +6,34 @@
 import SwiftUI
 
 struct RootView: View {
+    @Environment(AppModel.self) private var model
+
     var body: some View {
-        VStack(spacing: 8) {
-            Text("Radares Anunciados").font(.title2)
-            Text("lane: app").foregroundStyle(.secondary)
+        @Bindable var model = model
+        TabView(selection: $model.selectedTab) {
+            NavigationStack { HealthView() }
+                .tabItem { Label("Estado", systemImage: "checklist") }
+                .tag(AppModel.Tab.estado)
+            NavigationStack { MapView() }
+                .tabItem { Label("Mapa", systemImage: "map") }
+                .tag(AppModel.Tab.mapa)
+            NavigationStack { SettingsView() }
+                .tabItem { Label("Ajustes", systemImage: "gearshape") }
+                .tag(AppModel.Tab.ajustes)
+        }
+        .fullScreenCover(isPresented: $model.showOnboarding) {
+            OnboardingFlow()
+        }
+        .sheet(isPresented: $model.showRecipe) {
+            NavigationStack {
+                ScrollView { AutomationRecipeView().padding() }
+                    .navigationTitle("En el coche")
+                    .toolbar { Button("Cerrar") { model.showRecipe = false } }
+            }
+            .presentationDetents([.medium])
+        }
+        .onAppear {
+            Task { await model.ensureActivityIfDriving() }
         }
     }
 }
