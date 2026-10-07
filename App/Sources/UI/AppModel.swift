@@ -25,7 +25,6 @@ enum LaunchFlags {
 /// UserDefaults keys the app lane owns.
 enum SettingsKey {
     static let onboardingDone = "onboardingDone"
-    static let voiceEnabled = "voiceEnabled"
     static let warningsEnabled = "warningsEnabled"
 }
 

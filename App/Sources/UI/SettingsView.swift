@@ -9,7 +9,8 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
-    @AppStorage(SettingsKey.voiceEnabled) private var voiceEnabled = true
+    /// The dispatcher keeps the voice setting across launches; this mirrors it for the toggle.
+    @State private var voiceEnabled = AlertDispatcher.shared.voiceEnabled
     @AppStorage(SettingsKey.warningsEnabled) private var warningsEnabled = true
 
     var body: some View {

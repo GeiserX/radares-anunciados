@@ -43,11 +43,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             await CurrentFeed.shared.loadIfNeeded()
         }
 
-        // The one setting the surfaces read (design 1): voice on unless the driver turned it off.
-        AlertDispatcher.shared.voiceEnabled = UserDefaults.standard.object(forKey: SettingsKey.voiceEnabled) as? Bool ?? true
-
         // 5. Adopt a Live Activity that survived a relaunch, end anything older.
         DriveActivityController.shared.reattach()
+
+        // The surfaces' own launch-argument self-test (-SurfacesSelfTest), a no-op on a normal launch.
+        AlertDispatcher.runSelfTestIfRequested()
 
         // 6. The reason stays `unknown` until the first event tells it.
         AppLog.shared.post(.launch(reason: .unknown, state: launchState))
