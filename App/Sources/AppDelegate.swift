@@ -29,6 +29,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         let coordinator = LocationCoordinator.shared
         Task { await coordinator.bootstrap(state: application.applicationState) }
 
+        // The folder every lane writes to, with its protection class, before anything is written into it.
+        FileStore.shared.prepareFolder()
+
         // 2. Must be registered before launch finishes.
         FeedRefresher.shared.registerBackgroundTask()
 
@@ -37,11 +40,14 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 
         // 4. The store loads off the main thread; the bundled snapshot is copied in when no feed exists yet.
         Task.detached(priority: .utility) {
-            FileStore.shared.copySnapshotIfNeeded()
+            await CurrentFeed.shared.loadIfNeeded()
         }
 
         // 5. Adopt a Live Activity that survived a relaunch, end anything older.
         DriveActivityController.shared.reattach()
+
+        // The surfaces' own launch-argument self-test (-SurfacesSelfTest), a no-op on a normal launch.
+        AlertDispatcher.runSelfTestIfRequested()
 
         // 6. The reason stays `unknown` until the first event tells it.
         AppLog.shared.post(.launch(reason: .unknown, state: launchState))
