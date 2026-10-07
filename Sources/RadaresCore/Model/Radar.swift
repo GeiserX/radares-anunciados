@@ -9,6 +9,8 @@ public enum Kind: String, Codable, Sendable, Hashable, CaseIterable {
     case section
     case stretch
     case mobileAnnounced = "mobile_announced"
+    /// A place where a mobile radar is set up often, derived from published fines (Barcelona, Madrid); no dates.
+    case mobileRecurring = "mobile_recurring"
     case trailer
     case reported
 }

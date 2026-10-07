@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // The liveUpdates(.automotiveNavigation) loop the probe and the drive share (`DriveSession.stream`), and the drive
-// itself: CLLocationUpdate -> Fix -> AlertEngine.ingest -> AlertDispatcher.handle, the drive counters that end up
-// in the driveEnded row, the pass ledger persisted on warn, pass and drive end (never per fix), the drive state
-// persisted in UserDefaults on every change so a relaunch resumes the loop, and the CLBackgroundActivitySession of
-// the degraded While-Using mode, rejoined at launch and never invalidated from a launch path (design 3.1, 3.2, 3.4).
+// itself: CLLocationUpdate -> Fix -> AlertEngine.ingest -> AlertDispatcher.handle(_:at:), the card handed to the
+// Live Activity after every fix (the controller's cadence decides what reaches the system), the passed, stretch
+// and driveEnded log rows, the drive counters that end up in the driveEnded row, the pass ledger persisted on
+// warn, pass and drive end (never per fix), the drive state persisted in UserDefaults on every change so a relaunch
+// resumes the loop, and the CLBackgroundActivitySession of the degraded While-Using mode, rejoined at launch and
+// never invalidated from a launch path (design 3.1, 3.2, 3.4).
 //
 // The state machine (idle, probing, driving, paused) is the coordinator's; this actor only knows "a drive is on".
 
@@ -86,6 +88,8 @@ public actor DriveSession {
     private var engine: AlertEngine?
     private var engineLoad: Task<Void, Never>?
     private var backgroundSession: CLBackgroundActivitySession?
+    /// The surfaces were told the drive started, once per process (a relaunch mid-drive tells them again).
+    private var surfacesStarted = false
 
     // Counters for the driveEnded row (design 6).
     private var fixes = 0
@@ -177,6 +181,7 @@ public actor DriveSession {
     /// here, from a foreground start, and is what lets Core Location unsuspend and relaunch the app for this drive.
     public func begin(reason: DriveReason, wakeAt: Date?, backgroundActivity: Bool, now: Date = Date()) {
         resetCounters()
+        surfacesStarted = false
         if backgroundActivity, backgroundSession == nil {
             backgroundSession = CLBackgroundActivitySession()
             logger.info("background activity session created (While-Using mode)")
@@ -196,6 +201,7 @@ public actor DriveSession {
     /// when one was outstanding (DTS 770063: rejoin from every launch path, never invalidate there).
     public func resume(_ saved: PersistedDrive) {
         resetCounters()
+        surfacesStarted = false
         persisted = saved
         if saved.backgroundActivitySessionOutstanding, backgroundSession == nil {
             backgroundSession = CLBackgroundActivitySession()
@@ -211,8 +217,8 @@ public actor DriveSession {
         persisted?.save(to: defaults)
     }
 
-    /// One fix of the drive: engine, dispatcher, ledger, counters, the fix row every `Thresholds.fixLogSeconds`.
-    /// Returns the engine's events (empty while paused or before the engine is ready).
+    /// One fix of the drive: engine, dispatcher, the card to the Live Activity, ledger, counters, the fix row every
+    /// `Thresholds.fixLogSeconds`. Returns the engine's events (empty while paused or before the engine is ready).
     @discardableResult
     public func ingest(_ fix: Fix, paused: Bool, now: Date = Date()) async -> [AlertEvent] {
         guard persisted != nil else { return [] }
@@ -236,9 +242,18 @@ public actor DriveSession {
             AppLog.shared.post(.fix(speedMps: fix.speed, horizontalAccuracy: fix.horizontalAccuracy, isStationary: fix.isStationary))
         }
         guard !paused, let engine else { return [] }
+        if engineEnabled, !surfacesStarted {
+            // The first fix of the drive in this process: the once-per-drive audio fallback takes its session here.
+            surfacesStarted = true
+            await AlertDispatcher.shared.driveDidStart()
+        }
         let events = engine.ingest(fix)
         if !events.isEmpty {
-            await dispatch(events, ledger: engine.ledger)
+            await dispatch(events, ledger: engine.ledger, at: fix)
+        }
+        if engineEnabled {
+            // Every fix: the controller's milestone cadence decides whether the system hears about it (design 4.2).
+            await DriveActivityController.shared.update(engine.snapshot.content, alert: nil)
         }
         return events
     }
@@ -251,7 +266,7 @@ public actor DriveSession {
         engineLoad = nil
         if let engine {
             let events = engine.endDrive()
-            await dispatch(events, ledger: engine.ledger, force: true)
+            await dispatch(events, ledger: engine.ledger, at: nil, force: true)
         }
         if engineEnabled {
             await DriveActivityController.shared.end()
@@ -298,7 +313,7 @@ public actor DriveSession {
     private func loadEngine() {
         guard engineEnabled, engine == nil else { return }
         engineLoad = Task.detached(priority: .utility) { [weak self] in
-            let built = Self.buildEngine()
+            let built = await Self.buildEngine()
             await self?.install(engine: built)
         }
     }
@@ -310,20 +325,13 @@ public actor DriveSession {
         logger.info("alert engine ready: \(built != nil, privacy: .public)")
     }
 
-    /// The feed from `AppPaths.feed` (the app lane copies the bundled snapshot there on first launch) and the
-    /// ledger from `AppPaths.passes`, pruned. Off the fix path: decoding is about 100 to 200 ms. A feed swapped
+    /// The one decoded feed of the process (`CurrentFeed`, loaded at launch step 4; the app lane copies the bundled
+    /// snapshot in on first launch) and the ledger from `AppPaths.passes`, pruned. Off the fix path. A feed swapped
     /// mid-drive is used from the next drive.
-    private nonisolated static func buildEngine() -> AlertEngine? {
+    private nonisolated static func buildEngine() async -> AlertEngine? {
         let logger = Logger(subsystem: "io.github.geiserx.radares", category: "drive")
-        guard let data = try? Data(contentsOf: AppPaths.feed) else {
-            logger.error("no feed at \(AppPaths.feed.lastPathComponent, privacy: .public): no engine this drive")
-            return nil
-        }
-        let store: RadarStore
-        do {
-            store = try RadarStore.load(geojson: data)
-        } catch {
-            logger.error("feed failed to load: \(error.localizedDescription, privacy: .public)")
+        guard let store = await CurrentFeed.shared.loadIfNeeded() else {
+            logger.error("no feed loaded: no engine this drive")
             return nil
         }
         var ledger = PassLedger()
@@ -334,7 +342,9 @@ public actor DriveSession {
         return AlertEngine(store: store, ledger: ledger)
     }
 
-    private func dispatch(_ events: [AlertEvent], ledger: PassLedger, force: Bool = false) async {
+    /// Hands the events to the surfaces with the fix they were decided on, writes this lane's rows (`passed`,
+    /// `stretchEntered`, `stretchExited`; `driveEnded` is the coordinator's), persists the ledger on warn and pass.
+    private func dispatch(_ events: [AlertEvent], ledger: PassLedger, at fix: Fix?, force: Bool = false) async {
         var persistLedger = force
         for event in events {
             switch event.kind {
@@ -346,10 +356,19 @@ public actor DriveSession {
                 }
             case .passed:
                 persistLedger = true
-            case .stretchEntered, .stretchExited, .driveEnded:
+                AppLog.shared.post(.passed(id: event.radar?.id ?? ""))
+            case .stretchEntered:
+                persistLedger = true
+                alerts += 1
+                if firstWarnAfterWakeM == nil { firstWarnAfterWakeM = metresSinceFirstFix }
+                AppLog.shared.post(.stretchEntered(id: event.radar?.id ?? ""))
+            case .stretchExited(let reason):
+                persistLedger = true
+                AppLog.shared.post(.stretchExited(id: event.radar?.id ?? "", reason: reason))
+            case .driveEnded:
                 break
             }
-            await AlertDispatcher.shared.handle(event)
+            await AlertDispatcher.shared.handle(event, at: fix)
         }
         if persistLedger {
             Self.persist(ledger)

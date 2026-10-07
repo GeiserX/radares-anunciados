@@ -12,6 +12,9 @@ struct SettingsView: View {
     /// The dispatcher keeps the voice setting across launches; this mirrors it for the toggle.
     @State private var voiceEnabled = AlertDispatcher.shared.voiceEnabled
     @AppStorage(SettingsKey.warningsEnabled) private var warningsEnabled = true
+    /// "Pausar hoy" (design 3.5): mirrors the coordinator's date, read on appear.
+    @State private var pausedToday = false
+    @State private var pausedLoaded = false
 
     var body: some View {
         Form {
@@ -24,8 +27,17 @@ struct SettingsView: View {
                     .onChange(of: voiceEnabled) { _, on in
                         AlertDispatcher.shared.voiceEnabled = on
                     }
+                Toggle("Pausar hoy", isOn: $pausedToday)
+                    .onChange(of: pausedToday) { _, on in
+                        guard pausedLoaded else { return }
+                        Task { await LocationCoordinator.shared.setPausedToday(on) }
+                    }
             } footer: {
-                Text("Sin «Avisos» la app no se despierta ni usa el GPS.")
+                Text("Sin «Avisos» la app no se despierta ni usa el GPS. «Pausar hoy» ignora los despertares hasta mañana (en autobús o tren); el control «Conducir» y abrir la app siguen avisando.")
+            }
+            .task {
+                pausedToday = await LocationCoordinator.shared.pausedToday
+                pausedLoaded = true
             }
 
             Section("Datos") {

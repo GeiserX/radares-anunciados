@@ -9,7 +9,7 @@ final class RadarStoreTests: XCTestCase {
 
     func testCandidatesAreOrderedByGateDistanceAndBounded() throws {
         let store = try Fixtures.store()
-        XCTAssertEqual(store.count, 206)
+        XCTAssertEqual(store.count, 208)
         XCTAssertEqual(store.countsByKind[.stretch], 60)
         let near = store.candidates(near: a2, within: 1200, on: t0)
         XCTAssertEqual(near.map(\.id), ["dgt-CABINACINEMOMETRO_120001"])

@@ -29,6 +29,8 @@ final class PhrasingTests: XCTestCase {
         XCTAssertEqual(Phrasing.make(event(makeRadar(kind: .section), distance: 600), locale: Fixtures.es).spoken, "Radar de tramo a 600 metros.")
         XCTAssertEqual(Phrasing.make(event(makeRadar(kind: .mobileAnnounced, maxspeed: 50), distance: 347), locale: Fixtures.es).spoken, "Radar móvil anunciado a 350 metros. Límite 50.")
         XCTAssertEqual(Phrasing.make(event(makeRadar(kind: .trailer), distance: 800), locale: Fixtures.es).spoken, "Radar en remolque a 800 metros.")
+        XCTAssertEqual(Phrasing.make(event(makeRadar(kind: .mobileRecurring, maxspeed: 50), distance: 347), locale: Fixtures.es).spoken, "Radar móvil habitual a 350 metros. Límite 50.")
+        XCTAssertEqual(Phrasing.make(event(makeRadar(kind: .mobileRecurring), distance: 800), locale: Fixtures.en).spoken, "Usual mobile radar 800 metres ahead.")
     }
 
     func testStretchEntriesAndExit() {
@@ -43,7 +45,7 @@ final class PhrasingTests: XCTestCase {
         XCTAssertEqual(p.title, "Radar de tramo · 3 kilómetros")
         XCTAssertEqual(p.body, "Z-40 km 26,6 · límite 100 km/h · sentido Madrid")
 
-        let exit = Phrasing.make(event(section, kind: .stretchExited, distance: nil), locale: Fixtures.es)
+        let exit = Phrasing.make(event(section, kind: .stretchExited(.farGate), distance: nil), locale: Fixtures.es)
         XCTAssertEqual(exit.spoken, "Fin de tramo.")
         XCTAssertEqual(exit.title, "Fin de tramo")
         XCTAssertEqual(Phrasing.make(event(section, kind: .passed, distance: nil), locale: Fixtures.es).spoken, "")
@@ -62,7 +64,7 @@ final class PhrasingTests: XCTestCase {
         XCTAssertEqual(Phrasing.make(event(makeRadar(kind: .mobileAnnounced, maxspeed: 50), distance: 350), locale: Fixtures.en).spoken, "Announced mobile speed camera 350 metres ahead. Limit 50.")
         let corridor = makeRadar(kind: .stretch, role: .mobileCorridor, end: .at(41.3, -1.8), road: "N-232", kmFrom: 20.81, kmTo: 30.91, bidirectional: true, source: "dgt_invive")
         XCTAssertEqual(Phrasing.make(event(corridor, kind: .stretchEntered, distance: 610), locale: Fixtures.en).spoken, "Mobile radar stretch, N-232, 10 kilometres.")
-        XCTAssertEqual(Phrasing.make(event(corridor, kind: .stretchExited, distance: nil), locale: Fixtures.en).spoken, "End of section.")
+        XCTAssertEqual(Phrasing.make(event(corridor, kind: .stretchExited(.farGate), distance: nil), locale: Fixtures.en).spoken, "End of section.")
         XCTAssertEqual(Phrasing.make(event(makeRadar(), distance: 600), locale: Fixtures.en, alsoAt: 800).spoken, "Fixed speed camera 600 metres ahead, and another at 800.")
         XCTAssertEqual(Phrasing.make(event(makeRadar(road: "A-2", kmFrom: 202.3, maxspeed: 90)), locale: Fixtures.en).body, "A-2 km 202.3 · limit 90 km/h")
         XCTAssertTrue(Phrasing.isEnglish(Locale(identifier: "en_US")))

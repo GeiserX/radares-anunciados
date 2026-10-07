@@ -87,7 +87,8 @@ public final class AlertDispatcher {
             crossTrackMetres: event.crossTrackMetres,
             suppressedByDirection: level == .visual && event.content.opposite,
             coordinate: fix?.coordinate ?? radar?.start ?? Coordinate(latitude: 0, longitude: 0),
-            sinks: sinks
+            sinks: sinks,
+            spoken: phrase?.spoken
         ))
         let summary = sinks.map { "\($0.sink.rawValue)=\($0.ok)" }.joined(separator: " ")
         logger.notice("alert \(radar?.id ?? "-", privacy: .public) \(level.rawValue, privacy: .public) \(summary, privacy: .public)")

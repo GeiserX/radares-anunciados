@@ -52,6 +52,9 @@ public actor LocationCoordinator {
 
     /// UserDefaults: the user granted Always and wants warnings; the session is re-taken at every launch while set.
     public static let wantsAlwaysKey = "wantsAlways"
+    /// UserDefaults: "Pausar hoy" (design 3.5): until this date no wake-up starts a probe. The control, the shortcut
+    /// and an opened app still start a drive, the user asked for those.
+    public static let pausedUntilKey = "pausedUntil"
     private static let fenceCenterKey = "fence.center"
     /// While paused and not stationary, the walking check runs at most this often.
     private static let pausedMotionCheckSeconds: Double = 30
@@ -114,17 +117,14 @@ public actor LocationCoordinator {
 
     // MARK: Launch (design 3.3, step 1)
 
-    public func bootstrap(state applicationState: UIApplication.State) async {
+    /// `launchedInBackground` is the app delegate's verdict from the location launch key (the one rule for a
+    /// background wake; `applicationState` at launch is `.background` on every launch and decides nothing).
+    public func bootstrap(launchedInBackground: Bool) async {
         guard !bootstrapped else { return }
         bootstrapped = true
         launchedAt = Date()
-        launchState = switch applicationState {
-        case .active: .active
-        case .inactive: .inactive
-        case .background: .background
-        @unknown default: .background
-        }
-        launchedInBackground = applicationState == .background
+        launchState = launchedInBackground ? .background : .inactive
+        self.launchedInBackground = launchedInBackground
         if let alwaysSession {
             watchDiagnostics(alwaysSession)
         }
@@ -154,9 +154,16 @@ public actor LocationCoordinator {
             await driveSession.resume(saved)
             startStream()
             logger.info("persisted drive resumed")
-        } else if launchedInBackground {
-            // Launched in the background for any reason while idle: probe, stream first (design 3.1, 3.3).
-            await beginProbe(wake: nil, at: launchedAt)
+        } else {
+            // No live drive: a Live Activity adopted from the previous process belongs to a drive that is over.
+            if await DriveActivityController.shared.adoptedAtLaunch {
+                await DriveActivityController.shared.end()
+                logger.info("stale activity from the previous process ended")
+            }
+            if launchedInBackground, !pausedToday {
+                // Launched in the background for a location event while idle: probe, stream first (design 3.1, 3.3).
+                await beginProbe(wake: nil, at: launchedAt)
+            }
         }
         // `-StartDriveForTest 1` (scripts/sim-drive.sh) is the app lane's: it starts the drive when the scene
         // becomes active, where the Live Activity can be requested too.
@@ -238,6 +245,27 @@ public actor LocationCoordinator {
         }
     }
 
+    /// "Pausar hoy" is on: wake-ups are ignored until the stored date (the end of the day it was switched on).
+    public var pausedToday: Bool {
+        guard let until = defaults.object(forKey: Self.pausedUntilKey) as? Date else { return false }
+        return until > Date()
+    }
+
+    /// "Pausar hoy" (design 3.5, the one-line answer to a bus commuter's GPS bill): on ends whatever runs and
+    /// ignores wake-ups until midnight; off lets the next wake-up probe again.
+    public func setPausedToday(_ on: Bool) async {
+        if on {
+            let calendar = Calendar.autoupdatingCurrent
+            let midnight = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: Date()) ?? Date())
+            defaults.set(midnight, forKey: Self.pausedUntilKey)
+            await stopDrive()
+            logger.info("paused until \(midnight, privacy: .public)")
+        } else {
+            defaults.removeObject(forKey: Self.pausedUntilKey)
+            logger.info("pause lifted")
+        }
+    }
+
     /// Onboarding screen 1: When In Use, then Always (design 7).
     public func requestAuthorization() async {
         await wakeUps?.requestAuthorization()
@@ -314,6 +342,10 @@ public actor LocationCoordinator {
         lastWakeSource = source
         switch state {
         case .idle:
+            if pausedToday {
+                AppLog.shared.post(.wakeup(source: source, flags: flags + ["pausedToday"]))
+                return
+            }
             AppLog.shared.post(.wakeup(source: source, flags: flags))
             await beginProbe(wake: source, at: date)
         case .probing:

@@ -16,12 +16,13 @@ final class FeedDecoderTests: XCTestCase {
         let radars = try FeedDecoder.decode(Fixtures.feedData())
         var counts: [Kind: Int] = [:]
         for r in radars { counts[r.kind, default: 0] += 1 }
-        // 254 features: 2 of an unknown kind are skipped and 46 section twins fold into their stretch.
-        XCTAssertEqual(radars.count, 206)
+        // 254 features: 46 section twins fold into their stretch; the 2 mobile_recurring entries are points.
+        XCTAssertEqual(radars.count, 208)
         XCTAssertEqual(counts[.fixed], 109)
         XCTAssertEqual(counts[.stretch], 60)
         XCTAssertEqual(counts[.section], 4)
         XCTAssertEqual(counts[.mobileAnnounced], 23)
+        XCTAssertEqual(counts[.mobileRecurring], 2)
         XCTAssertEqual(counts[.trailer], 5)
         XCTAssertEqual(counts[.reported], 5)
         XCTAssertEqual(Set(radars.map(\.id)).count, radars.count, "ids stay unique")
@@ -33,7 +34,8 @@ final class FeedDecoderTests: XCTestCase {
         for r in radars { roles[r.role, default: 0] += 1 }
         XCTAssertEqual(roles[.mobileCorridor], 31)
         XCTAssertEqual(roles[.averageSpeedSection], 29)
-        XCTAssertEqual(roles[.point], 146)
+        XCTAssertEqual(roles[.point], 148)
+        XCTAssertTrue(radars.filter { $0.kind == .mobileRecurring }.allSatisfy { $0.role == .point && $0.isAlertable(on: Date()) }, "a recurring mobile radar is a point with no dates")
         XCTAssertEqual(try Fixtures.radar("dgt_invive-Tramo_Invive_344").role, .mobileCorridor)
         XCTAssertEqual(try Fixtures.radar("dgt-CVM_161274").role, .averageSpeedSection)
         XCTAssertEqual(try Fixtures.radar("salamanca-tramo-2").role, .averageSpeedSection)
@@ -139,7 +141,7 @@ final class FeedDecoderTests: XCTestCase {
         let json = """
         {"type":"FeatureCollection","features":[
           {"type":"Feature","id":"ok","geometry":{"type":"Point","coordinates":[-1.9,41.3]},"properties":{"kind":"fixed","name":"x","source":"dgt","active":true,"maxspeed":null,"direction":null,"province":null,"url":null,"attribution":"a","extra_field":{"nested":1}}},
-          {"type":"Feature","id":"newkind","geometry":{"type":"Point","coordinates":[-1.9,41.3]},"properties":{"kind":"mobile_recurring","name":"x","source":"madrid_multas","active":true}},
+          {"type":"Feature","id":"newkind","geometry":{"type":"Point","coordinates":[-1.9,41.3]},"properties":{"kind":"drone_patrol","name":"x","source":"dgt","active":true}},
           {"type":"Feature","geometry":{"type":"Point","coordinates":[-1.9,41.3]},"properties":{"kind":"fixed","name":"noid","source":"dgt","active":true}},
           {"type":"Feature","id":"poly","geometry":{"type":"Polygon","coordinates":[[[0,0],[1,1],[2,2],[0,0]]]},"properties":{"kind":"fixed","name":"x","source":"dgt","active":true}},
           {"type":"Feature","id":"nogeom","geometry":null,"properties":{"kind":"fixed","name":"x","source":"dgt","active":true}}

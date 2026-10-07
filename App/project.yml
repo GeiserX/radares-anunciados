@@ -43,6 +43,9 @@ targets:
       - path: Sources/Localizable.xcstrings
       - path: Sources/InfoPlist.xcstrings
       - path: Sources/Assets.xcassets
+      # the bundled feed snapshot, its date and the Live Activity tick (design 5.3, 4.2)
+      - path: Sources/Resources
+        buildPhase: resources
       # location lane
       - path: Sources/Location
       # surfaces lane
@@ -132,13 +135,35 @@ targets:
           CODE_SIGN_IDENTITY: Apple Distribution
           PROVISIONING_PROFILE_SPECIFIER: Radares Activity App Store
 
+  # App-side unit tests: what runs without Core Location or ActivityKit (the fix rule, the persisted drive, the
+  # drive counters, the card cadence, the health merge). `xcodebuild test` on a simulator; CI runs it on every push.
+  RadaresAnunciadosTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: RadaresAnunciados
+      - package: RadaresCore
+        product: RadaresCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.geiserx.radares.tests
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+
 schemes:
   RadaresAnunciados:
     build:
       targets:
         RadaresAnunciados: all
         RadaresWidgets: all
+        RadaresAnunciadosTests: [test]
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - RadaresAnunciadosTests
     archive:
       config: Release

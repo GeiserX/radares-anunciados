@@ -1,6 +1,9 @@
-# Xcode project is generated from project.yml by XcodeGen
+# Xcode project is generated from project.yml by XcodeGen, and so are these three (every generate rewrites them)
 *.xcodeproj
 *.xcworkspace
+App/Sources/Info.plist
+App/Sources/Radares.entitlements
+App/Widgets/Info.plist
 DerivedData/
 xcuserdata/
 *.xcarchive

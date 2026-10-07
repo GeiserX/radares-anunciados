@@ -66,17 +66,30 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | tee build.log | grep -E 'error:|warning: .*\.swift|\*\* BUILD'
 
-      - name: Run the app tests when an app test target exists
+      - name: Run the app tests
         run: |
           set -o pipefail
-          if xcodebuild -list -project App/RadaresAnunciados.xcodeproj | grep -qE '^\s+RadaresAnunciadosTests$'; then
-            xcodebuild test \
-              -project App/RadaresAnunciados.xcodeproj \
-              -scheme RadaresAnunciados \
-              -destination 'platform=iOS Simulator,name=iPhone 16' \
-              -derivedDataPath "$RUNNER_TEMP/dd" \
-              CODE_SIGNING_ALLOWED=NO \
-              | grep -E 'error:|Test Case .*(passed|failed)|Executed [0-9]+ tests|\*\* TEST'
-          else
-            echo "no app test target yet"
+          # The first available iPhone of the newest runtime; a fixed model name breaks when the runner's Xcode moves.
+          udid=$(xcrun simctl list devices available -j \
+            | jq -r '[.devices | to_entries[] | select(.key | test("iOS")) | .value[] | select(.name | startswith("iPhone")) | .udid][0]')
+          if [ -z "$udid" ] || [ "$udid" = null ]; then
+            echo "::error::no iPhone simulator available"
+            exit 1
           fi
+          xcodebuild test \
+            -project App/RadaresAnunciados.xcodeproj \
+            -scheme RadaresAnunciados \
+            -destination "platform=iOS Simulator,id=$udid" \
+            -derivedDataPath "$RUNNER_TEMP/dd" \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee apptest.log | grep -E 'error:|Test Case .*(passed|failed)|Executed [0-9]+ tests|\*\* TEST'
+
+      - name: Fail when no app test ran
+        run: |
+          # The summary line is tab-indented; anchor on leading whitespace, not on the line start.
+          executed=$(grep -E '^[[:space:]]*Executed [0-9]+ tests?,' apptest.log | tail -1 | sed -E 's/^[[:space:]]*Executed ([0-9]+) .*/\1/')
+          if [ -z "$executed" ] || [ "$executed" -eq 0 ]; then
+            echo "::error::no app test was executed"
+            exit 1
+          fi
+          echo "executed $executed app tests"

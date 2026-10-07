@@ -27,6 +27,9 @@ public final class DriveActivityController {
     private let logger = Logger(subsystem: "io.github.geiserx.radares", category: "activity")
     private var currentID: String?
     private var cadence = ActivityCadence()
+    /// `reattach()` adopted an activity from the previous process. The location lane ends it when its relaunch finds
+    /// no live drive; an activity started in this process (the intent, the foreground) is never that one.
+    public private(set) var adoptedAtLaunch = false
 
     private init() {}
 
@@ -58,6 +61,7 @@ public final class DriveActivityController {
                 pushType: nil
             )
             currentID = activity.id
+            adoptedAtLaunch = false
             UserDefaults.standard.set(activity.id, forKey: Self.activityIDKey)
             cadence = ActivityCadence()
             cadence.record(shown, at: now)
@@ -103,6 +107,7 @@ public final class DriveActivityController {
     public func end(content: DriveContent? = nil) async {
         guard let id = currentID else { return }
         currentID = nil
+        adoptedAtLaunch = false
         UserDefaults.standard.removeObject(forKey: Self.activityIDKey)
         let state = (content.map(ActivityCadence.display) ?? cadence.lastSent).map(DriveAttributes.ContentState.init)
         cadence = ActivityCadence()
@@ -127,6 +132,7 @@ public final class DriveActivityController {
         if currentID == nil {
             UserDefaults.standard.removeObject(forKey: Self.activityIDKey)
         }
+        adoptedAtLaunch = currentID != nil
         cadence = ActivityCadence()
         logger.notice("reattach: \(self.currentID ?? "none", privacy: .public)")
     }

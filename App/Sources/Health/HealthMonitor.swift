@@ -26,25 +26,30 @@ public final class HealthMonitor {
         let log = await AppLog.shared.recent(Thresholds.logMaxLines)
         var inputs = HealthInputs(now: now)
 
-        // Ubicación and Sesión Siempre. The diagnostics are derived from the authorization the session would report:
-        // the session object itself belongs to the location lane and is never touched from here.
-        let manager = CLLocationManager()
-        inputs.locationAuthorization = Self.map(manager.authorizationStatus)
-        inputs.preciseLocation = manager.accuracyAuthorization == .fullAccuracy
-        var diagnostics = HealthInputs.SessionDiagnostics()
-        diagnostics.alwaysAuthorizationDenied = inputs.locationAuthorization == .whenInUse
-        diagnostics.authorizationDenied = inputs.locationAuthorization == .denied
-        diagnostics.authorizationRestricted = inputs.locationAuthorization == .restricted
-        diagnostics.fullAccuracyDenied = !inputs.preciseLocation
-        diagnostics.authorizationDeniedGlobally = await Task.detached { !CLLocationManager.locationServicesEnabled() }.value
-        inputs.sessionDiagnostics = diagnostics
+        // Ubicación, Sesión Siempre, Valla, Cambio significativo, Movimiento: what the location lane owns, from the
+        // coordinator. The session diagnostics arrive on a stream, so until the first one lands the status-derived
+        // flags stand in; a flag set on either side is red.
+        let location = await LocationCoordinator.shared.healthSnapshot()
+        inputs.locationAuthorization = location.authorization
+        inputs.preciseLocation = location.preciseLocation
+        inputs.sessionDiagnostics = Self.merge(
+            location.sessionDiagnostics,
+            authorization: location.authorization,
+            precise: location.preciseLocation,
+            servicesEnabled: await Task.detached { CLLocationManager.locationServicesEnabled() }.value
+        )
+        inputs.sessionTaken = location.sessionTaken
+        inputs.parkedFenceIdentifierPresent = location.parkedFenceIdentifierPresent
+        inputs.parkedFenceFlags = location.parkedFenceFlags
+        inputs.slcStarted = location.slcStarted
+        inputs.lastSlcDelivery = location.lastSlcDelivery
+        inputs.motionAuthorization = location.motionAuthorization
 
         let window = now.addingTimeInterval(-Thresholds.healthWindowDays * 86_400)
         // This process's rows: from the delegate's launch row (reason `unknown`; a derived reason comes as a later
         // row), with a few seconds of slack because the lanes post from concurrent tasks and the order is not fixed.
         let launchRow = log.last { if case .launch(.unknown, _) = $0.event { true } else { false } }
         let processStart = launchRow.map { $0.t.addingTimeInterval(-Self.launchSlackSeconds) } ?? .distantPast
-        inputs.sessionTaken = log.contains { $0.t >= processStart && $0.event == .sessionTaken }
 
         // Arranques solos. A launch row whose reason was derived later is logged again by whoever saw the first event.
         for entry in log where entry.t >= window {
@@ -63,14 +68,14 @@ public final class HealthMonitor {
             inputs.lastEventWasWillTerminate = log.last { $0.t < processStart }?.event == .willTerminate
         }
 
-        // Valla de aparcamiento and Cambio significativo, from what the location lane logged.
+        // The log carries what earlier processes saw: the last parked-fence event's flags and the last
+        // significant-change delivery, which the 14-day rule needs across launches.
         for entry in log {
             switch entry.event {
             case let .monitorEvent(identifier, _, flags) where identifier == "parked":
                 inputs.parkedFenceFlags = flags
-                inputs.parkedFenceIdentifierPresent = true
             case .wakeup(source: .slc, _):
-                inputs.lastSlcDelivery = entry.t
+                if inputs.lastSlcDelivery.map({ entry.t > $0 }) ?? true { inputs.lastSlcDelivery = entry.t }
             case let .driveEnded(_, maxGap, _, _, _):
                 inputs.lastDriveEnded = entry.t
                 inputs.lastDriveMaxGapSeconds = maxGap
@@ -78,7 +83,7 @@ public final class HealthMonitor {
                 inputs.lastDriveStarted = entry.t
                 if reason == .intent { inputs.intentStartedDriveLogged = true }
                 inputs.lastDriveHadLateAlert = false
-            case let .alert(_, _, _, _, late, _, _, _, _) where late:
+            case let .alert(_, _, _, _, late, _, _, _, _, _) where late:
                 inputs.lastDriveHadLateAlert = true
             case .bgTaskRan:
                 inputs.lastBgTaskRan = entry.t
@@ -92,9 +97,6 @@ public final class HealthMonitor {
                 break
             }
         }
-        let authorized = inputs.locationAuthorization == .always || inputs.locationAuthorization == .whenInUse
-        inputs.slcStarted = authorized && CLLocationManager.significantLocationChangeMonitoringAvailable()
-
         // Datos.
         let meta = FileStore.shared.readMeta()
         inputs.feedFetchedAt = meta.fetchedAt
@@ -122,9 +124,8 @@ public final class HealthMonitor {
         @unknown default: .disabled
         }
 
-        // Pantalla del coche, Movimiento, Voz.
+        // Pantalla del coche, Voz.
         inputs.activitiesEnabled = ActivityAuthorizationInfo().areActivitiesEnabled
-        inputs.motionAuthorization = Self.map(CMMotionActivityManager.authorizationStatus())
         inputs.spanishVoiceAvailable = AVSpeechSynthesisVoice(language: "es-ES") != nil
 
         // Archivos: the logged read-back, else a read-back now.
@@ -132,6 +133,23 @@ public final class HealthMonitor {
             inputs.protectionVerified = FileStore.shared.verifyProtection()
         }
         return inputs
+    }
+
+    /// The session's own diagnostics, with the flags the authorization status already proves: a goal of Always
+    /// with only When In Use granted is `alwaysAuthorizationDenied` whether or not the stream has said so yet.
+    nonisolated static func merge(
+        _ reported: HealthInputs.SessionDiagnostics,
+        authorization: HealthInputs.LocationAuthorization,
+        precise: Bool,
+        servicesEnabled: Bool
+    ) -> HealthInputs.SessionDiagnostics {
+        var d = reported
+        d.alwaysAuthorizationDenied = d.alwaysAuthorizationDenied || authorization == .whenInUse
+        d.authorizationDenied = d.authorizationDenied || authorization == .denied
+        d.authorizationRestricted = d.authorizationRestricted || authorization == .restricted
+        d.fullAccuracyDenied = d.fullAccuracyDenied || !precise
+        d.authorizationDeniedGlobally = d.authorizationDeniedGlobally || !servicesEnabled
+        return d
     }
 
     static func map(_ status: CLAuthorizationStatus) -> HealthInputs.LocationAuthorization {
