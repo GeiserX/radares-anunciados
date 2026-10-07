@@ -23,11 +23,6 @@ public enum FeedDecoder {
 
     /// Normalises an already parsed collection. Features without an id, a usable geometry or a known kind are skipped.
     public static func radars(from collection: GeoJSONFeatureCollection) -> [Radar] {
-        struct Decoded {
-            var radar: Radar
-            var sectionMaxspeed: Int?
-        }
-
         var lines: [Radar] = []
         var points: [Radar] = []
         for feature in collection.features {
