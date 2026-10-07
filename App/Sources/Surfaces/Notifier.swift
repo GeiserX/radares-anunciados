@@ -61,12 +61,14 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
         return error
     }
 
-    /// Removes the delivered radar notifications (all of them, or all but `keep`): at pass, and before the next radar.
-    public func removeRadarNotifications(except keep: String? = nil) async {
+    /// Removes delivered radar notifications: every one but `keep` before the next radar is posted, or only those of
+    /// `radarID` when that radar is passed (a later radar's notification stays).
+    public func removeRadarNotifications(except keep: String? = nil, radarID: String? = nil) async {
         let center = UNUserNotificationCenter.current()
         let ids = await center.deliveredNotifications()
             .map(\.request)
             .filter { $0.content.threadIdentifier == Self.radarThread && $0.identifier != keep }
+            .filter { request in radarID.map { request.identifier.hasPrefix("\($0)#") } ?? true }
             .map(\.identifier)
         if !ids.isEmpty {
             center.removeDeliveredNotifications(withIdentifiers: ids)

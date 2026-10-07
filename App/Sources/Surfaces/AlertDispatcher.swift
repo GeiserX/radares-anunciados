@@ -8,7 +8,7 @@
 //   .warn(.full), .stretchEntered   speech + Live Activity alert, or the Time Sensitive notification when no
 //                                   activity runs; one `alert` log row with the sink outcomes
 //   .warn(.visual)                  the card only (sentido contrario, pacing gap); an `alert` row
-//   .passed                         the card; the radar's notification is removed
+//   .passed                         the card; that radar's notification is removed
 //   .stretchExited                  "Fin de tramo" when the core phrased it (dropped if anything is speaking); the card
 //   .driveEnded                     the activity ends; the once-per-drive audio session is released
 // This lane writes the `alert`, `speech`, `notificationPosted` and `activity*` rows. `passed`, `stretchEntered`,
@@ -50,7 +50,9 @@ public final class AlertDispatcher {
             await alert(event, level: event.content.opposite ? .visual : .full, fix: fix)
         case .passed:
             await activity.update(event.content, alert: nil)
-            await notifier.removeRadarNotifications()
+            if let id = event.radar?.id {
+                await notifier.removeRadarNotifications(radarID: id)
+            }
         case .stretchExited:
             if voiceEnabled, let phrase = event.phrase {
                 _ = await speech.speak(phrase, as: .exit)
@@ -191,6 +193,14 @@ extension AlertDispatcher {
         let delivered = await center.deliveredNotifications().filter { $0.request.content.threadIdentifier == Notifier.radarThread }
         let timeSensitive = delivered.first?.request.content.interruptionLevel == .timeSensitive
         logger.notice("self-test: delivered radar notifications \(delivered.count), time sensitive \(timeSensitive)")
+
+        if !withActivity {
+            // The pass removes this radar's notification and leaves any other radar's.
+            try? await Task.sleep(for: .seconds(4))
+            await handle(AlertEvent(kind: .passed, radar: radar, content: card(.passed, nil)))
+            let left = await center.deliveredNotifications().filter { $0.request.content.threadIdentifier == Notifier.radarThread }
+            logger.notice("self-test: radar notifications after pass \(left.count)")
+        }
 
         if withActivity {
             try? await Task.sleep(for: .seconds(6))
