@@ -1,0 +1,96 @@
+{
+  "sourceLanguage": "es",
+  "strings": {
+    "Conducir": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drive"
+          }
+        }
+      }
+    },
+    "Empieza a avisar de los radares anunciados.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starts warning about announced speed cameras."
+          }
+        }
+      }
+    },
+    "En pausa": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused"
+          }
+        }
+      }
+    },
+    "Límite %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limit %lld"
+          }
+        }
+      }
+    },
+    "Radar superado": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radar passed"
+          }
+        }
+      }
+    },
+    "Sin datos recientes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No recent data"
+          }
+        }
+      }
+    },
+    "media %lld km/h": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "average %lld km/h"
+          }
+        }
+      }
+    },
+    "restantes aprox.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "left, approx."
+          }
+        }
+      }
+    },
+    "sentido contrario": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "opposite direction"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -9,8 +9,10 @@ import SwiftUI
 import WidgetKit
 
 struct DriveControl: ControlWidget {
+    static let kind = "io.github.geiserx.radares.drive"
+
     var body: some ControlWidgetConfiguration {
-        StaticControlConfiguration(kind: "io.github.geiserx.radares.drive") {
+        StaticControlConfiguration(kind: Self.kind) {
             ControlWidgetButton(action: StartDriveIntent()) {
                 Label("Conducir", systemImage: "car.fill")
             }
