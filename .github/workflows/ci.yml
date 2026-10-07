@@ -1,0 +1,82 @@
+# Owned by the app lane once the skeleton has merged. Two jobs: the package tests on a Mac (no simulator), and
+# the XcodeGen project built for the iOS Simulator. Every action is pinned by SHA.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: RadaresCore (swift test)
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Show toolchain
+        run: swift --version
+
+      - name: Run the package tests
+        run: |
+          set -o pipefail
+          swift test 2>&1 | tee test.log
+
+      - name: Fail when no test ran
+        run: |
+          executed=$(grep -E '^[[:space:]]*Executed [0-9]+ tests?,' test.log | tail -1 | sed -E 's/^[[:space:]]*Executed ([0-9]+) .*/\1/')
+          if [ -z "$executed" ] || [ "$executed" -eq 0 ]; then
+            echo "::error::no test was executed"
+            exit 1
+          fi
+          echo "executed $executed tests"
+
+  build:
+    name: App (iOS Simulator build)
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Show toolchain
+        run: xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate the Xcode project
+        run: xcodegen generate --spec App/project.yml
+
+      - name: Build for the iOS Simulator
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project App/RadaresAnunciados.xcodeproj \
+            -scheme RadaresAnunciados \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/dd" \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee build.log | grep -E 'error:|warning: .*\.swift|\*\* BUILD'
+
+      - name: Run the app tests when an app test target exists
+        run: |
+          set -o pipefail
+          if xcodebuild -list -project App/RadaresAnunciados.xcodeproj | grep -qE '^\s+RadaresAnunciadosTests$'; then
+            xcodebuild test \
+              -project App/RadaresAnunciados.xcodeproj \
+              -scheme RadaresAnunciados \
+              -destination 'platform=iOS Simulator,name=iPhone 16' \
+              -derivedDataPath "$RUNNER_TEMP/dd" \
+              CODE_SIGNING_ALLOWED=NO \
+              | grep -E 'error:|Test Case .*(passed|failed)|Executed [0-9]+ tests|\*\* TEST'
+          else
+            echo "no app test target yet"
+          fi

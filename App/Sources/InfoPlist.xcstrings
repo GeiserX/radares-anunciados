@@ -1,0 +1,74 @@
+{
+  "sourceLanguage" : "es",
+  "strings" : {
+    "NSLocationAlwaysAndWhenInUseUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To warn you in the car without opening the app: it wakes up when you move and only uses GPS while you drive. Your location never leaves the phone."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para avisarte en el coche sin abrir la app: se despierta al moverse y solo usa el GPS mientras conduces. La ubicación nunca sale del teléfono."
+          }
+        }
+      }
+    },
+    "NSLocationAlwaysUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To warn you in the car without opening the app: it wakes up when you move and only uses GPS while you drive. Your location never leaves the phone."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para avisarte en el coche sin abrir la app: se despierta al moverse y solo usa el GPS mientras conduces. La ubicación nunca sale del teléfono."
+          }
+        }
+      }
+    },
+    "NSLocationWhenInUseUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To compute the distance and the direction to the announced radars."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para calcular la distancia y el sentido hacia los radares anunciados."
+          }
+        }
+      }
+    },
+    "NSMotionUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To know whether you are in a car and not spend battery while you walk."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para saber si vas en coche y no gastar batería cuando caminas."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

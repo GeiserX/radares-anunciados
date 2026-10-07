@@ -1,0 +1,78 @@
+// Lane: frozen (orchestrator)
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// The Live Activity's attributes and content (design 2.7). Compiled into the app and the widget extension.
+// `ContentState` mirrors `DriveContent` in RadaresCore field by field, with the same names and the same
+// `Phase` raw values; the surfaces lane copies one into the other. The widget does not link RadaresCore.
+
+import ActivityKit
+import Foundation
+
+public struct DriveAttributes: ActivityAttributes {
+    public enum Phase: String, Codable, Hashable, Sendable {
+        case watching
+        case approaching
+        case alert
+        case passed
+        case insideStretch
+        case paused
+        case degraded
+    }
+
+    /// Far under the 4 KB limit: display values are integers and strings are short.
+    public struct ContentState: Codable, Hashable, Sendable {
+        public var phase: Phase
+        /// SF Symbol name for the kind.
+        public var kindSymbol: String
+        /// "Radar fijo", "Tramo radar móvil", "Sin radares cerca".
+        public var title: String
+        /// Road and km, or the name.
+        public var subtitle: String
+        /// Shown at milestones only (1,000 / 750 / 500 / 250 / 100 m); the voice carries the exact distance.
+        public var distanceMetres: Int?
+        public var limit: Int?
+        public var speedKmh: Int?
+        /// "sentido contrario" row.
+        public var opposite: Bool
+        public var stretchRemainingMetres: Int?
+        public var avgKmh: Int?
+        /// "Datos de hace 3 días", "Abre la app".
+        public var note: String?
+        public var updatedAt: Date
+
+        public init(
+            phase: Phase,
+            kindSymbol: String,
+            title: String,
+            subtitle: String,
+            distanceMetres: Int? = nil,
+            limit: Int? = nil,
+            speedKmh: Int? = nil,
+            opposite: Bool = false,
+            stretchRemainingMetres: Int? = nil,
+            avgKmh: Int? = nil,
+            note: String? = nil,
+            updatedAt: Date
+        ) {
+            self.phase = phase
+            self.kindSymbol = kindSymbol
+            self.title = title
+            self.subtitle = subtitle
+            self.distanceMetres = distanceMetres
+            self.limit = limit
+            self.speedKmh = speedKmh
+            self.opposite = opposite
+            self.stretchRemainingMetres = stretchRemainingMetres
+            self.avgKmh = avgKmh
+            self.note = note
+            self.updatedAt = updatedAt
+        }
+    }
+
+    /// When the drive began. Fixed for the life of the activity.
+    public var startedAt: Date
+
+    public init(startedAt: Date) {
+        self.startedAt = startedAt
+    }
+}

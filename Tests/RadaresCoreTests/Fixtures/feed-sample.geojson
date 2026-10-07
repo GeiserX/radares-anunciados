@@ -1,0 +1,61 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "dgt-CABINACINEMOMETRO_120001",
+      "geometry": { "type": "Point", "coordinates": [-1.94488, 41.30326] },
+      "properties": {
+        "kind": "fixed",
+        "name": "A-2 km 202,3",
+        "source": "dgt",
+        "active": true,
+        "maxspeed": null,
+        "direction": "ZARAGOZA",
+        "province": "Zaragoza",
+        "road": "A-2",
+        "km_from": 202.3,
+        "km_to": null,
+        "url": "https://www.dgt.es/",
+        "attribution": "Dirección General de Tráfico (CC BY 4.0)"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "dgt_invive-Tramo_Invive_344",
+      "geometry": { "type": "LineString", "coordinates": [[0.13277, 40.51793], [0.24688, 40.51235]] },
+      "properties": {
+        "kind": "stretch",
+        "name": "N-232 km 20,81 a 30,91",
+        "source": "dgt_invive",
+        "active": true,
+        "maxspeed": null,
+        "direction": "both",
+        "province": "Castellón",
+        "road": "N-232",
+        "km_from": 20.81,
+        "km_to": 30.91,
+        "url": "https://www.dgt.es/",
+        "attribution": "Creative Commons Attribution"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "leon-2026-10-06-avenida-de-europa-0",
+      "geometry": { "type": "Point", "coordinates": [-5.5802, 42.6091] },
+      "properties": {
+        "kind": "mobile_announced",
+        "name": "Avenida de Europa",
+        "source": "leon",
+        "active": true,
+        "maxspeed": 50,
+        "direction": null,
+        "province": "León",
+        "valid_from": "2026-10-06",
+        "valid_to": "2026-10-06",
+        "url": "https://ileon.eldiario.es/",
+        "attribution": "Redacción ILEÓN, obtenido de ILEÓN (ileon.eldiario.es), CC BY-NC 4.0; geometría © OpenStreetMap"
+      }
+    }
+  ]
+}
