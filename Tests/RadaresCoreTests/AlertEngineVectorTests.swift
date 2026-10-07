@@ -261,6 +261,8 @@ final class AlertEngineVectorTests: XCTestCase {
 
         let second = AlertEngine(store: store, ledger: first.ledger, locale: Fixtures.es)
         XCTAssertEqual(second.snapshot.stretch?.radar.id, "dgt_invive-Tramo_Invive_344", "restored before the first fix")
+        XCTAssertEqual(second.snapshot.content.phase, .insideStretch, "the card is the stretch's from the start")
+        XCTAssertEqual(second.snapshot.next?.id, "dgt_invive-Tramo_Invive_344")
         var events: [AlertEvent] = []
         var phasesAfterExit: [DrivePhase] = []
         for fix in fixes[150...] {

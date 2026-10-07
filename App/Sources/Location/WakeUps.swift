@@ -46,6 +46,10 @@ public final class WakeUps {
     private var monitorTask: Task<Void, Never>?
     /// The next significant-change delivery is the cached position of a user launch: an initial fix, not a wake.
     private var initialDeliveryPending = false
+    private var slcStartedAt = Date()
+    /// A cached delivery lands within a moment of the start; a delivery later than this on a device with nothing
+    /// cached is real movement and wakes as usual.
+    static let initialDeliveryWindowSeconds: TimeInterval = 5
 
     /// Health inputs (design 6, rows "Valla de aparcamiento" and "Cambio significativo").
     public private(set) var slcStarted = false
@@ -70,18 +74,24 @@ public final class WakeUps {
     }
 
     /// The next delivery is the cached position of a start on a user launch, not movement.
-    func expectInitialDelivery() {
+    func expectInitialDelivery(at now: Date = Date()) {
         initialDeliveryPending = true
+        slcStartedAt = now
     }
 
     /// Every delivery of the significant-change manager. The first one after a start on a user launch is the
-    /// cached position (`initialDeliveryPending`): kept as the initial fix, not logged or probed as a wake-up.
-    func significantChange(_ fix: Fix) async {
+    /// cached position (`initialDeliveryPending`) when it is older than the start or lands within
+    /// `initialDeliveryWindowSeconds` of it: kept as the initial fix, not logged or probed as a wake-up. A first
+    /// delivery later than that (a device with nothing cached) is movement.
+    func significantChange(_ fix: Fix, receivedAt now: Date = Date()) async {
         if initialDeliveryPending {
             initialDeliveryPending = false
-            logger.info("significant change: initial cached delivery, kept as the first fix, not a wake-up")
-            await onInitialFix(fix)
-            return
+            if fix.timestamp < slcStartedAt || now.timeIntervalSince(slcStartedAt) < Self.initialDeliveryWindowSeconds {
+                logger.info("significant change: initial cached delivery, kept as the first fix, not a wake-up")
+                await onInitialFix(fix)
+                return
+            }
+            logger.info("significant change: first delivery is late and fresh, a wake")
         }
         lastSlcDelivery = fix.timestamp
         await onSignificantChange(fix)

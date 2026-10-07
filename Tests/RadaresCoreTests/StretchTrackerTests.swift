@@ -92,6 +92,11 @@ final class StretchTrackerTests: XCTestCase {
         let across = fixes.map { makeFix($0.coordinate, t: $0.timestamp, speed: 25, course: Geo.normalize(into + 90)) }
         XCTAssertTrue(run(corridor(), fixes: across).changes.isEmpty, "crossing the chord is not a join")
 
+        // Two qualifying fixes, one with no course, one more: not three in a row, so the join comes two fixes later.
+        var broken = fixes
+        broken[2] = makeFix(fixes[2].coordinate, t: fixes[2].timestamp, speed: 25, course: nil)
+        XCTAssertEqual(run(corridor(), fixes: broken).changes.first?.0, 5, "the run restarts after the course-less fix")
+
         let beside = fixes.map { makeFix(Geo.destination(from: $0.coordinate, bearingDegrees: into + 90, metres: Thresholds.stretchMidJoinCrossTrackM + 50), t: $0.timestamp, speed: 25, course: into) }
         XCTAssertTrue(run(corridor(), fixes: beside).changes.isEmpty, "a road beside the chord is not a join")
 

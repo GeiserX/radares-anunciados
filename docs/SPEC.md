@@ -155,7 +155,7 @@ surfaces, shown in 500 m steps; for an average-speed section also the average = 
 time. No second voice prompt. The stretch is "fired" in the ledger from entry, so it is one pass. A point inside the
 stretch fires as any point does and owns the card while ahead and for its 4 s "Radar superado"; the stretch card
 returns afterwards. The ledger carries the stretch the car is inside (radar, entry gate, entry position, time and
-speed), written at entry and cleared at exit: a process restarted mid-stretch resumes it and still says
+speed), written at entry and cleared at exit: a process restarted mid-stretch resumes it (a resumed drive only, never a new one) and still says
 *"Fin de tramo."* at the far gate, estimating the path before the restart as the straight distance from the entry
 position.
 

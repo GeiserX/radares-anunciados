@@ -72,6 +72,28 @@ public struct DriveAttributes: ActivityAttributes {
             self.updatedAt = updatedAt
             self.seq = seq
         }
+
+        private enum CodingKeys: String, CodingKey {
+            case phase, kindSymbol, title, subtitle, distanceMetres, limit, speedKmh, opposite, stretchRemainingMetres, avgKmh, note, updatedAt, seq
+        }
+
+        /// A content state written by a build without `seq` (an activity alive across an app update) decodes as 0.
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            phase = try c.decode(Phase.self, forKey: .phase)
+            kindSymbol = try c.decode(String.self, forKey: .kindSymbol)
+            title = try c.decode(String.self, forKey: .title)
+            subtitle = try c.decode(String.self, forKey: .subtitle)
+            distanceMetres = try c.decodeIfPresent(Int.self, forKey: .distanceMetres)
+            limit = try c.decodeIfPresent(Int.self, forKey: .limit)
+            speedKmh = try c.decodeIfPresent(Int.self, forKey: .speedKmh)
+            opposite = try c.decode(Bool.self, forKey: .opposite)
+            stretchRemainingMetres = try c.decodeIfPresent(Int.self, forKey: .stretchRemainingMetres)
+            avgKmh = try c.decodeIfPresent(Int.self, forKey: .avgKmh)
+            note = try c.decodeIfPresent(String.self, forKey: .note)
+            updatedAt = try c.decode(Date.self, forKey: .updatedAt)
+            seq = try c.decodeIfPresent(Int.self, forKey: .seq) ?? 0
+        }
     }
 
     /// When the drive began. Fixed for the life of the activity.

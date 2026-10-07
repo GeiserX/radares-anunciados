@@ -45,6 +45,26 @@ final class WakeUpsTests: XCTestCase {
         XCTAssertEqual(seen.initial.count, 1)
     }
 
+    /// A fresh device has nothing cached: its first delivery comes with the first movement, later than the window
+    /// and with a fresh timestamp, and must wake. An old timestamp is cached whenever it arrives.
+    @MainActor
+    func testALateFreshFirstDeliveryIsAWake() async {
+        let seen = Seen()
+        let w = wakeUps(seen)
+        let start = Date(timeIntervalSince1970: 100)
+        w.expectInitialDelivery(at: start)
+        await w.significantChange(fix(160), receivedAt: start.addingTimeInterval(60))
+        XCTAssertEqual(seen.wakes.count, 1, "60 s after the start with a fresh timestamp: movement")
+        XCTAssertTrue(seen.initial.isEmpty)
+
+        let cached = Seen()
+        let c = wakeUps(cached)
+        c.expectInitialDelivery(at: start)
+        await c.significantChange(fix(50), receivedAt: start.addingTimeInterval(60))
+        XCTAssertEqual(cached.initial.count, 1, "a timestamp older than the start is the cached position whenever it lands")
+        XCTAssertTrue(cached.wakes.isEmpty)
+    }
+
     @MainActor
     func testOnABackgroundLaunchTheFirstDeliveryIsTheWake() async {
         let seen = Seen()

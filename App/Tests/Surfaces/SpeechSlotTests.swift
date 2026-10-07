@@ -44,6 +44,19 @@ final class SpeechSlotTests: XCTestCase {
         XCTAssertNil(preparing.releaseIfStale(now: t0.addingTimeInterval(60), synthesizerSpeaking: false), "a slot still preparing its session has no utterance to time out")
     }
 
+    /// A claim made before the session was prepared is void once an interruption freed the slot or a later warning
+    /// claimed it: the suspended start must not speak over the new holder.
+    func testAClaimIsVoidAfterAnInterruptionOrALaterClaim() {
+        var slot = SpeechSlot()
+        let first = slot.claim(kind: .warning, now: t0)
+        XCTAssertTrue(slot.holds(first))
+        _ = slot.interrupted()
+        XCTAssertFalse(slot.holds(first), "freed by the interruption")
+        let second = slot.claim(kind: .warning, now: t0)
+        XCTAssertFalse(slot.holds(first), "taken by a later claim")
+        XCTAssertTrue(slot.holds(second))
+    }
+
     func testTheDriveEndResetsTheSlot() {
         var slot = SpeechSlot()
         slot.started(id: ObjectIdentifier(utterance), kind: .exit, route: "Speaker", now: t0)

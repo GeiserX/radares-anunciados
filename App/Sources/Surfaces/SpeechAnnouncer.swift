@@ -162,13 +162,18 @@ public final class SpeechAnnouncer: NSObject, AVSpeechSynthesizerDelegate {
     }
 
     private func start(_ phrase: Phrase, kind: Utterance) async -> SpeechOutcome {
-        slot.claim(kind: kind, now: Date())
+        let claim = slot.claim(kind: kind, now: Date())
         if let error = await session.prepare(activation) {
-            slot.reset()
+            if slot.holds(claim) { slot.reset() }
             AppLog.shared.post(.speech(route: Self.route, setActiveError: error, finished: false, launchContext: launchContext))
             logger.error("setActive failed: \(error, privacy: .public)")
             startPending()
             return .failed(setActiveError: error)
+        }
+        // An interruption during prepare freed the slot, and another warning may hold it now: this one is over.
+        guard slot.holds(claim) else {
+            logger.info("slot lost while preparing the session: sentence dropped")
+            return .skipped(reason: "interrupted")
         }
         if kind == .exit, pending != nil {
             // A warning arrived while the session was being prepared for "Fin de tramo": the warning wins.
@@ -245,9 +250,20 @@ struct SpeechSlot: Sendable {
     static let maxUtteranceSeconds: TimeInterval = 15
 
     private(set) var speaking: Speaking?
+    /// Counts claims, so a `start` that was suspended in `prepare` can tell whether its claim still stands.
+    private(set) var claims = 0
 
-    mutating func claim(kind: SpeechAnnouncer.Utterance, now: Date) {
+    /// Takes the slot while the session is prepared; returns the claim to check with `holds` afterwards.
+    @discardableResult
+    mutating func claim(kind: SpeechAnnouncer.Utterance, now: Date) -> Int {
+        claims += 1
         speaking = Speaking(id: nil, kind: kind, route: "", since: now)
+        return claims
+    }
+
+    /// True while `claim` is the slot's current holder: not freed by an interruption, not taken by a later claim.
+    func holds(_ claim: Int) -> Bool {
+        speaking != nil && claims == claim
     }
 
     mutating func started(id: ObjectIdentifier, kind: SpeechAnnouncer.Utterance, route: String, now: Date) {

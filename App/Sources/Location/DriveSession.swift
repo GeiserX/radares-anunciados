@@ -217,7 +217,7 @@ public actor DriveSession {
             wakeAt: wakeAt
         )
         persisted?.save(to: defaults)
-        loadEngine()
+        loadEngine(resuming: false)
         logger.info("drive begun, reason \(String(describing: reason), privacy: .public)")
     }
 
@@ -231,7 +231,7 @@ public actor DriveSession {
             backgroundSession = CLBackgroundActivitySession()
             logger.info("background activity session rejoined at launch")
         }
-        loadEngine()
+        loadEngine(resuming: true)
         logger.info("drive resumed from persisted state, paused \(saved.pausedSince != nil, privacy: .public)")
     }
 
@@ -339,10 +339,10 @@ public actor DriveSession {
 
     // MARK: Private
 
-    private func loadEngine() {
+    private func loadEngine(resuming: Bool) {
         guard engineEnabled, engine == nil else { return }
         engineLoad = Task.detached(priority: .utility) { [weak self] in
-            let built = await Self.buildEngine()
+            let built = await Self.buildEngine(resuming: resuming)
             await self?.install(engine: built)
         }
     }
@@ -356,8 +356,9 @@ public actor DriveSession {
 
     /// The one decoded feed of the process (`CurrentFeed`, loaded at launch step 4; the app lane copies the bundled
     /// snapshot in on first launch) and the ledger from `AppPaths.passes`, pruned. Off the fix path. A feed swapped
-    /// mid-drive is used from the next drive.
-    private nonisolated static func buildEngine() async -> AlertEngine? {
+    /// mid-drive is used from the next drive. The stretch the ledger carries belongs to the drive that was killed
+    /// inside it: a resumed drive restores it, a new drive never does.
+    private nonisolated static func buildEngine(resuming: Bool) async -> AlertEngine? {
         let logger = Logger(subsystem: "io.github.geiserx.radares", category: "drive")
         guard let store = await CurrentFeed.shared.loadIfNeeded() else {
             logger.error("no feed loaded: no engine this drive")
@@ -368,7 +369,15 @@ public actor DriveSession {
             ledger = decoded
         }
         ledger.prune(now: Date())
-        return AlertEngine(store: store, ledger: ledger)
+        return AlertEngine(store: store, ledger: ledgerForEngine(ledger, resuming: resuming))
+    }
+
+    /// The persisted ledger as the engine gets it: the passes always, the stretch only when the drive is the one
+    /// that was inside it.
+    static func ledgerForEngine(_ ledger: PassLedger, resuming: Bool) -> PassLedger {
+        var l = ledger
+        if !resuming { l.stretch = nil }
+        return l
     }
 
     /// Hands the events to the surfaces with the fix they were decided on (queued, in order, off the fix loop),

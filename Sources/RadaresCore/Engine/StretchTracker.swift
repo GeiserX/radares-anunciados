@@ -105,7 +105,11 @@ public struct StretchTracker: Sendable {
             return nil
         }
 
-        guard let course = courseDegrees else { return nil }
+        guard let course = courseDegrees else {
+            // A fix with no course cannot qualify for a join: the runs restart, three fixes means three in a row.
+            midJoinRuns = [:]
+            return nil
+        }
         let ordered = candidates.filter(\.isLine).sorted {
             RadarStore.gateDistance(from: fix.coordinate, to: $0) < RadarStore.gateDistance(from: fix.coordinate, to: $1)
         }

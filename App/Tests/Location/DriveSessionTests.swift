@@ -113,21 +113,45 @@ final class DriveSessionTests: XCTestCase {
         XCTAssertTrue(DriveSession.persistsLedger(after: [.driveEnded], force: true))
     }
 
-    /// The surfaces run off the fix loop: enqueue returns at once, jobs run in order, drain waits for the last one.
+    /// A stretch in the ledger belongs to the drive that was killed inside it: a resumed drive restores it, a new
+    /// drive (the same ledger, a different day or place) starts outside every stretch.
+    func testTheLedgerStretchIsRestoredOnlyForAResumedDrive() {
+        let radar = Radar(id: "s", kind: .stretch, role: .mobileCorridor, start: Coordinate(latitude: 40.5, longitude: 0.13), end: Coordinate(latitude: 40.51, longitude: 0.24), name: "N-232", source: "dgt_invive", attribution: "")
+        var ledger = PassLedger(entries: [PassLedger.Entry(id: "s", firedAt: Date(timeIntervalSince1970: 0))])
+        ledger.stretch = DriveSnapshot.StretchState(radar: radar, enteredAt: Date(timeIntervalSince1970: 0), entryGate: radar.start)
+        XCTAssertNotNil(DriveSession.ledgerForEngine(ledger, resuming: true).stretch)
+        XCTAssertNil(DriveSession.ledgerForEngine(ledger, resuming: false).stretch)
+        XCTAssertEqual(DriveSession.ledgerForEngine(ledger, resuming: false).entries.count, 1, "the passes stay either way")
+    }
+
+    /// The surfaces run off the fix loop: enqueue returns while the first job is still held at a gate, the second
+    /// job waits for the first, drain waits for both. A queue that ran jobs inline would never return from the
+    /// first enqueue, which the 3 s race turns into a failure instead of a hang.
     func testSurfaceQueueRunsInOrderWithoutHoldingTheCaller() async {
         let queue = SerialTaskQueue()
         let order = Order()
-        let clock = ContinuousClock()
-        let start = clock.now
-        await queue.enqueue {
-            try? await Task.sleep(for: .milliseconds(300))
-            await order.add(1)
+        let gate = Gate()
+        let returned = await withTaskGroup(of: Bool.self) { group in
+            group.addTask {
+                await queue.enqueue {
+                    await gate.wait()
+                    await order.add(1)
+                }
+                await queue.enqueue { await order.add(2) }
+                return true
+            }
+            group.addTask {
+                try? await Task.sleep(for: .seconds(3))
+                return false
+            }
+            let first = await group.next() ?? false
+            group.cancelAll()
+            return first
         }
-        await queue.enqueue { await order.add(2) }
-        let elapsed = clock.now - start
-        XCTAssertLessThan(elapsed, .milliseconds(200), "enqueue must not wait for the slow job")
+        XCTAssertTrue(returned, "enqueue must return while the first job is still held at the gate")
         let before = await order.seen
-        XCTAssertEqual(before, [], "nothing has run before the slow job ends")
+        XCTAssertEqual(before, [], "nothing has run while the first job is held")
+        await gate.open()
         await queue.drain()
         let after = await order.seen
         XCTAssertEqual(after, [1, 2], "in order, the second after the first")
@@ -136,6 +160,14 @@ final class DriveSessionTests: XCTestCase {
     private actor Order {
         var seen: [Int] = []
         func add(_ n: Int) { seen.append(n) }
+    }
+
+    private actor Gate {
+        private var isOpen = false
+        func open() { isOpen = true }
+        func wait() async {
+            while !isOpen { try? await Task.sleep(for: .milliseconds(10)) }
+        }
     }
 
     func testMetresIsHaversine() {

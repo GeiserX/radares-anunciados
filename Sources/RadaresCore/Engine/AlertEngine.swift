@@ -48,7 +48,13 @@ public final class AlertEngine {
         let resumed = ledger.stretch.flatMap { state in ledger.entry(for: state.radar.id)?.passedAt == nil ? state : nil }
         stretches = StretchTracker(resuming: resumed)
         current = .empty(at: now(), locale: locale)
-        current.stretch = stretches.inside
+        if let state = stretches.inside {
+            // The card is the stretch's from the start, not "Sin radares cerca" until the first fix after the relaunch.
+            current.stretch = state
+            current.next = state.radar
+            current.distanceMetres = state.remainingMetres
+            current.content = stretchContent(median: nil, at: now())
+        }
     }
 
     /// The pass ledger plus the stretch the car is inside: what the owner persists.

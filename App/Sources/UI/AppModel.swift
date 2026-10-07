@@ -80,7 +80,7 @@ final class AppModel {
         store = await CurrentFeed.shared.loadIfNeeded()
         if let current = CurrentFeed.shared.store { store = current }
         meta = FileStore.shared.readMeta()
-        report = healthReport(await HealthMonitor().collect())
+        report = healthReport(await HealthMonitor().collect(), locale: .autoupdatingCurrent)
         lastBackgroundLaunch = await HealthMonitor.lastBackgroundLaunch()
         await refreshDriveSnapshot()
         let since = Date().addingTimeInterval(-Thresholds.alertHistoryHours * 3600)
