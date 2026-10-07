@@ -118,12 +118,12 @@ private func launchesRow(_ i: HealthInputs, _ l: HealthText) -> HealthItem {
     if i.lastEventWasWillTerminate {
         return HealthItem(status: .fail, title: t, detail: l("Última sesión cerrada por ti: no cierres la app desde el selector", "Last session closed by you: do not close the app from the app switcher"))
     }
-    if i.drives > 0, i.backgroundLaunches == 0, i.intentLaunches == 0 {
-        return HealthItem(status: .warn, title: t, detail: l("iOS no ha arrancado la app sola en \(window) días", "iOS has not launched the app on its own in \(window) days"), action: .showAutomationRecipe)
+    if i.drives > 0, i.backgroundLaunches == 0 {
+        return HealthItem(status: .warn, title: t, detail: l("iOS no ha arrancado la app sola en \(window) días", "iOS has not launched the app on its own in \(window) days"))
     }
     return HealthItem(status: .ok, title: t, detail: l(
-        "\(i.backgroundLaunches) en segundo plano, \(i.intentLaunches) por atajo, \(i.drives) viajes en \(window) días",
-        "\(i.backgroundLaunches) in the background, \(i.intentLaunches) by shortcut, \(i.drives) drives in \(window) days"
+        "\(i.backgroundLaunches) en segundo plano, \(i.drives) viajes en \(window) días",
+        "\(i.backgroundLaunches) in the background, \(i.drives) drives in \(window) days"
     ))
 }
 
@@ -215,11 +215,10 @@ private func activityRow(_ i: HealthInputs, _ l: HealthText) -> HealthItem {
     if !i.activitiesEnabled {
         return HealthItem(status: .fail, title: t, detail: l("Actividades en directo desactivadas", "Live Activities off"), action: .openSettings)
     }
-    if !i.intentStartedDriveLogged {
-        return HealthItem(status: .warn, title: t, detail: l("Automatización no probada", "Automation not tried yet"), action: .showAutomationRecipe)
-    }
+    // The card can only begin for a drive that starts with the app open (design 4.2): a drive that began from a
+    // background wake-up had voice and the notification, not the card. The row says so; the fix is opening the app.
     if let drive = i.lastDriveStarted, i.lastActivityStarted == nil || i.lastActivityStarted! < drive {
-        return HealthItem(status: .warn, title: t, detail: l("Pantalla del coche no iniciada en el último viaje", "Car screen not started on the last drive"), action: .showAutomationRecipe)
+        return HealthItem(status: .warn, title: t, detail: l("Pantalla del coche no iniciada en el último viaje: abre la app antes de salir", "Car screen not started on the last drive: open the app before you set off"))
     }
     return HealthItem(status: .ok, title: t, detail: l("Pantalla del coche lista", "Car screen ready"))
 }

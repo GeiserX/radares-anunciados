@@ -1,6 +1,26 @@
 {
   "sourceLanguage" : "es",
   "strings" : {
+    "Con iOS 26 la tarjeta del radar aparece en la pantalla de CarPlay y en la pantalla bloqueada. iOS solo deja que la tarjeta empiece con la app abierta: si la quieres en el coche, abre la app antes de salir. Si no, el aviso llega igual por voz y como notificación." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With iOS 26 the radar card shows on the CarPlay screen and on the Lock Screen. iOS only lets the card start while the app is open: if you want it in the car, open the app before you set off. If not, the warning still arrives by voice and as a notification."
+          }
+        }
+      }
+    },
+    "Sin «Avisos» la app no se despierta ni usa el GPS. «Pausar hoy» ignora los despertares hasta mañana (en autobús o tren); abrir la app y «Probar aviso» siguen funcionando." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With Warnings off the app never wakes up or uses GPS. Pause today ignores wake-ups until tomorrow (on a bus or a train); opening the app and Probar aviso (Test warning) still work."
+          }
+        }
+      }
+    },
     "%lld km/h" : {
       "localizations" : {
         "en" : {
@@ -17,46 +37,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld m"
-          }
-        }
-      }
-    },
-    "1. Abre Atajos y ve a Automatización." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1. Open Shortcuts and go to Automation."
-          }
-        }
-      }
-    },
-    "2. Pulsa + y elige CarPlay." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2. Tap + and choose CarPlay."
-          }
-        }
-      }
-    },
-    "3. Marca Conecta y Ejecutar inmediatamente." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3. Select Connects and Run Immediately."
-          }
-        }
-      }
-    },
-    "4. Añade la acción «Iniciar aviso de radares»." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "4. Add the action “Iniciar aviso de radares” (Start radar warnings)."
           }
         }
       }
@@ -241,36 +221,6 @@
         }
       }
     },
-    "Cerrar" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Close"
-          }
-        }
-      }
-    },
-    "Con iOS 26 la tarjeta del radar aparece en la pantalla de CarPlay y en la pantalla bloqueada. La tarjeta solo puede empezar si la app se abre o la inicia un atajo, así que conviene una de estas tres:" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "With iOS 26 the radar card shows on the CarPlay screen and on the Lock Screen. The card can only start when the app is opened or a shortcut starts it, so set up one of these three:"
-          }
-        }
-      }
-    },
-    "Conducir" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drive"
-          }
-        }
-      }
-    },
     "Cuando no hay tarjeta en la pantalla del coche, el aviso llega como notificación urgente: pasa la mayoría de los modos de concentración. Con el modo Conducción el aviso llega por voz." : {
       "localizations" : {
         "en" : {
@@ -401,16 +351,6 @@
         }
       }
     },
-    "Iniciar aviso de radares" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start radar warnings"
-          }
-        }
-      }
-    },
     "Licencias" : {
       "localizations" : {
         "en" : {
@@ -517,26 +457,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "To warn you in the car without being opened, the app needs Always location and Precise Location. It only uses GPS while you drive, and your location never leaves the phone."
-          }
-        }
-      }
-    },
-    "Para que la pantalla del coche se encienda sola:" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "To have the car screen start on its own:"
-          }
-        }
-      }
-    },
-    "Parar aviso de radares" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stop radar warnings"
           }
         }
       }
@@ -751,16 +671,6 @@
         }
       }
     },
-    "Sin «Avisos» la app no se despierta ni usa el GPS. «Pausar hoy» ignora los despertares hasta mañana (en autobús o tren); el control «Conducir» y el atajo siguen avisando." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "With Warnings off the app never wakes up or uses GPS. Pause today ignores wake-ups until tomorrow (on a bus or a train); the Conducir (Drive) control and the shortcut still warn."
-          }
-        }
-      }
-    },
     "Solo pantalla" : {
       "localizations" : {
         "en" : {
@@ -777,16 +687,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "While Using only: you will have to open the app before you drive."
-          }
-        }
-      }
-    },
-    "También puedes añadir el control «Conducir» al Centro de control o al botón de acción, o simplemente abrir la app antes de salir." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You can also add the Conducir (Drive) control to Control Center or the Action button, or simply open the app before you leave."
           }
         }
       }
@@ -837,16 +737,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Always location granted"
-          }
-        }
-      }
-    },
-    "Ver cómo se configura" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "See how to set it up"
           }
         }
       }

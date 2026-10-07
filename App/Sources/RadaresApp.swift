@@ -1,8 +1,8 @@
 // Lane: app
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// SwiftUI App with the UIKit delegate adaptor: background launches (fence exit, significant change, BG task,
-// intent) go through AppDelegate before any scene exists (design 3.3).
+// SwiftUI App with the UIKit delegate adaptor: background launches (fence exit, significant change, BG task)
+// go through AppDelegate before any scene exists (design 3.3).
 
 import RadaresCore
 import SwiftUI

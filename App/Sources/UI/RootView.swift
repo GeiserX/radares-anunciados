@@ -24,14 +24,6 @@ struct RootView: View {
         .fullScreenCover(isPresented: $model.showOnboarding) {
             OnboardingFlow()
         }
-        .sheet(isPresented: $model.showRecipe) {
-            NavigationStack {
-                ScrollView { AutomationRecipeView().padding() }
-                    .navigationTitle("En el coche")
-                    .toolbar { Button("Cerrar") { model.showRecipe = false } }
-            }
-            .presentationDetents([.medium])
-        }
         .onAppear {
             Task { await model.ensureActivityIfDriving() }
         }

@@ -84,25 +84,7 @@ extension HealthItem.Action {
         switch self {
         case .openSettings: "Abrir Ajustes"
         case .refreshFeed: "Actualizar ahora"
-        case .showAutomationRecipe: "Ver cómo se configura"
         case .openOnboarding: "Repasar la introducción"
         }
-    }
-}
-
-/// The Shortcuts automation that starts the drive when the iPhone connects to CarPlay (design 4.2, 7).
-struct AutomationRecipeView: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Para que la pantalla del coche se encienda sola:").font(.headline)
-            Text("1. Abre Atajos y ve a Automatización.")
-            Text("2. Pulsa + y elige CarPlay.")
-            Text("3. Marca Conecta y Ejecutar inmediatamente.")
-            Text("4. Añade la acción «Iniciar aviso de radares».")
-            Text("También puedes añadir el control «Conducir» al Centro de control o al botón de acción, o simplemente abrir la app antes de salir.")
-                .foregroundStyle(.secondary)
-        }
-        .font(.body)
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

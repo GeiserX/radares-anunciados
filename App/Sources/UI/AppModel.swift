@@ -48,7 +48,6 @@ final class AppModel {
     /// The engine's view while a drive is on (design 4.4: the next-radar card reads it); nil when idle.
     private(set) var driveSnapshot: DriveSnapshot?
     var showOnboarding = !UserDefaults.standard.bool(forKey: SettingsKey.onboardingDone)
-    var showRecipe = false
     var selectedTab = LaunchFlags.initialTab.flatMap(Tab.init(rawValue:)) ?? .estado
 
     enum Tab: String, Hashable { case estado, mapa, ajustes }
@@ -131,7 +130,7 @@ final class AppModel {
     }
 
     /// A drive that begins while the app is open (a wake-up's probe that was already running when the user opened
-    /// the app, the "Conducir" control) gets its Live Activity from the foreground (design 4.2, way 2). The
+    /// the app) gets its Live Activity from the foreground (design 4.2). The
     /// coordinator's stream has one consumer: this one.
     private func watchDriveState() {
         guard stateWatcher == nil else { return }
@@ -185,8 +184,6 @@ final class AppModel {
             }
         case .refreshFeed:
             Task { await refreshFeed() }
-        case .showAutomationRecipe:
-            showRecipe = true
         case .openOnboarding:
             showOnboarding = true
         }

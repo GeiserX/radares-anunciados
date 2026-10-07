@@ -18,7 +18,6 @@ final class HealthReportTests: XCTestCase {
             sessionDiagnostics: d,
             sessionTaken: true,
             backgroundLaunches: 3,
-            intentLaunches: 1,
             drives: 4,
             lastEventWasWillTerminate: false,
             parkedFenceFlags: [],
@@ -38,7 +37,6 @@ final class HealthReportTests: XCTestCase {
             activitiesEnabled: true,
             lastActivityStarted: t0.addingTimeInterval(-7000),
             lastDriveStarted: t0.addingTimeInterval(-7100),
-            intentStartedDriveLogged: true,
             motionAuthorization: .authorized,
             lastSpeechSetActiveError: nil,
             spanishVoiceAvailable: true,
@@ -48,8 +46,8 @@ final class HealthReportTests: XCTestCase {
         )
     }
 
-    func row(_ title: String, _ inputs: HealthInputs) -> HealthItem {
-        healthReport(inputs).first { $0.title == title }!
+    func row(_ title: String, _ inputs: HealthInputs, locale: Locale = Fixtures.es) -> HealthItem {
+        healthReport(inputs, locale: locale).first { $0.title == HealthTitles.localized(title, locale: locale) }!
     }
 
     /// English phone: every title and detail is English; the Spanish titles stay the row ids.
@@ -115,8 +113,9 @@ final class HealthReportTests: XCTestCase {
         var i = healthy()
         XCTAssertEqual(row(HealthTitles.launches, i).status, .ok)
         i.backgroundLaunches = 0
-        i.intentLaunches = 0
-        XCTAssertEqual(row(HealthTitles.launches, i).status, .warn)
+        let warn = row(HealthTitles.launches, i)
+        XCTAssertEqual(warn.status, .warn)
+        XCTAssertNil(warn.action, "nothing to configure: the wake-ups are the only self-start")
         i.drives = 0
         XCTAssertEqual(row(HealthTitles.launches, i).status, .ok, "no drives, nothing to expect")
         i.lastEventWasWillTerminate = true
@@ -205,14 +204,12 @@ final class HealthReportTests: XCTestCase {
         i.activitiesEnabled = false
         XCTAssertEqual(row(HealthTitles.activity, i).status, .fail)
         i = healthy()
-        i.intentStartedDriveLogged = false
-        let r = row(HealthTitles.activity, i)
-        XCTAssertEqual(r.status, .warn)
-        XCTAssertEqual(r.detail, "Automatización no probada")
-        XCTAssertEqual(r.action, .showAutomationRecipe)
-        i = healthy()
         i.lastActivityStarted = t0.addingTimeInterval(-90_000)
-        XCTAssertEqual(row(HealthTitles.activity, i).status, .warn, "the last drive had no card")
+        let r = row(HealthTitles.activity, i)
+        XCTAssertEqual(r.status, .warn, "the last drive had no card")
+        XCTAssertEqual(r.detail, "Pantalla del coche no iniciada en el último viaje: abre la app antes de salir")
+        XCTAssertNil(r.action, "the only fix is opening the app before the drive; there is nothing to configure")
+        XCTAssertEqual(row(HealthTitles.activity, i, locale: Fixtures.en).detail, "Car screen not started on the last drive: open the app before you set off")
     }
 
     func testMotion() {

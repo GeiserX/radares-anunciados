@@ -21,36 +21,6 @@
         }
       }
     },
-    "Empieza a avisar de los radares anunciados y muestra la tarjeta en la pantalla bloqueada y en CarPlay.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Starts warning about announced speed cameras and shows the card on the Lock Screen and in CarPlay."
-          }
-        }
-      }
-    },
-    "Iniciar aviso de radares": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start radar warnings"
-          }
-        }
-      }
-    },
-    "Parar aviso de radares": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stop radar warnings"
-          }
-        }
-      }
-    },
     "Radar de prueba": {
       "localizations": {
         "en": {
@@ -97,16 +67,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Radares Anunciados"
-          }
-        }
-      }
-    },
-    "Termina el viaje: deja de avisar hasta el próximo y quita la tarjeta.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ends the drive: no more warnings until the next one, and the card goes away."
           }
         }
       }

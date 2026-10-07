@@ -15,7 +15,6 @@ public struct HealthItem: Sendable, Codable, Hashable, Identifiable {
     public enum Action: String, Sendable, Codable, Hashable {
         case openSettings
         case refreshFeed
-        case showAutomationRecipe
         case openOnboarding
     }
 
@@ -87,7 +86,6 @@ public struct HealthInputs: Sendable, Codable, Hashable {
 
     // Arranques solos (last `Thresholds.healthWindowDays`)
     public var backgroundLaunches: Int
-    public var intentLaunches: Int
     public var drives: Int
     /// The last log row is `willTerminate`: the process was ended while running (design 6, "Arranques solos").
     public var lastEventWasWillTerminate: Bool
@@ -120,8 +118,6 @@ public struct HealthInputs: Sendable, Codable, Hashable {
     public var activitiesEnabled: Bool
     public var lastActivityStarted: Date?
     public var lastDriveStarted: Date?
-    /// A drive started by `StartDriveIntent` has been logged at least once (the automation is proven).
-    public var intentStartedDriveLogged: Bool
 
     // Movimiento
     public var motionAuthorization: MotionAuthorization
@@ -144,7 +140,6 @@ public struct HealthInputs: Sendable, Codable, Hashable {
         sessionDiagnostics: SessionDiagnostics = SessionDiagnostics(),
         sessionTaken: Bool = false,
         backgroundLaunches: Int = 0,
-        intentLaunches: Int = 0,
         drives: Int = 0,
         lastEventWasWillTerminate: Bool = false,
         parkedFenceFlags: [String] = [],
@@ -164,7 +159,6 @@ public struct HealthInputs: Sendable, Codable, Hashable {
         activitiesEnabled: Bool = false,
         lastActivityStarted: Date? = nil,
         lastDriveStarted: Date? = nil,
-        intentStartedDriveLogged: Bool = false,
         motionAuthorization: MotionAuthorization = .notDetermined,
         lastSpeechSetActiveError: String? = nil,
         spanishVoiceAvailable: Bool = true,
@@ -178,7 +172,6 @@ public struct HealthInputs: Sendable, Codable, Hashable {
         self.sessionDiagnostics = sessionDiagnostics
         self.sessionTaken = sessionTaken
         self.backgroundLaunches = backgroundLaunches
-        self.intentLaunches = intentLaunches
         self.drives = drives
         self.lastEventWasWillTerminate = lastEventWasWillTerminate
         self.parkedFenceFlags = parkedFenceFlags
@@ -198,7 +191,6 @@ public struct HealthInputs: Sendable, Codable, Hashable {
         self.activitiesEnabled = activitiesEnabled
         self.lastActivityStarted = lastActivityStarted
         self.lastDriveStarted = lastDriveStarted
-        self.intentStartedDriveLogged = intentStartedDriveLogged
         self.motionAuthorization = motionAuthorization
         self.lastSpeechSetActiveError = lastSpeechSetActiveError
         self.spanishVoiceAvailable = spanishVoiceAvailable

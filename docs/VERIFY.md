@@ -22,7 +22,7 @@ lines that back it. Keep failed rows: they are the reason a design decision chan
   rejoining it from a non-UI launch. It is invalidated only at drive end, by the code that ended the drive.
 - **A force-quit app may never come back on iOS 26.** [Forum thread 826964](https://developer.apple.com/forums/thread/826964) reports that an app the user swiped away
   on iOS 26.4.2 was never relaunched by significant change or a region exit, where iOS 18 relaunched it. Onboarding
-  says never to swipe the app away, Estado turns red on `willTerminate`, and the "Conducir" control restarts the
+  says never to swipe the app away, Estado turns red on `willTerminate`, and opening the app restarts the
   chain. The row below records what the test device does.
 
 ## Real iPhone checklist
@@ -59,7 +59,7 @@ v1.1 adds radar rings (design 11, risk 7).
 
 | # | Test | Expectation | Result |
 |---|---|---|---|
-| S1 | **Background-launch speech.** App terminated, phone locked in a pocket, drive started by the CarPlay automation or by a cold wake, never foregrounded, past one fixed radar | A `speech(route:, setActiveError: nil, finished: true, launchContext: background)` row. If `setActiveError` is set from a cold background launch, switch on the once-per-drive activation fallback of design 4.1 and record which variant shipped | pending |
+| S1 | **Background-launch speech.** App terminated, phone locked in a pocket, drive started by a cold wake, never foregrounded, past one fixed radar | A `speech(route:, setActiveError: nil, finished: true, launchContext: background)` row. If `setActiveError` is set from a cold background launch, switch on the once-per-drive activation fallback of design 4.1 and record which variant shipped | pending |
 | S2 | CarPlay, music playing | The sentence over the car speakers, music ducked and restored; `route: carAudio` | pending |
 | S3 | Bluetooth A2DP, podcast playing (an app that sets `.spokenAudio`) | The podcast pauses, the sentence plays, the podcast resumes; `route: bluetoothA2DP` | pending |
 | S4 | Silent switch on, screen locked, phone speaker | The sentence still plays (`.playback` category) | pending |
@@ -73,8 +73,8 @@ Bluetooth, no allowed apps.
 
 | # | Test | Expectation | Result |
 |---|---|---|---|
-| F1 | **Time Sensitive notification through a Driving Focus** (no Live Activity running: start the drive from a cold wake, not from the automation) | Record whether the banner appears on the Lock Screen at the warn distance, and whether it waits until the Focus ends. The log row `notificationPosted(error: nil)` only proves the post | pending |
-| F2 | **Live Activity alert through a Driving Focus** (drive started by the automation, so the activity exists) | Record whether the `.full` alert lights the screen and expands the Dynamic Island, or whether only the content changes silently | pending |
+| F1 | **Time Sensitive notification through a Driving Focus** (no Live Activity running: start the drive from a cold wake, app closed) | Record whether the banner appears on the Lock Screen at the warn distance, and whether it waits until the Focus ends. The log row `notificationPosted(error: nil)` only proves the post | pending |
+| F2 | **Live Activity alert through a Driving Focus** (drive started with the app open, so the activity exists) | Record whether the `.full` alert lights the screen and expands the Dynamic Island, or whether only the content changes silently | pending |
 | F3 | Same two tests with the Focus's "Time Sensitive notifications" allowed, where the Focus offers the switch | Record the difference, if any | pending |
 
 Whatever F1 and F2 say, the voice is the surface that arrives: onboarding says so.
@@ -112,11 +112,11 @@ unit. Live Activities in CarPlay use the small activity family ([WWDC25 216](htt
 | # | Test | Expectation | Result |
 |---|---|---|---|
 | E1 | "Probar aviso" in the foreground | The sentence, the card, the notification once the card is dismissed; one `alert` row with three sink outcomes | pending |
-| E2 | The CarPlay Shortcuts automation (Atajos > Automatización > CarPlay > Conecta > Ejecutar inmediatamente > Iniciar aviso de radares) | `launch(reason: intent)`, `driveStarted(reason: intent)`, `activityStarted`, no confirmation prompt | pending |
+| E2 | App opened before the drive (Always) | `driveStarted(reason: foreground)`, `activityStarted`, the card on the Lock Screen and on the CarPlay Dashboard | pending |
 | E3 | A week of Settings > Battery | The app's share stays under a navigation app's for the same driving minutes; Estado's 7-day drive minutes match the real drives | pending |
 | E4 | Settings > Privacy > Analytics after a week | No jetsam report naming the app | pending |
 | E5 | `maxGapSeconds` in every `driveEnded` row of the week | Under 10 s while moving; a larger gap is a row to explain (suspension, throttling) | pending |
-| E6 | While-Using only (deny Always), app opened before the drive | Opening the app starts the drive (`driveStarted(reason: foreground)`) and the blue pill shows; the "Conducir" control alone only shows the card with "Abre la app"; after `driveEnded` nothing wakes the app; Estado's Ubicación row says "Solo mientras se usa: abre la app antes de conducir, o concede Siempre" and the Sesión Siempre row "Permiso Siempre no concedido". Measurement, not a feature: how long an outstanding `CLBackgroundActivitySession` would keep the wake-ups alive if it were never invalidated | pending |
+| E6 | While-Using only (deny Always), app opened before the drive | Opening the app starts the drive (`driveStarted(reason: foreground)`) and the blue pill shows; after `driveEnded` nothing wakes the app; Estado's Ubicación row says "Solo mientras se usa: abre la app antes de conducir, o concede Siempre" and the Sesión Siempre row "Permiso Siempre no concedido". Measurement, not a feature: how long an outstanding `CLBackgroundActivitySession` would keep the wake-ups alive if it were never invalidated | pending |
 
 The App Review recording (onboarding, Estado, "Probar aviso", a short drive past a radar with the Live Activity)
 comes from one of these drives.

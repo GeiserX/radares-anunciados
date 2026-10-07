@@ -6,10 +6,10 @@
 // re-takes it within the first second of every launch; the wake-ups; the motion gate; the drive session.
 // `bootstrap(launchedInBackground:)` runs from didFinishLaunching: the persisted drive sets the state at once, the
 // rest runs in `bootstrapTask`; a persisted drive resumes its loop, a background launch while idle starts the stream
-// first and then probes, a foreground launch waits for the user or an intent (under Always) or starts the drive from
+// first and then probes, a foreground launch waits for the user (under Always) or starts the drive from
 // the scene (the degraded While-Using mode, `foregroundDriveWanted`). The public controls wait for the bootstrap.
 //
-// What the app and surfaces lanes call: `startDrive(reason:)` (the intent, the UI, "Probar aviso"), `stopDrive()`,
+// What the app and surfaces lanes call: `startDrive(reason:)` (the UI, "Probar aviso"), `stopDrive()`,
 // `setWarningsEnabled(_:)` (onboarding after the Always grant, and the "Avisos" switch), `requestAuthorization()`
 // (onboarding screen 1), `noteSceneConnected()` (the launch reason when a scene is the first arrival),
 // `healthSnapshot()` (the Estado inputs this lane owns) and `stateChanges` (the UI's view of the state).
@@ -54,8 +54,8 @@ public actor LocationCoordinator {
 
     /// UserDefaults: the user granted Always and wants warnings; the session is re-taken at every launch while set.
     public static let wantsAlwaysKey = "wantsAlways"
-    /// UserDefaults: "Pausar hoy" (design 3.5): until this date no wake-up starts a probe. The control and the
-    /// shortcut still start a drive, the user asked for those.
+    /// UserDefaults: "Pausar hoy" (design 3.5): until this date no wake-up starts a probe. Opening the app and
+    /// "Probar aviso" still start a drive, the user asked for those.
     public static let pausedUntilKey = "pausedUntil"
     private static let fenceCenterKey = "fence.center"
     /// While paused and not stationary, the walking check runs at most this often.
@@ -87,8 +87,8 @@ public actor LocationCoordinator {
     private var launchState: LaunchState = .active
     private var launchedAt = Date()
     private var bootstrapped = false
-    /// The rest of the launch path after the persisted state is set; the controls await it so an intent that
-    /// launched a dead process cannot run between the state and the resumed stream.
+    /// The rest of the launch path after the persisted state is set; the controls await it so a call that reached
+    /// a freshly launched process cannot run between the state and the resumed stream.
     private var bootstrapTask: Task<Void, Never>?
     private var lastFix: Fix?
     private var slowSince: Date?
@@ -162,7 +162,7 @@ public actor LocationCoordinator {
         }
         logger.info("bootstrap: launch state \(self.launchState.rawValue, privacy: .public), wantsAlways \(self.wantsAlways, privacy: .public)")
 
-        // The state may have moved while the wake-ups were created: an intent that stopped the drive, a wake-up.
+        // The state may have moved while the wake-ups were created: the UI stopping the drive, a wake-up.
         // Only a drive still on is resumed, from the persisted copy as it stands now.
         if let saved, state.isDriveOn {
             // A relaunch mid-drive: the loop continues, same drive, same ledger (design 3.1, 3.4).
@@ -190,11 +190,10 @@ public actor LocationCoordinator {
 
     // MARK: Public controls
 
-    /// The intent, the UI or "Probar aviso" start a drive now; a probe in progress becomes the drive.
+    /// The UI or "Probar aviso" start a drive now; a probe in progress becomes the drive.
     public func startDrive(reason: DriveReason) async {
         await awaitBootstrap()
         switch reason {
-        case .intent: noteLaunchReason(.intent)
         case .foreground, .test: noteLaunchReason(.scene)
         case .wakeup: break
         }
@@ -212,7 +211,7 @@ public actor LocationCoordinator {
         }
     }
 
-    /// `StopDriveIntent` and the UI: drive end, fence re-armed at the last fix, stream cancelled.
+    /// The UI: drive end, fence re-armed at the last fix, stream cancelled.
     public func stopDrive() async {
         await awaitBootstrap()
         switch state {
@@ -346,7 +345,7 @@ public actor LocationCoordinator {
     }
 
     /// The degraded While-Using mode (design 3.4): the only start iOS allows is from the foreground, so opening the
-    /// app starts the drive. Never under Always (a foreground launch waits for the user or an intent), never while
+    /// app starts the drive. Never under Always (a foreground launch waits for the user), never while
     /// warnings are off or "Pausar hoy" is on, never over a drive or a probe already running.
     public func startForegroundDriveIfWanted() async {
         await awaitBootstrap()
