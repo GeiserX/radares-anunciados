@@ -1,29 +1,233 @@
 // Lane: location
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// The two system-persisted wake-ups (design 3.1): CLMonitor "radares.wake" with the parked condition
-// (assuming .satisfied, so the first .unsatisfied is the exit) and the significant-change manager with its delegate.
+// The two system-persisted wake-ups (design 3.1): CLMonitor "RadaresWake" with the parked condition, added
+// `assuming: .satisfied` so the first `.unsatisfied` event is the exit, and the significant-change manager with its
+// delegate. Co-equal: whichever arrives first starts the probe. Both are recreated at every launch; the monitor is
+// recreated by name and the parked condition re-added when `identifiers` lost it (the system keeps the condition
+// across relaunches, but not across every reinstall or reboot before first unlock).
+//
+// A main-actor class, not an actor: CLLocationManager delivers its delegate callbacks on the thread that created
+// it, and that thread needs a run loop, so the manager lives on the main thread. CLMonitor is an actor of its own.
 
 import CoreLocation
+import Foundation
 import RadaresCore
+import os
 
-public actor WakeUps {
-    public static let monitorName = "radares.wake"
-    public static let parkedIdentifier = "parked"
+@MainActor
+public final class WakeUps {
+    /// The design names it "radares.wake"; Core Location asserts on a non-alphanumeric monitor name, so no dot.
+    public nonisolated static let monitorName = "RadaresWake"
+    public nonisolated static let parkedIdentifier = "parked"
 
-    public init() {}
-
-    /// Recreate the monitor by name, start iterating its events, start significant change. Every launch.
-    public func start() {
-        fatalError("lane: location")
+    /// A `CLMonitor.Event` reduced to values, so it crosses into the coordinator and the log as-is.
+    public struct MonitorEvent: Sendable, Hashable {
+        public var identifier: String
+        public var state: String
+        public var flags: [String]
+        public var date: Date
     }
 
-    /// Move the parked fence to `center` (remove + add).
-    public func rearmFence(at center: Coordinate) {
-        fatalError("lane: location")
+    private let logger = Logger(subsystem: "io.github.geiserx.radares", category: "wakeups")
+    private let onMonitorEvent: @Sendable (MonitorEvent) async -> Void
+    private let onSignificantChange: @Sendable (Fix) async -> Void
+    private let onAuthorizationChange: @Sendable (CLAuthorizationStatus) async -> Void
+
+    private let slcManager = CLLocationManager()
+    private let slcDelegate: SLCDelegate
+    private var monitor: CLMonitor?
+    private var monitorTask: Task<Void, Never>?
+
+    /// Health inputs (design 6, rows "Valla de aparcamiento" and "Cambio significativo").
+    public private(set) var slcStarted = false
+    public private(set) var parkedConditionPresent = false
+    public private(set) var lastParkedFlags: [String] = []
+    public private(set) var lastSlcDelivery: Date?
+    public private(set) var fenceCenter: Coordinate?
+
+    public init(
+        onMonitorEvent: @escaping @Sendable (MonitorEvent) async -> Void,
+        onSignificantChange: @escaping @Sendable (Fix) async -> Void,
+        onAuthorizationChange: @escaping @Sendable (CLAuthorizationStatus) async -> Void
+    ) {
+        self.onMonitorEvent = onMonitorEvent
+        self.onSignificantChange = onSignificantChange
+        self.onAuthorizationChange = onAuthorizationChange
+        slcDelegate = SLCDelegate(onLocations: onSignificantChange, onAuthorization: onAuthorizationChange)
+        slcManager.delegate = slcDelegate
     }
 
-    public func stop() {
-        fatalError("lane: location")
+    // MARK: Authorization (design 7, screen 1)
+
+    public var authorizationStatus: CLAuthorizationStatus { slcManager.authorizationStatus }
+    public var accuracyAuthorization: CLAccuracyAuthorization { slcManager.accuracyAuthorization }
+
+    /// When In Use first; once granted, Always. Apple prompts for Always at once when When In Use was just granted,
+    /// so the chain lives in the delegate: a change to `.authorizedWhenInUse` while the goal is Always asks again.
+    public func requestAuthorization() {
+        switch slcManager.authorizationStatus {
+        case .notDetermined:
+            slcDelegate.chainToAlways = true
+            slcManager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse:
+            slcManager.requestAlwaysAuthorization()
+        default:
+            break
+        }
+    }
+
+    // MARK: Start, re-arm, stop
+
+    /// Every launch: recreate the monitor by name, iterate its events, re-add the parked condition if it was lost,
+    /// start significant change. `fenceCenter` is the last persisted fence position (nil before the first fix).
+    public func start(fenceCenter: Coordinate?) async {
+        self.fenceCenter = fenceCenter
+        if !slcStarted {
+            slcManager.startMonitoringSignificantLocationChanges()
+            slcStarted = true
+            logger.info("significant change started")
+        }
+        guard monitor == nil else { return }
+        let monitor = await CLMonitor(Self.monitorName)
+        self.monitor = monitor
+        let identifiers = await monitor.identifiers
+        parkedConditionPresent = identifiers.contains(Self.parkedIdentifier)
+        logger.info("monitor \(Self.monitorName, privacy: .public) identifiers \(identifiers, privacy: .public)")
+        if !parkedConditionPresent, let fenceCenter {
+            await add(center: fenceCenter)
+            logger.info("parked condition re-added at launch")
+        }
+        monitorTask = Task { [weak self] in
+            await self?.iterateEvents(monitor)
+        }
+    }
+
+    /// Move the parked fence to `center` (remove + add). Called when a probe ends idle, on pause and at drive end.
+    public func rearmFence(at center: Coordinate) async {
+        guard let monitor else {
+            fenceCenter = center
+            return
+        }
+        if await monitor.identifiers.contains(Self.parkedIdentifier) {
+            await monitor.remove(Self.parkedIdentifier)
+        }
+        await add(center: center)
+    }
+
+    /// The "Avisos" switch off: no fence, no significant change. The way out of every state the app adds.
+    public func stop() async {
+        slcManager.stopMonitoringSignificantLocationChanges()
+        slcStarted = false
+        monitorTask?.cancel()
+        monitorTask = nil
+        if let monitor, await monitor.identifiers.contains(Self.parkedIdentifier) {
+            await monitor.remove(Self.parkedIdentifier)
+        }
+        parkedConditionPresent = false
+        monitor = nil
+        logger.info("wake-ups stopped")
+    }
+
+    private func add(center: Coordinate) async {
+        guard let monitor else { return }
+        let condition = CLMonitor.CircularGeographicCondition(
+            center: CLLocationCoordinate2D(latitude: center.latitude, longitude: center.longitude),
+            radius: Thresholds.fenceRadiusM
+        )
+        await monitor.add(condition, identifier: Self.parkedIdentifier, assuming: .satisfied)
+        fenceCenter = center
+        parkedConditionPresent = await monitor.identifiers.contains(Self.parkedIdentifier)
+        logger.info("parked fence armed, radius \(Thresholds.fenceRadiusM, privacy: .public) m, present \(self.parkedConditionPresent, privacy: .public)")
+    }
+
+    private func iterateEvents(_ monitor: CLMonitor) async {
+        do {
+            let events = await monitor.events
+            for try await event in events {
+                if Task.isCancelled { return }
+                let reduced = MonitorEvent(
+                    identifier: event.identifier,
+                    state: Self.describe(event.state),
+                    flags: Self.flags(of: event),
+                    date: event.date
+                )
+                if reduced.identifier == Self.parkedIdentifier {
+                    lastParkedFlags = reduced.flags
+                }
+                logger.info("monitor event \(reduced.identifier, privacy: .public) \(reduced.state, privacy: .public) flags \(reduced.flags, privacy: .public)")
+                await onMonitorEvent(reduced)
+            }
+        } catch {
+            logger.error("monitor events ended: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    func noteSlcDelivery(at date: Date) {
+        lastSlcDelivery = date
+    }
+
+    private static func describe(_ state: CLMonitor.Event.State) -> String {
+        switch state {
+        case .unknown: "unknown"
+        case .satisfied: "satisfied"
+        case .unsatisfied: "unsatisfied"
+        case .unmonitored: "unmonitored"
+        @unknown default: "other"
+        }
+    }
+
+    /// Every flag of design 3.2 that is set, by name.
+    private static func flags(of event: CLMonitor.Event) -> [String] {
+        var flags: [String] = []
+        if event.conditionLimitExceeded { flags.append("conditionLimitExceeded") }
+        if event.conditionUnsupported { flags.append("conditionUnsupported") }
+        if event.persistenceUnavailable { flags.append("persistenceUnavailable") }
+        if event.authorizationDenied { flags.append("authorizationDenied") }
+        if event.authorizationDeniedGlobally { flags.append("authorizationDeniedGlobally") }
+        if event.authorizationRestricted { flags.append("authorizationRestricted") }
+        if event.authorizationRequestInProgress { flags.append("authorizationRequestInProgress") }
+        if event.accuracyLimited { flags.append("accuracyLimited") }
+        if event.insufficientlyInUse { flags.append("insufficientlyInUse") }
+        if event.serviceSessionRequired { flags.append("serviceSessionRequired") }
+        return flags
+    }
+}
+
+/// The significant-change delegate. Not isolated: Core Location calls it on the main thread (the manager was
+/// created there) and the callbacks hand values, never Core Location objects, to the coordinator.
+private final class SLCDelegate: NSObject, CLLocationManagerDelegate, @unchecked Sendable {
+    private let onLocations: @Sendable (Fix) async -> Void
+    private let onAuthorization: @Sendable (CLAuthorizationStatus) async -> Void
+    var chainToAlways = false
+
+    init(
+        onLocations: @escaping @Sendable (Fix) async -> Void,
+        onAuthorization: @escaping @Sendable (CLAuthorizationStatus) async -> Void
+    ) {
+        self.onLocations = onLocations
+        self.onAuthorization = onAuthorization
+    }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let last = locations.last else { return }
+        let fix = DriveSession.fix(from: last, isStationary: false)
+        let handler = onLocations
+        Task { await handler(fix) }
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
+        if status == .authorizedWhenInUse, chainToAlways {
+            chainToAlways = false
+            manager.requestAlwaysAuthorization()
+        }
+        let handler = onAuthorization
+        Task { await handler(status) }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: any Error) {
+        Logger(subsystem: "io.github.geiserx.radares", category: "wakeups")
+            .error("significant change failed: \(error.localizedDescription, privacy: .public)")
     }
 }
