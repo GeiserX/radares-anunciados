@@ -375,7 +375,9 @@ final class AlertEngineVectorTests: XCTestCase {
     func testEndDriveClosesAStretchSilentlyAndPrunes() throws {
         let vector = try Vector.load("corridor-n232-from-west")
         let fixes = vector.fixList
-        let engine = AlertEngine(store: try store(), ledger: PassLedger(), locale: Fixtures.es)
+        // endDrive prunes the ledger against the engine clock: pin it to the drive, not to the day the test runs.
+        let driveEnd = try XCTUnwrap(fixes.prefix(150).last).timestamp
+        let engine = AlertEngine(store: try store(), ledger: PassLedger(), now: { driveEnd }, locale: Fixtures.es)
         for fix in fixes.prefix(150) { _ = engine.ingest(fix) }
         XCTAssertNotNil(engine.snapshot.stretch)
         let events = engine.endDrive()
