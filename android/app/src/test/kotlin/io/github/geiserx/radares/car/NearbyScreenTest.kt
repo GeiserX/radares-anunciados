@@ -64,7 +64,7 @@ class NearbyScreenTest {
             assertEquals(expected.title, row.title.toString())
             val texts = row.texts.map { it.toString() }
             assertTrue("row ${expected.radarId} has no source: $texts", texts.any { it == expected.source })
-            assertTrue(row.metadata.place != null)
+            assertTrue("row ${expected.radarId} has no map place", row.metadata?.place != null)
         }
     }
 
