@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<resources>
+    <string name="app_name" translatable="false">Radares Anunciados</string>
+
+    <string name="channel_radares">Avisos de radar</string>
+    <string name="channel_radares_desc">Un aviso por radar publicado delante, con la voz. Emergente, también en Android Auto.</string>
+    <string name="channel_conduccion">Conducción</string>
+    <string name="channel_conduccion_desc">Aviso silencioso que Android exige mientras la app sigue tu posición en un viaje. No hace falta mirarlo.</string>
+    <string name="channel_estado">Estado</string>
+    <string name="channel_estado_desc">Como mucho un aviso al día cuando algo impide avisar de los radares.</string>
+    <string name="drive_notification">Radares Anunciados vigila los radares publicados</string>
+    <string name="health_notice">Radares: %1$s, %2$s.</string>
+
+    <string name="tab_map">Mapa</string>
+    <string name="tab_status">Estado</string>
+    <string name="tab_sources">Fuentes</string>
+
+    <string name="map_attribution">© OpenStreetMap contributors, ODbL</string>
+    <string name="card_limit">Límite %1$d</string>
+    <string name="card_distance">%1$d m</string>
+    <string name="card_remaining">quedan %1$s aprox.</string>
+    <string name="card_average">media %1$d km/h</string>
+    <string name="card_opposite">sentido contrario</string>
+    <string name="marker_source">Fuente: %1$s</string>
+
+    <string name="status_refresh">Actualizar datos</string>
+    <string name="status_self_test">Autocomprobación</string>
+    <string name="status_export">Exportar registro</string>
+    <string name="status_wipe">Borrar registro</string>
+    <string name="status_wiped">Registro borrado</string>
+    <string name="status_self_test_running">Autocomprobación en marcha: escucharás un aviso de prueba.</string>
+    <string name="status_refreshing">Descargando los datos…</string>
+    <string name="status_fix">Arreglar</string>
+    <string name="status_version">Versión %1$s</string>
+
+    <string name="sources_header">Fuentes del archivo</string>
+    <string name="sources_footer">Cada radar conserva la fuente y la atribución que publica el archivo.</string>
+    <string name="sources_licences">Licencias</string>
+    <string name="sources_odbl">Base de datos: Open Database License (ODbL) 1.0.</string>
+    <string name="sources_osm">© OpenStreetMap contributors</string>
+    <string name="sources_dgt">Datos: DGT (CC BY 4.0)</string>
+    <string name="sources_app">App: GPL-3.0-or-later</string>
+    <string name="sources_feed_repo">Archivo de radares: radares-anunciados-ha</string>
+    <string name="sources_play">Usa los servicios de ubicación y de reconocimiento de actividad de Google Play. Sin cuenta, sin analítica, sin servidor propio.</string>
+    <string name="sources_legal">Avisa solo de posiciones publicadas. El Reglamento General de Circulación (art. 18.3) prohíbe detectores e inhibidores y excluye «los mecanismos de aviso que informan de la posición de los sistemas de vigilancia del tráfico». Esta app no detecta, no recibe y no interfiere ninguna señal de radar.</string>
+
+    <string name="onb_welcome_title">Avisos de radares publicados</string>
+    <string name="onb_welcome_body">La app sabe sola cuándo vas en coche y te avisa con la voz y una notificación antes de cada radar publicado. No hay que tocar nada para conducir.</string>
+    <string name="onb_location_title">Ubicación precisa</string>
+    <string name="onb_location_body">Hace falta tu posición precisa para medir la distancia a cada radar. No sale del teléfono.</string>
+    <string name="onb_background_title">Ubicación todo el tiempo</string>
+    <string name="onb_background_body">Para empezar a avisar con el teléfono en el bolsillo, Android pide que elijas «%1$s» en los ajustes de ubicación de la app.</string>
+    <string name="onb_notifications_title">Notificaciones</string>
+    <string name="onb_notifications_body">Cada aviso sale también como notificación emergente, en el teléfono y en Android Auto.</string>
+    <string name="onb_activity_title">Actividad física</string>
+    <string name="onb_activity_body">Con este permiso Android avisa a la app cuando subes a un coche, y el primer aviso llega antes.</string>
+    <string name="onb_continue">Continuar</string>
+    <string name="onb_allow">Permitir</string>
+    <string name="onb_open_settings">Abrir ajustes</string>
+    <string name="onb_not_now">Ahora no</string>
+    <plurals name="sources_count">
+        <item quantity="one">%1$d radar</item>
+        <item quantity="other">%1$d radares</item>
+    </plurals>
+</resources>

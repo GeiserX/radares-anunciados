@@ -20,3 +20,4 @@ dependencyResolutionManagement {
 rootProject.name = "radares-anunciados"
 
 include(":core")
+include(":app")

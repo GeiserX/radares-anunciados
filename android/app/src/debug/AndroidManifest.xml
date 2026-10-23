@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Debug builds only. The emulator proof cannot fake an Activity Recognition transition: the real receivers are
+     not exported (adb runs as uid 2000) and a hand-made intent carries no ActivityTransitionResult. This receiver
+     starts the drive service through the same startForegroundService path, with an "in vehicle" reason.
+     ReleaseManifestTest checks it is absent from the release manifest. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application>
+        <receiver
+            android:name=".drive.DebugWakeReceiver"
+            android:exported="true"
+            tools:ignore="ExportedReceiver">
+            <intent-filter>
+                <action android:name="io.github.geiserx.radares.DEBUG_WAKE" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

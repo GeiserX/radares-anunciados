@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<resources>
+    <string name="channel_radares">Radar warnings</string>
+    <string name="channel_radares_desc">One warning per published radar ahead, with the voice. Pops up, also on Android Auto.</string>
+    <string name="channel_conduccion">Driving</string>
+    <string name="channel_conduccion_desc">Silent notice Android requires while the app follows your position on a drive. No need to look at it.</string>
+    <string name="channel_estado">Status</string>
+    <string name="channel_estado_desc">At most one notice a day when something stops the radar warnings.</string>
+    <string name="drive_notification">Radares Anunciados is watching the published radars</string>
+    <string name="health_notice">Radares: %1$s, %2$s.</string>
+
+    <string name="tab_map">Map</string>
+    <string name="tab_status">Status</string>
+    <string name="tab_sources">Sources</string>
+
+    <string name="map_attribution">© OpenStreetMap contributors, ODbL</string>
+    <string name="card_limit">Limit %1$d</string>
+    <string name="card_distance">%1$d m</string>
+    <string name="card_remaining">%1$s left approx.</string>
+    <string name="card_average">average %1$d km/h</string>
+    <string name="card_opposite">opposite direction</string>
+    <string name="marker_source">Source: %1$s</string>
+
+    <string name="status_refresh">Update data</string>
+    <string name="status_self_test">Self-test</string>
+    <string name="status_export">Export log</string>
+    <string name="status_wipe">Delete log</string>
+    <string name="status_wiped">Log deleted</string>
+    <string name="status_self_test_running">Self-test running: you will hear a test warning.</string>
+    <string name="status_refreshing">Downloading the data…</string>
+    <string name="status_fix">Fix</string>
+    <string name="status_version">Version %1$s</string>
+
+    <string name="sources_header">Sources in the file</string>
+    <string name="sources_footer">Every radar keeps the source and attribution the file publishes.</string>
+    <string name="sources_licences">Licences</string>
+    <string name="sources_odbl">Database: Open Database License (ODbL) 1.0.</string>
+    <string name="sources_osm">© OpenStreetMap contributors</string>
+    <string name="sources_dgt">Data: DGT (CC BY 4.0)</string>
+    <string name="sources_app">App: GPL-3.0-or-later</string>
+    <string name="sources_feed_repo">Radar file: radares-anunciados-ha</string>
+    <string name="sources_play">Uses Google Play location and activity recognition services. No account, no analytics, no server of its own.</string>
+    <string name="sources_legal">Warns from published positions only. Spain\'s Reglamento General de Circulación (art. 18.3) bans detectors and jammers and leaves out «los mecanismos de aviso que informan de la posición de los sistemas de vigilancia del tráfico». This app does not detect, receive or interfere with any radar signal.</string>
+
+    <string name="onb_welcome_title">Warnings for published radars</string>
+    <string name="onb_welcome_body">The app knows by itself when you are driving and warns you by voice and with a notification before every published radar. Nothing to touch to drive.</string>
+    <string name="onb_location_title">Precise location</string>
+    <string name="onb_location_body">Your precise position is needed to measure the distance to each radar. It never leaves the phone.</string>
+    <string name="onb_background_title">Location all the time</string>
+    <string name="onb_background_body">To warn with the phone in your pocket, Android asks you to choose \"%1$s\" in the app\'s location settings.</string>
+    <string name="onb_notifications_title">Notifications</string>
+    <string name="onb_notifications_body">Every warning also shows as a pop-up notification, on the phone and on Android Auto.</string>
+    <string name="onb_activity_title">Physical activity</string>
+    <string name="onb_activity_body">With this permission Android tells the app when you get into a car, and the first warning comes sooner.</string>
+    <string name="onb_continue">Continue</string>
+    <string name="onb_allow">Allow</string>
+    <string name="onb_open_settings">Open settings</string>
+    <string name="onb_not_now">Not now</string>
+    <plurals name="sources_count">
+        <item quantity="one">%1$d radar</item>
+        <item quantity="other">%1$d radars</item>
+    </plurals>
+</resources>
