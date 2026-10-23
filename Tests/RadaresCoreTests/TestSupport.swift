@@ -27,7 +27,7 @@ enum Fixtures {
         try RadarStore.load(geojson: feedData())
     }
 
-    /// The road sidecar of the synthetic scenarios (seven entries, so it is loaded without the validator's 500 floor).
+    /// The road sidecar of the synthetic scenarios (eight entries, so it is loaded without the validator's 500 floor).
     static func roadsData() throws -> Data {
         try Data(contentsOf: url("roads-sample", ext: "json"))
     }

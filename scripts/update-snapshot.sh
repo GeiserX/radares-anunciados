@@ -70,8 +70,8 @@ if [ "$status" != 200 ]; then
   echo "roads.json: HTTP $status, road snapshot not replaced" >&2
   exit 1
 fi
-# The app's RoadsValidator checks: at most 4,000,000 bytes, version 1, at least 500 entries, every polyline
-# (approaches, line, gates) decodes to at least two distinct vertices.
+# The app's RoadsValidator checks: at most 4,000,000 bytes, version 1, at least 500 usable entries (a line or an
+# approach), every polyline present (approaches, line, gates) decodes to at least two distinct vertices.
 python3 -I - "$work/roads.json" <<'PY'
 import json, os, sys
 path = sys.argv[1]
@@ -82,8 +82,6 @@ with open(path, encoding="utf-8") as f:
 if doc.get("version") != 1:
     sys.exit(f"roads.json version {doc.get('version')}, need 1")
 features = doc.get("features") or {}
-if len(features) < 500:
-    sys.exit(f"only {len(features)} roads entries, need 500")
 
 def decode(s):
     coords, lat, lon, i = [], 0, 0, 0
@@ -108,14 +106,16 @@ def decode(s):
         coords.append((lat, lon))
     return coords
 
+# An entry with no line and no approach (e.g. {"approaches": []}) is skipped and not counted, as in the app.
+usable = 0
 for fid, entry in features.items():
     strings = [a["polyline"] for a in entry.get("approaches") or []]
+    if entry.get("line") or entry.get("approaches"):
+        usable += 1
     if entry.get("line"):
         strings.append(entry["line"])
     gates = entry.get("gates") or {}
     strings += [a["polyline"] for a in (gates.get("start") or []) + (gates.get("end") or [])]
-    if not strings:
-        sys.exit(f"{fid} has no polyline")
     for s in strings:
         try:
             coords = decode(s)
@@ -123,7 +123,9 @@ for fid, entry in features.items():
             sys.exit(f"{fid}: {e}")
         if len(set(coords)) < 2:
             sys.exit(f"{fid}: a polyline with fewer than two distinct vertices")
-print(f"{len(features)} roads entries")
+if usable < 500:
+    sys.exit(f"only {usable} usable roads entries, need 500")
+print(f"{usable} usable roads entries of {len(features)}")
 PY
 mv "$work/roads.json" "$roads_file"
 echo "road snapshot $(wc -c < "$roads_file" | tr -d ' ') bytes"

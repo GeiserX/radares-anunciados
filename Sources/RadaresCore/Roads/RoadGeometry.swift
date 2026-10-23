@@ -178,7 +178,9 @@ public enum RoadsError: Error, Sendable, Hashable {
 }
 
 /// The checks of design 5.1 for roads.json: at most Thresholds.roadsMaxBytes, parses, version 1, at least
-/// Thresholds.roadsMinEntries entries, every polyline (approaches, line, gates) decodes to at least two distinct vertices.
+/// Thresholds.roadsMinEntries usable entries (a line, or at least one approach), every polyline present (approaches,
+/// line, gates) decodes to at least two distinct vertices. An entry with no usable polyline (`{"approaches": []}`) is
+/// skipped and not counted, as RoadGeometry skips it: one empty entry must not refuse the whole file.
 /// A refused file keeps the old one; a radar without geometry runs today's rules.
 public enum RoadsValidator {
     public static func validate(_ data: Data) -> Result<RoadGeometry, RoadsError> {
@@ -190,18 +192,19 @@ public enum RoadsValidator {
             return .failure(.notJSON(String(describing: error).prefix(200).description))
         }
         guard file.version == 1 else { return .failure(.wrongVersion(file.version)) }
-        guard file.features.count >= Thresholds.roadsMinEntries else { return .failure(.tooFewEntries(file.features.count)) }
         let precision = file.precision ?? 5
+        var usable = 0
         for (id, entry) in file.features {
             var strings = entry.approaches?.map(\.polyline) ?? []
             if let line = entry.line { strings.append(line) }
             strings += entry.gates?.start?.map(\.polyline) ?? []
             strings += entry.gates?.end?.map(\.polyline) ?? []
-            if strings.isEmpty { return .failure(.brokenPolyline(id: id)) }
             for s in strings where !Polyline.isValid(s, precision: precision) {
                 return .failure(.brokenPolyline(id: id))
             }
+            if entry.line != nil || !(entry.approaches ?? []).isEmpty { usable += 1 }
         }
+        guard usable >= Thresholds.roadsMinEntries else { return .failure(.tooFewEntries(usable)) }
         return .success(RoadGeometry(file: file))
     }
 }

@@ -128,7 +128,7 @@ final class RoadGeometryTests: XCTestCase {
 
     func testTheFixtureLoadsAndIndexesItsLineInChunks() throws {
         let roads = try Fixtures.roads()
-        XCTAssertEqual(roads.count, 7)
+        XCTAssertEqual(roads.count, 8)
         XCTAssertEqual(roads.approaches(for: "fixed-dual-high-road")?.count, 1)
         let line = try XCTUnwrap(roads.line(for: "dgt_invive-curve-road"))
         XCTAssertEqual(line.length, 9368, accuracy: 30)
@@ -136,7 +136,8 @@ final class RoadGeometryTests: XCTestCase {
         XCTAssertNil(roads.approaches(for: "dgt_invive-curve-road"))
         XCTAssertNil(roads.line(for: "fixed-arc-road"))
         XCTAssertNil(roads.approaches(for: "dgt-CABINACINEMOMETRO_120001"), "a radar with no entry runs today's rules")
-        XCTAssertEqual(roads.boxCount, Int((line.length / Thresholds.roadChunkM).rounded(.up)), "pieces of at most 2 km")
+        let second = try XCTUnwrap(roads.line(for: "dgt_invive-switchback-road"))
+        XCTAssertEqual(roads.boxCount, Int((line.length / Thresholds.roadChunkM).rounded(.up)) + Int((second.length / Thresholds.roadChunkM).rounded(.up)), "pieces of at most 2 km")
         // The middle of the bow, 2 km off the chord: found through the road's boxes.
         let middle = line.coordinate(atAlong: line.length / 2)
         XCTAssertEqual(roads.lineCandidates(near: middle, within: 500), ["dgt_invive-curve-road"])
@@ -180,6 +181,25 @@ final class RoadGeometryTests: XCTestCase {
         XCTAssertEqual(failure(RoadsValidator.validate(file(entries: 500, brokenGate: true))), .brokenPolyline(id: "line"))
     }
 
+    /// An entry whose approaches were all omitted (under 200 m) does not refuse the file, and does not count toward
+    /// the floor; RoadGeometry skips it the same way.
+    func testTheValidatorSkipsAnEntryWithNoPolyline() throws {
+        var doc = try XCTUnwrap(JSONSerialization.jsonObject(with: file(entries: 500)) as? [String: Any])
+        var features = try XCTUnwrap(doc["features"] as? [String: Any])
+        features["empty"] = ["approaches": [Any]()]
+        doc["features"] = features
+        let data = try JSONSerialization.data(withJSONObject: doc)
+        guard case .success(let roads) = RoadsValidator.validate(data) else { return XCTFail("one empty entry refused the file") }
+        XCTAssertEqual(roads.count, 500)
+        XCTAssertNil(roads.approaches(for: "empty"))
+        // 499 good entries plus an empty one are under the floor: the empty one is not counted.
+        var short = try XCTUnwrap(JSONSerialization.jsonObject(with: file(entries: 499)) as? [String: Any])
+        var shortFeatures = try XCTUnwrap(short["features"] as? [String: Any])
+        shortFeatures["empty"] = ["approaches": [Any]()]
+        short["features"] = shortFeatures
+        XCTAssertEqual(failure(RoadsValidator.validate(try JSONSerialization.data(withJSONObject: short))), .tooFewEntries(499))
+    }
+
     func testTheValidatorRefusesAFileOverFourMegabytes() {
         XCTAssertEqual(failure(RoadsValidator.validate(Data(count: 4_000_001))), .tooLarge(4_000_001))
         // Exactly the limit is a size it accepts (and then fails as JSON, which proves the size test passed).
@@ -187,8 +207,8 @@ final class RoadGeometryTests: XCTestCase {
     }
 
     func testTheValidatorChecksTheFixtureLikeAnyFile() throws {
-        // The fixture has seven entries, under the floor: the same code that accepts 500 good ones refuses it.
-        XCTAssertEqual(failure(RoadsValidator.validate(try Fixtures.roadsData())), .tooFewEntries(7))
+        // The fixture has eight entries, under the floor: the same code that accepts 500 good ones refuses it.
+        XCTAssertEqual(failure(RoadsValidator.validate(try Fixtures.roadsData())), .tooFewEntries(8))
     }
 
     private func failure(_ r: Result<RoadGeometry, RoadsError>) -> RoadsError? {
