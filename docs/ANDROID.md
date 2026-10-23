@@ -228,7 +228,7 @@ Check a download before installing it. `apksigner` is in the Android SDK's `buil
 apksigner verify --print-certs radares-anunciados-0.1.0.apk
 ```
 
-The line `Signer #1 certificate SHA-256 digest:` must read
+The line `V2 Signer: certificate SHA-256 digest:` (some `apksigner` versions print `Signer #1 certificate SHA-256 digest:`) must read
 `ac6e5fb205c00c04172d907d6a6cf6e6415a76dee2028aa5de64662c3fff37ab`, the same fingerprint without colons. Each
 release also carries `SHA256SUMS` for the file checksums. The release workflow refuses to publish a build whose
 signer differs from the fingerprint on this page, and Android refuses to update an installed app with an APK signed
