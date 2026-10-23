@@ -16,7 +16,8 @@ PATTERN_BARE='(password|passwd|passphrase|secret|api[_-]?key|auth[_-]?token)[[:s
 # Generous on purpose: a false positive costs one allowlist term, a false negative a public credential.
 # `fingerprint|SHA-256|SHA256`: the public signing-certificate fingerprint in docs/ANDROID.md is meant to be public.
 # `secrets\.`: GitHub Actions expressions such as ${{ secrets.ANDROID_KEY_PASSWORD }}.
-ALLOW='example|placeholder|your-|<[a-z]|\$\{|\$\(|env|environment|variable|getenv|System\.|findProperty|BuildConfig|NOT recorded|_KEY|_PASSWORD|_TOKEN|_SECRET|storePassword|keyPassword|keystorePass|keyPass|secret: (true|false)|the (password|secret|token|key)|a (password|secret|token|key)|app signing key|upload key|Play App Signing|fingerprint|SHA-256|SHA256|secrets\.'
+# No `_KEY`-style terms: the match is case-insensitive, so they would also allow `api_key = "..."`.
+ALLOW='example|placeholder|your-|<[a-z]|\$\{|\$\(|env|environment|variable|getenv|System\.|findProperty|BuildConfig|NOT recorded|storePassword|keyPassword|keystorePass|keyPass|secret: (true|false)|the (password|secret|token|key)|a (password|secret|token|key)|app signing key|upload key|Play App Signing|fingerprint|SHA-256|SHA256|secrets\.'
 
 # Test sources and the Swift test fixtures are excluded: fixtures are meant to hold credential-shaped strings, and
 # scanning them gives permanent noise. A real secret pasted into a test file is the gap this leaves.

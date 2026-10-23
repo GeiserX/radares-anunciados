@@ -88,7 +88,7 @@ object VectorRunner {
         val run = VectorRun()
         // A snapshot check the fix loop never reaches would otherwise pass silently.
         for (check in vector.snapshots ?: emptyList()) {
-            if (check.fixIndex >= vector.fixes.size) run.mismatches.add("snapshot at ${check.fixIndex} never reached: the vector has ${vector.fixes.size} fixes")
+            if (check.fixIndex < 0 || check.fixIndex >= vector.fixes.size) run.mismatches.add("snapshot at ${check.fixIndex} never reached: the vector has ${vector.fixes.size} fixes")
         }
         for ((i, fix) in vector.fixList.withIndex()) {
             for (e in engine.ingest(fix)) run.events.add(i to e)
@@ -199,5 +199,7 @@ class VectorSuiteTest {
         val vector = Vector.load("corridor-n232-from-west").copy(snapshots = listOf(Vector.VSnapshot(fixIndex = 99_999, remainingMetres = 1.0)))
         val run = VectorRunner.run(vector, Fixtures.store)
         assertTrue(run.mismatches.any { it.contains("never reached") }, "${run.mismatches}")
+        val negative = Vector.load("corridor-n232-from-west").copy(snapshots = listOf(Vector.VSnapshot(fixIndex = -1, remainingMetres = 1.0)))
+        assertTrue(VectorRunner.run(negative, Fixtures.store).mismatches.any { it.contains("never reached") }, "a negative index is never reached either")
     }
 }
