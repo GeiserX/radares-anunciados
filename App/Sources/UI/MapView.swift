@@ -74,10 +74,11 @@ struct MapView: View {
         ))
     }
 
-    /// What the map draws around its centre (`MapRules.nearby`).
+    /// What the map draws around its centre (`MapRules.nearby`), with the road from the sidecar under each stretch.
     private var nearby: [MapRules.Item] {
         guard let store = model.store else { return [] }
-        return MapRules.nearby(store: store, centre: center, on: Date())
+        let roads = CurrentFeed.shared.roads
+        return MapRules.nearby(store: store, centre: center, on: Date()) { roads?.line(for: $0)?.vertices }
     }
 
     /// Driving: the engine's next radar and its distance (design 4.4). Otherwise the nearest radar to the user that
