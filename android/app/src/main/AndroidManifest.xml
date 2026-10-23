@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Position while driving, and at a wake-up with the screen off. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Android 14 refuses a location foreground service started from the background without it, and the
+         parked fence needs it. -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <!-- The in-vehicle / on-foot / still transitions that start and end a drive. -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <!-- Re-registers the transitions and the parked fence after a reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- The radar feed download, nothing else. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- WorkManager merges WAKE_LOCK in for its pre-Android 6 alarm scheduler. From Android 10 (minSdk 29) it
+         runs on JobScheduler, which holds the wake lock itself, so the app asks for none. -->
+    <uses-permission
+        android:name="android.permission.WAKE_LOCK"
+        tools:node="remove" />
+
+    <!-- AUTO LANE: the androidx.car.app.MAP_TEMPLATES permission goes here. -->
+
+    <application
+        android:name=".RadaresApp"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Radares"
+        tools:targetApi="36">
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- The drive: 1 Hz location while driving, voice and notifications. Started only by the wake-ups below. -->
+        <service
+            android:name=".drive.DriveService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
+        <receiver
+            android:name=".drive.TransitionReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".drive.GeofenceReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".drive.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- "Exportar registro": the log file handed to the share sheet. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.export"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/export_paths" />
+        </provider>
+
+        <!-- AUTO LANE: the CarAppService block (RadaresCarAppService, category POI), the
+             com.google.android.gms.car.application meta-data and androidx.car.app.minCarApiLevel go here. -->
+    </application>
+</manifest>
