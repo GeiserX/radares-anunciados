@@ -109,7 +109,7 @@ final class EventLogTests: XCTestCase {
             }
         }
         let report = healthReport(HealthInputs(now: t0.addingTimeInterval(10), drives: drives, lastDriveEnded: lastDriveEnded))
-        XCTAssertEqual(report.count, 12)
+        XCTAssertEqual(report.count, 13)
         XCTAssertEqual(report.first { $0.title == HealthTitles.lastDrive }?.status, .ok, "built from the surviving rows")
     }
 

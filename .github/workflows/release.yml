@@ -150,6 +150,11 @@ jobs:
             fi
           done
 
+      # The car-screen banner needs the CarPlay driving-task entitlement in the signature and in the profile
+      # (docs/CARPLAY.md). Fail here rather than ship a build iOS will not draw on the car screen.
+      - name: Check the archived app carries the CarPlay and Time Sensitive entitlements
+        run: scripts/check-entitlements.sh "$RUNNER_TEMP/RadaresAnunciados.xcarchive/Products/Applications/RadaresAnunciados.app"
+
       - name: Export the IPA
         run: |
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST

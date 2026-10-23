@@ -84,6 +84,9 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
     func templateApplicationScene(_ scene: CPTemplateApplicationScene, didConnect interfaceController: CPInterfaceController) {
         self.interfaceController = interfaceController
+        // The phone is on CarPlay: Estado's CarPlay row now expects the setting, and a pre-0.1.2 grant gets `.carPlay`.
+        Notifier.noteCarPlaySeen()
+        Task { await Notifier.shared.addCarPlayToGrantedAuthorization() }
         // "Probar aviso": the same self-test as the Estado button, so the driver sees the warning reach the car
         // screen once; it changes no setting.
         let selfTest = CPTextButton(title: Phrasing.isEnglish(.autoupdatingCurrent) ? "Test warning" : "Probar aviso", textStyle: .normal) { _ in

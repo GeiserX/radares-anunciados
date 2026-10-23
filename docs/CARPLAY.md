@@ -25,6 +25,10 @@ pantalla del coche. Nada más: ningún ajuste se cambia desde el coche.
 
 Con el permiso de ubicación "Mientras se usa" y sin "Siempre", abrir la app es la única forma de empezar el viaje.
 
+La fila «CarPlay» de la pestaña Estado dice si el aviso puede salir en la pantalla del coche: verde cuando iOS lo
+permite, ámbar si «Mostrar en CarPlay» está apagado en Ajustes › Notificaciones › Radares Anunciados, o si el
+permiso de notificaciones no incluye CarPlay.
+
 ## English
 
 There is nothing to open and nothing to leave on screen: the app wakes on its own when you start driving and warns
@@ -39,6 +43,10 @@ same self-test as the Estado tab, so you can watch the notification reach the ca
 changes from the car.
 
 With "While Using" location permission and no "Always", opening the app is the only way a drive can start.
+
+The "CarPlay" row of the Estado tab says whether the warning can reach the car screen: green when iOS allows it,
+amber when "Show in CarPlay" is off in Settings › Notifications › Radares Anunciados, or when the notification
+permission does not include CarPlay.
 
 ## What the scene shows
 
@@ -60,21 +68,64 @@ periodically refresh data items in the CarPlay UI more than once every 10 second
 changed. It is never a live countdown; the voice carries the exact moment. The Estado report is re-collected once a
 minute. The phone's own scene is SwiftUI's and keeps working with no CarPlay connected.
 
-## The three notification rules
+## Every condition for the banner on the car screen
 
-From the CarPlay App Programming Guide (https://developer.apple.com/carplay/documentation/CarPlay-App-Programming-Guide.pdf)
-and Apple's answers on the developer forums (https://developer.apple.com/forums/thread/795990). All three are in
-the app:
+Sources: the CarPlay App Programming Guide, "Notifications" (https://developer.apple.com/carplay/documentation/CarPlay-App-Programming-Guide.pdf),
+the `allowInCarPlay` reference (https://developer.apple.com/documentation/usernotifications/unnotificationcategoryoptions/allowincarplay),
+the `requestAuthorization` reference (https://developer.apple.com/documentation/usernotifications/unusernotificationcenter/requestauthorization(options:completionhandler:))
+and Apple's answers on https://developer.apple.com/forums/thread/795990.
 
-1. **Authorization option.** Every notification request asks `Notifier.authorizationOptions`,
-   `[.alert, .sound, .carPlay]` (onboarding, and the provisional path of the self-test and the simulator scripts
-   adds `.provisional`).
-2. **Category.** `Notifier.registerCategories()` registers the `radar` category with
-   `UNNotificationCategoryOptions.allowInCarPlay` at launch, and every radar notification carries that category
-   identifier ("Apps must be approved for CarPlay overall and then you must enable CarPlay for the notification
-   types you want displayed"). The daily health notice has no category and stays on the phone.
-3. **App icon on the CarPlay Home Screen.** "Notifications on CarPlay requires the app icon present on the CarPlay
-   Home Screen": the scene above is what puts it there.
+| # | Condition | Apple's words | Where the app meets it |
+|---|---|---|---|
+| 1 | The CarPlay entitlement, in the signature and in the provisioning profile | "Apps must be approved for CarPlay overall" | `com.apple.developer.carplay-driving-task` in `App/project.yml`; the `Radares App Store` profile carries it. `scripts/check-entitlements.sh` fails the release (`release.yml`, after the archive) when either the signature or the embedded profile lacks it or the Time Sensitive key |
+| 2 | A driving-task app on iOS 18.4 or later | "Notifications are supported in CarPlay communication, EV Charging, parking, and public safety apps. Starting in iOS 18.4, notifications are also supported in CarPlay driving task apps." | Deployment target 18.0; Estado's CarPlay row says when the phone is older than 18.4 |
+| 3 | The `.carPlay` authorization option | "In order to show notifications in CarPlay, include the carPlay option when requesting authorization for notifications." | `Notifier.authorizationOptions = [.alert, .sound, .carPlay]` in every request |
+| 4 | The option recorded for a permission granted before it was asked | "Subsequent calls to this method don't prompt the person again." | 0.1.0 and 0.1.1 asked without `.carPlay`, so their grant reads `carPlaySetting == .notSupported`. `Notifier.addCarPlayToGrantedAuthorization()` asks again with the full options at every launch and when the CarPlay scene connects, only when the person already allowed notifications and iOS has no CarPlay setting; no prompt appears |
+| 5 | A category with `allowInCarPlay` on every notification meant for the car | "If a category doesn't explicitly contain this option, notifications of that type aren't displayed in a CarPlay environment." | The `radar` category, registered at launch; every radar notification carries it. The daily health notice has no category and stays on the phone |
+| 6 | The app's icon on the CarPlay Home Screen | "Notifications on CarPlay requires the app icon present on the CarPlay Home Screen." | The CarPlay scene in the Info.plist manifest puts it there; a unit test reads the built Info.plist and resolves the delegate class. The app never has to be opened on the car screen |
+| 7 | "Show in CarPlay" on in Settings | "Users can use Settings to show or hide your app's notifications in CarPlay." | Settings › Notifications › Radares Anunciados › Show in CarPlay. Estado's CarPlay row reads `carPlaySetting` and says when it is off |
+| 8 | A banner while the app is in the foreground | `willPresent` decides how a foreground notification is presented | `Notifier.foregroundPresentation = [.banner, .list, .sound]`, so an open app (on the phone or on the car screen) still gets the banner |
+| 9 | An interruption level that reaches the screen | Time Sensitive "presents the notification immediately, lights up the screen" | `interruptionLevel = .timeSensitive` with the Time Sensitive entitlement; a Focus may still hold it, the voice always speaks |
+
+What only a car can prove is in [VERIFY.md](VERIFY.md), rows C10 to C14: whether a pre-0.1.2 grant gains the
+CarPlay setting without a prompt, whether "Show in CarPlay" defaults on, and whether iOS draws the banner while the
+app's own CarPlay screen is in front.
+
+### What Estado shows
+
+Estado has a CarPlay row, `HealthTitles.carPlay`, never red because the voice and the phone still warn without it:
+
+| State | Row |
+|---|---|
+| `carPlaySetting == .enabled` | green, "Permitido: el aviso sale también en la pantalla del coche" |
+| `.disabled` | amber, "Desactivado en Ajustes › Notificaciones › Radares Anunciados › Mostrar en CarPlay", with "Abrir Ajustes" |
+| `.notSupported`, the phone has been on CarPlay | amber, "El permiso de notificaciones no incluye CarPlay: solo avisan la voz y el iPhone" |
+| `.notSupported`, never on CarPlay | green, "Aún no conectado a CarPlay" |
+| Notifications not allowed | amber once the phone has been on CarPlay (the Notificaciones row is the red one) |
+| iOS older than 18.4 | amber once the phone has been on CarPlay, "necesita iOS 18.4 o posterior" |
+
+"Has been on CarPlay" is `Notifier.carPlaySeenKey` in UserDefaults, set when the CarPlay scene connects or when
+Estado is collected with the car as the audio route (`AVAudioSession` port `.carAudio`).
+
+### How the Home Assistant companion app gets the banner
+
+The HA iOS app (https://github.com/home-assistant/iOS) shows its notifications on CarPlay with less than the list
+above. Its entitlements (`Configuration/Entitlements/App-ios.entitlements` plus
+`activate_special_entitlements.sh`, which adds `com.apple.developer.carplay-driving-task` and
+`com.apple.developer.carplay-voice-based-conversation` to release builds) carry Time Sensitive and Communication
+notifications. Its `requestAuthorization` options (`UNAuthorizationOptions.defaultOptions` in
+`Sources/App/Utilities/Permissions.swift`) are `[.alert, .badge, .sound, .providesAppNotificationSettings,
+.criticalAlert]`, without `.carPlay`, and its notification categories have no `allowInCarPlay` (the property is
+commented out in `Sources/Shared/API/Models/NotificationCategory.swift`). So on a real phone a driving-task app's
+notifications reach the car screen even without rules 3 and 5; we keep both because they are what Apple documents,
+and a category without the option is the one case the reference says is never shown. The shared conditions are the
+ones that matter in practice: the driving-task entitlement in the signed build, iOS 18.4, the icon on the CarPlay
+Home Screen, and "Show in CarPlay" on.
+
+## Android Auto
+
+There is no Android app yet. What it would need for the same banner on Android Auto is in
+[ANDROID-AUTO.md](ANDROID-AUTO.md).
 
 ## The iOS 18.4 floor
 
@@ -103,3 +154,5 @@ mirrored there is not evidence for a device.
   Addendum (https://developer.apple.com/documentation/carplay/requesting-carplay-entitlements), and granted the
   same day.
 - 0.1.2: the scene, the `.carPlay` option and the `allowInCarPlay` category.
+- Next release: the `.carPlay` option added to a permission granted on 0.1.0 or 0.1.1, the Estado CarPlay row, the
+  foreground banner as a named constant, and the release gate on the signed entitlements.

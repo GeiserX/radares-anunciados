@@ -103,6 +103,11 @@ head unit to the phone. The phone must run iOS 18.4 or later and the app's icon 
 | C7 | A red Estado row (deny Always) | The template shows "Estado · Sesión Siempre" | pending |
 | C8 | Phone on iOS 18.0 to 18.3 | The template shows, no banner on the car screen, the voice and the phone's notification as before | pending |
 | C9 | Real head unit | C3 to C6 again; note the car model and head unit software | pending |
+| C10 | Phone whose notification permission was granted on 0.1.0 or 0.1.1, then updated; open the app once | No prompt; Estado's CarPlay row turns green ("Permitido…") after the first CarPlay connection, and Settings › Notificaciones › Radares Anunciados shows "Mostrar en CarPlay" on. If it stays amber "no incluye CarPlay", note it: removing and reinstalling the app is then the way to a fresh grant | pending |
+| C11 | Fresh install, onboarding, then the first CarPlay connection | "Mostrar en CarPlay" exists and is on by default; Estado's CarPlay row is green | pending |
+| C12 | Turn "Mostrar en CarPlay" off, open Estado | CarPlay row amber with "Abrir Ajustes"; C3 shows the banner on the phone only; turn it back on | pending |
+| C13 | "Probar aviso" from the phone's Estado tab with the app open on the phone and CarPlay connected | The banner on the car screen as well as on the phone (foreground presentation `.banner`) | pending |
+| C14 | "Probar aviso" from the car screen, with the app's own CarPlay screen in front | The banner on the car screen over the app's template; if iOS does not draw it while the app is in front, note it: the template still names the radar within 10 s | pending |
 
 ### Everything else
 

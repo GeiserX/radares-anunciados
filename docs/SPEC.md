@@ -227,8 +227,8 @@ line, rotated at 2,000 lines by keeping the newest 1,000, exportable, wipeable. 
 600 m ahead through the real engine and the real sinks. A plain notification at most once per 24 h when the app is
 red and closed.
 
-The status screen has twelve rows (location, Always session, background launches, parked fence, significant
-change, data, background refresh, notifications, motion, voice, files, last drive), each ok, amber or
+The status screen has thirteen rows (location, Always session, background launches, parked fence, significant
+change, data, background refresh, notifications, CarPlay, motion, voice, files, last drive), each ok, amber or
 red by the rules in `Sources/RadaresCore/Health/HealthReport.swift`, with a positive and a negative test each.
 
 ## 10. The route vectors: how the Kotlin port runs them

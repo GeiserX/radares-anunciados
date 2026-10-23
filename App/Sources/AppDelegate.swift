@@ -39,6 +39,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         // 3. The delegate, and the radar category with `allowInCarPlay` before any warning can post (design 4.5).
         UNUserNotificationCenter.current().delegate = Notifier.shared
         Notifier.shared.registerCategories()
+        // A permission granted before 0.1.2 lacks `.carPlay`; this adds it without a prompt (docs/CARPLAY.md).
+        Task { await Notifier.shared.addCarPlayToGrantedAuthorization() }
 
         // 4. The store loads off the main thread; the bundled snapshot is copied in when no feed exists yet.
         Task.detached(priority: .utility) {
