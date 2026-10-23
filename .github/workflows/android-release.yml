@@ -145,17 +145,37 @@ jobs:
           cp android/app/build/outputs/bundle/release/app-release.aab "dist/radares-anunciados-${{ steps.version.outputs.version }}.aab"
           (cd dist && sha256sum ./*) | tee dist/SHA256SUMS
 
+      # Notes cover only the changes since the previous android-v* tag. GitHub's own "generate release notes" picks
+      # the previous tag of any kind, which is the iOS v* tag, and would list the iOS changes.
+      - name: Write the release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: android-v${{ steps.version.outputs.version }}
+        run: |
+          cat > dist/NOTES.md <<'EOF'
+          Android build of Radares Anunciados. Android 10 or later.
+
+          A sideloaded install (this APK) gives every voice warning through the car speakers. The Android Auto banner and radar screen appear only when the app is installed from Google Play; see https://github.com/GeiserX/radares-anunciados/blob/main/docs/ANDROID-AUTO.md
+
+          Check the signing certificate before installing: https://github.com/GeiserX/radares-anunciados/blob/main/docs/ANDROID.md#verifying-a-download
+          EOF
+          # The android-v* tag just below this one in version order; none for the first release.
+          previous=$(git tag --list 'android-v*' --sort=v:refname | grep -x -B1 -- "$TAG" | grep -vx -- "$TAG" | head -n 1 || true)
+          if [ -n "$previous" ]; then
+            printf '\n' >> dist/NOTES.md
+            gh api "repos/${{ github.repository }}/releases/generate-notes" \
+              -f tag_name="$TAG" -f target_commitish="$GITHUB_SHA" -f previous_tag_name="$previous" \
+              --jq .body >> dist/NOTES.md
+          else
+            printf '\nFirst Android release.\n' >> dist/NOTES.md
+          fi
+          cat dist/NOTES.md
+
       - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           tag_name: android-v${{ steps.version.outputs.version }}
           name: Android ${{ steps.version.outputs.version }}
-          generate_release_notes: true
-          body: |
-            Android build of Radares Anunciados. Android 10 or later.
-
-            A sideloaded install (this APK) gives every voice warning through the car speakers. The Android Auto banner and radar screen appear only when the app is installed from Google Play; see https://github.com/GeiserX/radares-anunciados/blob/main/docs/ANDROID-AUTO.md
-
-            Check the signing certificate before installing: https://github.com/GeiserX/radares-anunciados/blob/main/docs/ANDROID.md#verifying-a-download
+          body_path: dist/NOTES.md
           files: |
             dist/radares-anunciados-${{ steps.version.outputs.version }}.apk
             dist/radares-anunciados-${{ steps.version.outputs.version }}.aab
