@@ -118,6 +118,10 @@ public enum LogEvent: Sendable, Codable, Hashable {
     case feedChecked(etag: String?, notModified: Bool)
     case feedUpdated(count: Int, etag: String?)
     case feedFailed(error: String)
+    /// The road geometry sidecar (roads.json, design 5.1): asked, stored, or refused. Alerts never depend on it.
+    case roadsChecked(etag: String?, notModified: Bool)
+    case roadsUpdated(count: Int, etag: String?)
+    case roadsFailed(error: String)
     case bgTaskRan(expired: Bool)
     case notificationPosted(id: String, error: String?)
     case speech(route: String, setActiveError: String?, finished: Bool, launchContext: LaunchContext)
