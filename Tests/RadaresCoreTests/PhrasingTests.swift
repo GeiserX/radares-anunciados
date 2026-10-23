@@ -21,6 +21,11 @@ final class PhrasingTests: XCTestCase {
         XCTAssertEqual(q.spoken, "Radar fijo a 650 metros, sentido Zaragoza.")
         XCTAssertEqual(q.body, "Radar fijo A-2 km 202.3 · sentido Zaragoza")
 
+        // The DGT name already carries the direction: the body names it once.
+        let dgt = makeRadar(name: "Radar fijo A-2 km 202.3 (sentido ZARAGOZA)", directionText: "ZARAGOZA")
+        XCTAssertEqual(Phrasing.make(event(dgt), locale: Fixtures.es).body, "Radar fijo A-2 km 202.3 (sentido ZARAGOZA)")
+        XCTAssertEqual(Phrasing.make(event(dgt), locale: Fixtures.es).spoken, "Radar fijo a 800 metros, sentido Zaragoza.")
+
         let both = makeRadar(maxspeed: 90, directionText: "DONOSTIA / SAN SEBASTIÁN")
         XCTAssertEqual(Phrasing.make(event(both), locale: Fixtures.es).spoken, "Radar fijo a 800 metros, sentido Donostia / San Sebastián. Límite 90.")
     }

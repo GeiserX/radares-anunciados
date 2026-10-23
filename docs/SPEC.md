@@ -297,7 +297,8 @@ title-cased and appended when present. Spanish is the default; English only when
 Never spoken: `reported`, inactive, expired, in cooldown, behind, visual, passed, silent exits.
 
 Notification title `Radar fijo a 800 m`, body `A-2 km 202,3 · límite 90 km/h` (road and km when the feed has them,
-else the name; then the limit, then `sentido Zaragoza`). Every warning posts one, at the platform's time-sensitive
+else the name; then the limit, then `sentido Zaragoza` unless the name already carries it, as in the DGT's
+`Radar fijo A-2 km 202.3 (sentido ZARAGOZA)`). Every warning posts one, at the platform's time-sensitive
 level, with a short tick beside the voice (the default sound when the voice is off); a visual warning posts the same
 text without the voice and without a sound, with `, sentido contrario` in the title for the opposite flow. A hidden
 warning (section 3) posts nothing. One notification

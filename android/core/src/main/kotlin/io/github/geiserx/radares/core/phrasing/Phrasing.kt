@@ -121,12 +121,16 @@ object Phrasing {
         return radar.name
     }
 
-    /// The notification body: subtitle plus the limit or the direction.
+    /// The notification body: subtitle plus the limit or the direction. The direction is left out when the subtitle
+    /// already names it: a DGT name reads "Radar fijo A-2 km 202.3 (sentido ZARAGOZA)".
     fun body(radar: Radar, locale: Locale): String {
         val en = isEnglish(locale)
-        val parts = mutableListOf(subtitle(radar, locale))
+        val sub = subtitle(radar, locale)
+        val parts = mutableListOf(sub)
         radar.maxspeed?.let { parts.add(if (en) "limit $it km/h" else "límite $it km/h") }
-        radar.directionText?.let { parts.add(if (en) "towards ${directionName(it, locale)}" else "sentido ${directionName(it, locale)}") }
+        radar.directionText?.takeUnless { sub.contains(it, ignoreCase = true) }?.let {
+            parts.add(if (en) "towards ${directionName(it, locale)}" else "sentido ${directionName(it, locale)}")
+        }
         return parts.joinToString(" · ")
     }
 
