@@ -114,12 +114,16 @@ public enum Phrasing {
         return radar.name
     }
 
-    /// The notification body: subtitle plus the limit or the direction.
+    /// The notification body: subtitle plus the limit or the direction. The direction is left out when the subtitle
+    /// already names it: a DGT name reads "Radar fijo A-2 km 202.3 (sentido ZARAGOZA)".
     public static func body(_ radar: Radar, locale: Locale) -> String {
         let en = isEnglish(locale)
-        var parts = [subtitle(radar, locale: locale)]
+        let sub = subtitle(radar, locale: locale)
+        var parts = [sub]
         if let limit = radar.maxspeed { parts.append(en ? "limit \(limit) km/h" : "límite \(limit) km/h") }
-        if let direction = radar.directionText { parts.append(en ? "towards \(directionName(direction, locale: locale))" : "sentido \(directionName(direction, locale: locale))") }
+        if let direction = radar.directionText, sub.range(of: direction, options: .caseInsensitive) == nil {
+            parts.append(en ? "towards \(directionName(direction, locale: locale))" : "sentido \(directionName(direction, locale: locale))")
+        }
         return parts.joined(separator: " · ")
     }
 

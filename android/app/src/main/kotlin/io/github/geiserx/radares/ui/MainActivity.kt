@@ -82,15 +82,19 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun Tabs(graph: AppGraph, onReonboard: () -> Unit) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
-    val tabs = listOf(R.string.tab_map, R.string.tab_status, R.string.tab_sources)
+    val tabs = listOf(
+        R.string.tab_map to R.drawable.ic_tab_map,
+        R.string.tab_status to R.drawable.ic_tab_status,
+        R.string.tab_sources to R.drawable.ic_tab_sources,
+    )
     Scaffold(
         bottomBar = {
             NavigationBar {
-                tabs.forEachIndexed { i, label ->
+                tabs.forEachIndexed { i, (label, icon) ->
                     NavigationBarItem(
                         selected = tab == i,
                         onClick = { tab = i },
-                        icon = { Icon(painterResource(R.drawable.ic_stat_radar), contentDescription = null) },
+                        icon = { Icon(painterResource(icon), contentDescription = null) },
                         label = { Text(stringResource(label)) },
                     )
                 }

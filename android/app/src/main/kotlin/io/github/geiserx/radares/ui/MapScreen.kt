@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // Mapa: OpenStreetMap raster tiles through osmdroid, the published radars within 5 km of the map centre as markers
-// (tap one for its source), and the card from the drive snapshot ("Sin radares cerca" when idle). The card is for
-// a glance while the app happens to be open; the warnings never depend on it.
+// coloured by kind like the iOS map (tap one for its source), and the card from the drive snapshot ("Sin radares
+// cerca" when idle). The card is for a glance while the app happens to be open; the warnings never depend on it.
 //
 // OSM tile policy (https://operations.osmfoundation.org/policies/tiles/): a user agent that names the app and its
 // repository, the visible attribution, osmdroid's own cache of tiles already viewed, and nothing else: no
@@ -12,6 +12,9 @@ package io.github.geiserx.radares.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import io.github.geiserx.radares.AppGraph
 import io.github.geiserx.radares.BuildConfig
 import io.github.geiserx.radares.R
@@ -44,6 +48,7 @@ import io.github.geiserx.radares.core.Thresholds
 import io.github.geiserx.radares.core.engine.DriveContent
 import io.github.geiserx.radares.core.feed.RadarStore
 import io.github.geiserx.radares.core.model.Coordinate
+import io.github.geiserx.radares.core.model.Kind
 import io.github.geiserx.radares.core.phrasing.Phrasing
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapListener
@@ -135,6 +140,7 @@ private fun createMap(context: Context, attribution: String): MapView {
 private fun showRadars(map: MapView, store: RadarStore?, locale: Locale, sourceLabel: String) {
     val center = map.mapCenter.let { Coordinate(it.latitude, it.longitude) }
     map.overlays.removeAll { it is Marker }
+    val icons = mutableMapOf<Kind, Drawable>()
     store?.all?.asSequence()
         ?.filter { RadarStore.distance(center, it) <= Thresholds.mapRadiusM }
         ?.take(300)
@@ -144,10 +150,42 @@ private fun showRadars(map: MapView, store: RadarStore?, locale: Locale, sourceL
                 title = Phrasing.kindTitle(radar, locale)
                 snippet = Phrasing.body(radar, locale)
                 subDescription = sourceLabel.replace("%s", radar.attribution.ifEmpty { radar.source })
-                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                icon = icons.getOrPut(radar.kind) { markerIcon(map.context, radar.kind) }
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
             })
         }
     map.invalidate()
+}
+
+/** The marker's colour and glyph per kind, the same as the iOS map: red camera, orange road, blue car, purple
+ *  truck, grey question mark. Colours are iOS's dark-mode system colours. */
+internal fun markerStyle(kind: Kind): Pair<Int, Int> = when (kind) {
+    Kind.FIXED -> 0xFFFF453A.toInt() to R.drawable.ic_stat_radar
+    Kind.SECTION, Kind.STRETCH -> 0xFFFF9F0A.toInt() to R.drawable.ic_marker_road
+    Kind.MOBILE_ANNOUNCED, Kind.MOBILE_RECURRING -> 0xFF0A84FF.toInt() to R.drawable.ic_marker_car
+    Kind.TRAILER -> 0xFFBF5AF2.toInt() to R.drawable.ic_marker_truck
+    Kind.REPORTED -> 0xFF8E8E93.toInt() to R.drawable.ic_marker_question
+}
+
+/** A filled disc in the kind's colour with a white rim and the white glyph inside, 30 dp across. */
+private fun markerIcon(context: Context, kind: Kind): Drawable {
+    val (color, glyph) = markerStyle(kind)
+    val density = context.resources.displayMetrics.density
+    val size = (30 * density).toInt()
+    val disc = GradientDrawable().apply {
+        shape = GradientDrawable.OVAL
+        setColor(color)
+        setStroke((2 * density).toInt(), android.graphics.Color.WHITE)
+        setSize(size, size)
+    }
+    // The layer's intrinsic size is the glyph's size plus its insets, so the 24 dp glyph is sized down to fit
+    // inside 30 dp; left at 24 dp it would make the marker 38 dp.
+    val inset = (7 * density).toInt()
+    val glyphSize = size - 2 * inset
+    return LayerDrawable(arrayOf(disc, ContextCompat.getDrawable(context, glyph)!!)).apply {
+        setLayerSize(1, glyphSize, glyphSize)
+        setLayerInset(1, inset, inset, inset, inset)
+    }
 }
 
 @Composable

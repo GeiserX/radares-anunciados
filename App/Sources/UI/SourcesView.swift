@@ -1,7 +1,7 @@
 // Lane: app
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// Fuentes (design 8): every source's attribution verbatim with its link and count, the database licence, the
+// Fuentes (design 8): every source's attributions verbatim with its link and count, the database licence, the
 // OpenStreetMap and DGT credits, and the app's own licence.
 
 import RadaresCore
@@ -12,25 +12,19 @@ struct SourcesView: View {
 
     private struct Source: Identifiable {
         let id: String
-        let name: String
-        let attribution: String
+        let attributions: [String]
         let url: URL?
         let count: Int
     }
 
     private var sources: [Source] {
         guard let store = model.store else { return [] }
-        // One row per distinct (source, attribution): a source whose radars carry different strings shows them all.
-        let groups = Dictionary(grouping: store.all) { "\($0.source)\n\($0.attribution)" }
-        return groups.values.compactMap { radars -> Source? in
-            guard let first = radars.first else { return nil }
-            return Source(
-                id: "\(first.source)\n\(first.attribution)",
-                name: first.source,
-                attribution: first.attribution,
-                url: radars.compactMap(\.url).first,
-                count: radars.count
-            )
+        // One row per source with its total count; each distinct attribution string once, the most used first.
+        let groups = Dictionary(grouping: store.all, by: \.source)
+        return groups.map { source, radars in
+            let counts = Dictionary(grouping: radars, by: \.attribution).mapValues(\.count)
+            let attributions = counts.sorted { ($0.value, $1.key) > ($1.value, $0.key) }.map(\.key)
+            return Source(id: source, attributions: attributions, url: radars.compactMap(\.url).first, count: radars.count)
         }
         .sorted { ($0.count, $1.id) > ($1.count, $0.id) }
     }
@@ -41,11 +35,11 @@ struct SourcesView: View {
                 ForEach(sources) { source in
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text(source.name).font(.headline)
+                            Text(source.id).font(.headline)
                             Spacer()
                             Text(source.count.formatted()).monospacedDigit().foregroundStyle(.secondary)
                         }
-                        Text(source.attribution).font(.subheadline)
+                        ForEach(source.attributions, id: \.self) { Text($0).font(.subheadline) }
                         if let url = source.url {
                             Link(url.host() ?? url.absoluteString, destination: url).font(.caption)
                         }

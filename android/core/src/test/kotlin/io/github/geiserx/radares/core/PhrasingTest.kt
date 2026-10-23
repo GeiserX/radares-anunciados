@@ -37,6 +37,10 @@ class PhrasingTest {
         val q = Phrasing.make(event(makeRadar(directionText = "ZARAGOZA"), distance = 650.0), es)
         assertEquals("Radar fijo a 650 metros, sentido Zaragoza.", q.spoken)
         assertEquals("Radar fijo A-2 km 202.3 · sentido Zaragoza", q.body)
+        // The DGT name already carries the direction: the body names it once.
+        val dgt = makeRadar(name = "Radar fijo A-2 km 202.3 (sentido ZARAGOZA)", directionText = "ZARAGOZA")
+        assertEquals("Radar fijo A-2 km 202.3 (sentido ZARAGOZA)", Phrasing.make(event(dgt), es).body)
+        assertEquals("Radar fijo a 800 metros, sentido Zaragoza.", Phrasing.make(event(dgt), es).spoken)
         assertEquals("Radar fijo a 800 metros, sentido Donostia / San Sebastián. Límite 90.", Phrasing.make(event(makeRadar(maxspeed = 90, directionText = "DONOSTIA / SAN SEBASTIÁN")), es).spoken)
     }
 

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Map marker glyph for a section or stretch: a road with a dashed centre line. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M8.5,3h1.5L7,21H3.5zM14,3h1.5L20.5,21H17zM11.25,4h1.5v3h-1.5zM11.25,9h1.5v4h-1.5zM11.25,15h1.5v5h-1.5z" />
+</vector>
