@@ -126,7 +126,9 @@ jobs:
           apk=android/app/build/outputs/apk/release/app-release.apk
           test -s "$apk" || { echo "::error::$apk was not built (unsigned builds are named app-release-unsigned.apk)"; exit 1; }
           "$apksigner" verify --verbose --print-certs "$apk" | tee "$RUNNER_TEMP/apksigner.txt"
-          signed=$(awk -F': ' '/^Signer #1 certificate SHA-256 digest:/ {print $2; exit}' "$RUNNER_TEMP/apksigner.txt")
+          # Plain output says "Signer #1 certificate SHA-256 digest:"; --verbose prints one block per scheme instead,
+          # "V2 Signer: certificate SHA-256 digest:" for a minSdk 29 APK signed with v2 only.
+          signed=$(awk -F': ' '/^(Signer #1|V[0-9.]+ Signer:) certificate SHA-256 digest:/ {print $NF; exit}' "$RUNNER_TEMP/apksigner.txt")
           published=$(awk '/^## Verifying a download/ {on=1; next} /^## / {on=0} on' docs/ANDROID.md \
             | grep -oE '([0-9A-Fa-f]{2}:){31}[0-9A-Fa-f]{2}' | head -1 | tr -d ':' | tr 'A-F' 'a-f')
           if [ -z "$published" ]; then
