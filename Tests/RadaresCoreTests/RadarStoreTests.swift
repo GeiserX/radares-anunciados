@@ -8,7 +8,7 @@ final class RadarStoreTests: XCTestCase {
     let a2 = Coordinate.at(41.30326, -1.94488)
 
     func testCandidatesAreOrderedByGateDistanceAndBounded() throws {
-        let store = try Fixtures.store()
+        let store = try Fixtures.sampleStore()
         XCTAssertEqual(store.count, 208)
         XCTAssertEqual(store.countsByKind[.stretch], 60)
         let near = store.candidates(near: a2, within: 1200, on: t0)
@@ -21,7 +21,7 @@ final class RadarStoreTests: XCTestCase {
     /// A line is a candidate by its nearer gate or by its chord (design 2.5: a car that joined between the gates
     /// must see the stretch); a point 2 km beside the chord is not.
     func testALineIsFoundByItsNearerGateOrByItsChord() throws {
-        let store = try Fixtures.store()
+        let store = try Fixtures.sampleStore()
         let corridor = try Fixtures.radar("dgt_invive-Tramo_Invive_344")
         let east = try XCTUnwrap(corridor.end)
         let nearEast = Geo.destination(from: east, bearingDegrees: 90, metres: 500)
@@ -37,7 +37,7 @@ final class RadarStoreTests: XCTestCase {
     }
 
     func testInactiveAndReportedAreNeverCandidates() throws {
-        let store = try Fixtures.store()
+        let store = try Fixtures.sampleStore()
         let inactive = try Fixtures.radar("leon-2026-10-06-avenida-de-europa-0")
         XCTAssertFalse(inactive.active)
         XCTAssertFalse(store.candidates(near: inactive.start, within: 50, on: madridDate(2026, 10, 6)).contains { $0.id == inactive.id })
@@ -48,7 +48,7 @@ final class RadarStoreTests: XCTestCase {
     }
 
     func testAnnouncedMobileRadarIsAlertableOnlyOnItsMadridDays() throws {
-        let store = try Fixtures.store()
+        let store = try Fixtures.sampleStore()
         let leon = try Fixtures.radar("leon-2026-10-07-avenida-de-los-antibioticos-2")
         let ids = { (day: Date) in store.candidates(near: leon.start, within: 50, on: day).map(\.id) }
         XCTAssertEqual(ids(madridDate(2026, 10, 7, 0, 1)), [leon.id])
@@ -58,7 +58,7 @@ final class RadarStoreTests: XCTestCase {
     }
 
     func testMadridMidnightNotUTCMidnight() throws {
-        let store = try Fixtures.store()
+        let store = try Fixtures.sampleStore()
         let murcia = try XCTUnwrap(store.all.first { $0.source == "murcia" && $0.active })
         let to = try XCTUnwrap(murcia.validTo)
         // 22:30 UTC on the last valid day is already 00:30 of the next day in Madrid (CEST): no longer alertable.
@@ -72,7 +72,7 @@ final class RadarStoreTests: XCTestCase {
     }
 
     func testRadarByIdAndMissingId() throws {
-        let store = try Fixtures.store()
+        let store = try Fixtures.sampleStore()
         XCTAssertEqual(store.radar(id: "dgt-CABINACINEMOMETRO_120001")?.name, "Radar fijo A-2 km 202.3 (sentido ZARAGOZA)")
         XCTAssertNil(store.radar(id: "nope"))
         XCTAssertNil(store.radar(id: "dgt-CVM_161274-from"), "merged twins are gone")

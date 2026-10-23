@@ -12,6 +12,7 @@ the Kotlin port must agree with this file, not the other way round. docs/SPEC.md
 import json
 import math
 import os
+import runpy
 from datetime import datetime, timedelta, timezone
 
 R = 6371000.0
@@ -479,6 +480,689 @@ vector(
     r,
     [entered(SEC, d, section_sentence(SEC, d)), exited(SEC, "farGate", "Fin de tramo.")],
     snapshots=[{"fixIndex": mid, "stretch": SEC, "remainingMetres": round(remaining), "tolerance": 60, "avgKmh": 100, "avgTolerance": 3, "phase": "insideStretch"}],
+)
+
+# =====================================================================================================================
+# Road geometry (design 2.3, 2.5): the synthetic scenarios of make-roads-fixture.py. The expectations come from a
+# Python model of the road rule written from the design, never from the Swift engine: candidate segments pass the
+# lateral AND the course test, the smallest lateral wins, the along-road position may not jump further than
+# 3 x speed x seconds + 50 m, distance = length - along, closing over two decreases, pass at length - 30.
+# =====================================================================================================================
+
+ROADS_FIXTURE = runpy.run_path(os.path.join(ROOT, "scripts", "make-roads-fixture.py"), run_name="roads_fixture")
+GEOM = ROADS_FIXTURE["GEOMETRY"]
+ROADS_JSON = json.load(open(os.path.join(ROOT, "Tests", "RadaresCoreTests", "Fixtures", "roads-sample.json"), encoding="utf-8"))
+for f in json.load(open(os.path.join(ROOT, "Tests", "RadaresCoreTests", "Fixtures", "feed-sample-roads.geojson"), encoding="utf-8"))["features"]:
+    g = f["geometry"]
+    c = g["coordinates"]
+    if g["type"] == "Point":
+        RADARS[f["id"]] = {"start": (c[1], c[0]), "end": None, "p": f["properties"]}
+    else:
+        RADARS[f["id"]] = {"start": (c[0][1], c[0][0]), "end": (c[-1][1], c[-1][0]), "p": f["properties"]}
+
+LAT_M, LAT_FACTOR, COURSE_DEG, JUMP_FACTOR, JUMP_FLOOR = 25.0, 1.5, 45.0, 3.0, 50.0
+OFF_M, OFF_ACC, OFF_FIXES = 60.0, 20.0, 3
+LOSS_FIXES, LOSS_ACC = 5, 50.0
+EXIT_GATE, EXIT_SLACK, EXIT_TIME, MID_FIXES, MID_XT = 300.0, 1000.0, 2.0, 3, 150.0
+
+
+def angle_diff(a, b):
+    d = abs((a % 360) - (b % 360))
+    return 360 - d if d > 180 else d
+
+
+class PL:
+    """A decoded polyline in a flat frame around its box middle, as Sources/RadaresCore/Roads/Polyline.swift."""
+
+    def __init__(self, coords):
+        v = []
+        for c in coords:
+            if not v or v[-1] != c:
+                v.append(c)
+        self.v = v
+        lats, lons = [c[0] for c in v], [c[1] for c in v]
+        self.lat0, self.lon0 = (min(lats) + max(lats)) / 2, (min(lons) + max(lons)) / 2
+        self.ky = R * math.pi / 180
+        self.kx = self.ky * math.cos(math.radians(self.lat0))
+        self.xs = [(c[1] - self.lon0) * self.kx for c in v]
+        self.ys = [(c[0] - self.lat0) * self.ky for c in v]
+        self.cum = [0.0]
+        self.brg = []
+        for i in range(1, len(v)):
+            dx, dy = self.xs[i] - self.xs[i - 1], self.ys[i] - self.ys[i - 1]
+            self.cum.append(self.cum[-1] + math.hypot(dx, dy))
+            self.brg.append((math.degrees(math.atan2(dx, dy)) + 360) % 360)
+        self.length = self.cum[-1]
+
+    def projections(self, p):
+        px, py = (p[1] - self.lon0) * self.kx, (p[0] - self.lat0) * self.ky
+        out = []
+        for i in range(len(self.xs) - 1):
+            ax, ay = self.xs[i], self.ys[i]
+            dx, dy = self.xs[i + 1] - ax, self.ys[i + 1] - ay
+            l2 = dx * dx + dy * dy
+            t = ((px - ax) * dx + (py - ay) * dy) / l2 if l2 > 0 else 0
+            t = min(1, max(0, t))
+            lat = math.hypot(px - (ax + t * dx), py - (ay + t * dy))
+            out.append((lat, self.cum[i] + t * (self.cum[i + 1] - self.cum[i]), i, self.brg[i]))
+        return out
+
+    def min_lateral(self, p):
+        return min(x[0] for x in self.projections(p))
+
+    def at(self, along):
+        """Lat/lon at `along` metres (for building car paths)."""
+        along = max(0, min(self.length, along))
+        i = 1
+        while i < len(self.cum) - 1 and self.cum[i] < along:
+            i += 1
+        seg = self.cum[i] - self.cum[i - 1]
+        f = (along - self.cum[i - 1]) / seg if seg > 0 else 0
+        x = self.xs[i - 1] + f * (self.xs[i] - self.xs[i - 1])
+        y = self.ys[i - 1] + f * (self.ys[i] - self.ys[i - 1])
+        return (self.lat0 + y / self.ky, self.lon0 + x / self.kx)
+
+    def chunk_boxes(self, max_m=2000.0):
+        boxes, start = [], 0
+        while start < len(self.v) - 1:
+            end = start + 1
+            while end < len(self.v) - 1 and self.cum[end + 1] - self.cum[start] <= max_m:
+                end += 1
+            pts = self.v[start:end + 1]
+            boxes.append((min(p[0] for p in pts), max(p[0] for p in pts), min(p[1] for p in pts), max(p[1] for p in pts)))
+            start = end
+        return boxes
+
+
+def approaches_of(rid):
+    e = ROADS_JSON["features"].get(rid)
+    return [PL(ROADS_FIXTURE["decode"](a["polyline"])) for a in e["approaches"]] if e and "approaches" in e else None
+
+
+def line_of(rid):
+    e = ROADS_JSON["features"][rid]
+    return PL(ROADS_FIXTURE["decode"](e["line"])), [PL(ROADS_FIXTURE["decode"](a["polyline"])) for a in e["gates"]["start"]], [PL(ROADS_FIXTURE["decode"](a["polyline"])) for a in e["gates"]["end"]]
+
+
+def road_match(pls, pos, course, acc, prev=None, t=None, speed=None, forward=True, backward=False):
+    limit = max(LAT_M, LAT_FACTOR * acc)
+    jump = None
+    if prev is not None:
+        jump = JUMP_FACTOR * max(0.0, speed or 0.0) * max(0.0, (t - prev["at"]).total_seconds()) + JUMP_FLOOR
+    best = None
+    for k, pl in enumerate(pls):
+        for lat, along, seg, brg in pl.projections(pos):
+            if lat > limit:
+                continue
+            fwd = True
+            if course is not None:
+                if forward and angle_diff(course, brg) <= COURSE_DEG:
+                    fwd = True
+                elif backward and angle_diff(course, brg + 180) <= COURSE_DEG:
+                    fwd = False
+                else:
+                    continue
+            if prev is not None and prev["index"] == k and abs(along - prev["along"]) > jump:
+                continue
+            if best is None or lat < best["lateral"]:
+                best = {"index": k, "lateral": lat, "along": along, "forward": fwd, "length": pl.length}
+    return best
+
+
+def road_evaluate(pls, f, t, course, speed, prev, warn_d):
+    m = road_match(pls, (f["lat"], f["lon"]), course, f["accuracy"], prev, t, speed)
+    if m is None:
+        return None
+    d = m["length"] - m["along"]
+    earlier = prev["dists"] if prev is not None and prev["index"] == m["index"] else []
+    closing = len(earlier) >= 2 and earlier[-1] - d >= 1 and earlier[-2] - earlier[-1] >= 1
+    first = earlier[0] if earlier else d
+    kept = earlier + [d]
+    if len(kept) > 8:
+        del kept[1]
+    level = "full" if (m["along"] < m["length"] and closing and d <= warn_d) else None
+    return {**m, "distance": d, "level": level, "late": first < warn_d - LATE_BAND,
+            "hist": {"index": m["index"], "along": m["along"], "at": t, "dists": kept}}
+
+
+def fix_time(f):
+    return datetime.fromisoformat(f["t"])
+
+
+def median3(speeds):
+    s = sorted(speeds)
+    n = len(s)
+    return None if n == 0 else (s[n // 2] if n % 2 else (s[n // 2 - 1] + s[n // 2]) / 2)
+
+
+def straight_eval(f, gate, course, prev, warn_d, bearing_deg=None, bidir=False):
+    pos = (f["lat"], f["lon"])
+    d = hav(pos, gate)
+    ahead = angle_diff(course, bearing(pos, gate)) <= 60
+    closing = len(prev) >= 2 and prev[-1] - d >= 1 and prev[-2] - prev[-1] >= 1
+    match = True if (bearing_deg is None or bidir) else angle_diff(course, bearing_deg) <= 90
+    first = prev[0] if prev else d
+    level = None
+    if ahead and closing and d <= warn_d:
+        level = "full" if match else "visual"
+    return {"distance": d, "level": level, "late": first < warn_d - LATE_BAND, "ahead": ahead, "match": match}
+
+
+def sim_point(fixes, rid, use_roads=True):
+    """One point radar through the rules of design 2.3 and 2.4 with road geometry: returns the warn and passed
+    events with their fix index, and the hidden fires. Single radar, so pacing never applies."""
+    r = RADARS[rid]
+    p = r["p"]
+    gate = r["start"]
+    brg_deg, bidir = None, False
+    if p.get("bearing") is not None and p.get("direction_semantics") == "travel":
+        brg_deg = p["bearing"] % 360
+    elif p.get("direction") == "both":
+        bidir = True
+    elif p.get("direction") and p["direction"].lstrip("-").replace(".", "").isdigit():
+        brg_deg = float(p["direction"]) % 360
+    high = p.get("direction_confidence") == "high" and brg_deg is not None
+    pls = approaches_of(rid) if use_roads else None
+    events, hidden = [], []
+    speeds, hist, road_hist, off_run = [], [], None, 0
+    fired = None  # dict level/held/hidden
+    passed = False
+    watch = None
+    for i, f in enumerate(fixes):
+        t = fix_time(f)
+        if f["speed"] is not None and f["speed"] >= 0:
+            speeds = (speeds + [f["speed"]])[-3:]
+        med = median3(speeds)
+        w = warn(med or 0)
+        pos = (f["lat"], f["lon"])
+        d = hav(pos, gate)
+        course = f["course"]
+        match = None
+        cand = d <= w + BAND
+        prev = hist[:]
+        if cand:
+            hist = hist + [d]
+            if len(hist) > 8:
+                del hist[1]
+            if pls is not None:
+                off = min(pl.min_lateral(pos) for pl in pls) > OFF_M and f["accuracy"] <= OFF_ACC
+                off_run = off_run + 1 if off else 0
+                match = road_evaluate(pls, f, t, course, med if med is not None else f["speed"], road_hist, w) if course is not None else None
+                road_hist = match["hist"] if match else None
+        else:
+            hist, road_hist, off_run = [], None, 0
+        fired_now = False
+        if cand and course is not None:
+            if fired is None:
+                kind, a = None, None
+                if match is not None:
+                    if match["level"]:
+                        kind, a = "normal", {"distance": match["distance"], "level": match["level"], "late": match["late"], "match": True}
+                else:
+                    a = straight_eval(f, gate, course, prev, w, brg_deg, bidir)
+                    if a["level"] == "full":
+                        kind = "held" if (pls is not None and off_run >= OFF_FIXES) else "normal"
+                    elif a["level"] == "visual":
+                        kind = "hidden" if high else "normal"
+                if kind:
+                    level = "visual" if kind in ("held", "hidden") else a["level"]
+                    if level == "full" and a["distance"] < NO_VOICE:
+                        level = "visual"
+                    fired = {"level": level, "held": kind == "held", "hidden": kind == "hidden"}
+                    fired_now = True
+                    watch = [a["distance"], a["distance"], 0]
+                    if kind == "hidden":
+                        hidden.append((i, rid))
+                    else:
+                        e = warn_event(rid, level, a["distance"], late=a["late"], opposite=not a["match"],
+                                       spoken=point_sentence(p, a["distance"]) if level == "full" else None)
+                        if kind == "held":
+                            e["held"] = True
+                        events.append((i, e))
+            elif fired["held"] and not passed and match is not None and match["level"] == "full" and match["distance"] >= NO_VOICE:
+                fired = {"level": "full", "held": False, "hidden": False}
+                fired_now = True
+                watch = [match["distance"], match["distance"], 0]
+                events.append((i, warn_event(rid, "full", match["distance"], late=match["late"], spoken=point_sentence(p, match["distance"]))))
+        if fired is not None and not passed and not fired_now:
+            is_passed = False
+            if match is not None:
+                is_passed = match["along"] >= match["length"] - 30
+                if not is_passed:
+                    watch = [d, d, 0]
+                    continue
+            else:
+                is_passed = d < 30
+                if not is_passed:
+                    if d < watch[0]:
+                        watch[0], watch[2] = d, 0
+                    elif d - watch[1] >= 1:
+                        watch[2] += 1
+                        is_passed = watch[2] >= 3 and d - watch[0] >= max(3.0, f["accuracy"])
+                    else:
+                        watch[2] = 0
+            watch[1] = d
+            if is_passed:
+                passed = True
+                if not fired["hidden"]:
+                    events.append((i, {"kind": "passed", "radar": rid, "_d": d}))
+    return events, hidden
+
+
+def follow(route, path, speed, offset_m=0.0, bias=None, stop_after=None, accuracy=5.0):
+    """Drive a lat/lon path at `speed` m/s, one fix per second, course = the travel direction of the path where the car
+    is. `offset_m` moves the reported position that far to the left of the travel direction, `bias` = (heading,
+    metres) moves it the same way on every fix (a GPS bias). `stop_after` metres ends the drive early."""
+    segs = []
+    for k in range(1, len(path)):
+        segs.append((path[k - 1], path[k], hav(path[k - 1], path[k]), bearing(path[k - 1], path[k])))
+    total = sum(s[2] for s in segs)
+    if stop_after is not None:
+        total = min(total, stop_after)
+    s = 0.0
+    k = 0
+    acc_along = 0.0
+    while True:
+        s += speed
+        if s > total + 1e-6:
+            break
+        while k < len(segs) - 1 and acc_along + segs[k][2] < s:
+            acc_along += segs[k][2]
+            k += 1
+        a, b, L, brg = segs[k]
+        pos = dest(a, brg, s - acc_along)
+        if offset_m:
+            pos = dest(pos, (brg - 90) % 360, offset_m)
+        if bias:
+            pos = dest(pos, bias[0], bias[1])
+        route.pos = pos
+        route.t += timedelta(seconds=1)
+        route.fixes.append(route.fix(brg, speed, accuracy, False))
+    return route
+
+
+def local(name, pts):
+    fr = GEOM[name]["frame"]
+    return fr.lls(pts)
+
+
+def sorted_events(*lists):
+    """Merge per-radar event lists by fix index, warns before passes on one fix (the engine's order)."""
+    merged = []
+    for lst in lists:
+        merged += lst
+    order = {"stretchEntered": 0, "stretchExited": 0, "warn": 1, "passed": 2}
+    merged.sort(key=lambda x: (x[0], order[x[1]["kind"]], x[1].get("distance", 0)))
+    out = []
+    for _, e in merged:
+        e = dict(e)
+        e.pop("_d", None)
+        out.append(e)
+    return out
+
+
+def passed_near(rid, events, within=30.0):
+    """The passed event with a distance check: the car is within `within` m of the radar when it is marked passed."""
+    for i, e in events:
+        if e["kind"] == "passed":
+            assert e["_d"] < within, (rid, e["_d"])
+            e.update({"distance": round(within / 2, 1), "tolerance": within / 2})
+
+
+# ---- 14. Straight road with a parallel road 150 m off and an overpass 100 m before the radar ----
+SR = "fixed-straight-road"
+st = GEOM["straight"]
+road_lls = local("straight", st["road"])
+radar_ll = RADARS[SR]["start"]
+on_road = Route(road_lls[0])
+on_road.fixes = []
+# From 2 km before the radar along the road (500 m before its approach polyline starts) to 300 m past it.
+follow(on_road, road_lls, 90 / 3.6, stop_after=2800.0)
+on_road.fixes = on_road.fixes[int(500 / 25):]
+ev, hid = sim_point(on_road.fixes, SR)
+assert [e["kind"] for _, e in ev] == ["warn", "passed"] and ev[0][1]["level"] == "full", ev
+assert abs(ev[0][1]["distance"] - 625) <= 40, ev
+passed_near(SR, ev)
+vector("road-on-approach-2km", "90 km/h along the road into a radar with an approach polyline, from 2 km before it: one full warning at 625 +- 40 m along the road, passed within 30 m of the radar.", on_road, sorted_events(ev))
+
+par = Route(road_lls[0])
+follow(par, road_lls, 90 / 3.6, offset_m=150.0, stop_after=2800.0)
+par.fixes = par.fixes[int(500 / 25):]
+ev, hid = sim_point(par.fixes, SR)
+ev_old, _ = sim_point(par.fixes, SR, use_roads=False)
+assert ev_old[0][1]["level"] == "full", "the straight-line rule must speak here, or the vector proves nothing"
+assert [e["kind"] for _, e in ev] == ["warn", "passed"] and ev[0][1].get("held") and ev[0][0] == ev_old[0][0], (ev, ev_old)
+vector("road-parallel-150m-from-2km", "A road 150 m beside the radar's road, driven from 2 km before it at 90 km/h: the straight-line rule fires where it always did, but the car is more than 60 m from the radar's road on three accurate fixes, so the warning is held: a silent notification, no voice; then passed.", par, sorted_events(ev))
+
+# The overpass: a road crossing the radar's road at 90 degrees, 100 m before the radar, driven across.
+cross_pt = dest(radar_ll, (st["heading"] + 180) % 360, 100.0)
+over_start = dest(cross_pt, (st["heading"] + 270) % 360, 1500.0)
+over = Route(over_start)
+follow(over, [over_start, dest(cross_pt, (st["heading"] + 90) % 360, 1000.0)], 90 / 3.6)
+ev, hid = sim_point(over.fixes, SR)
+ev_old, _ = sim_point(over.fixes, SR, use_roads=False)
+assert ev_old and ev_old[0][1]["level"] == "full", "the straight-line rule speaks on the overpass today"
+assert all(e["kind"] != "warn" or (e["level"] == "visual" and e.get("held")) for _, e in ev), ev
+vector("road-overpass-90deg", "A road crossing over the radar's road at 90 degrees, 100 m before the radar, at 90 km/h: the straight-line rule would speak (the radar is straight ahead of the overpass), but the car is far off the radar's road, so the warning is held silent and never spoken. The held row is the design's: a car clearly off the road still gets a silent notification.", over, sorted_events(ev))
+
+# ---- 15. The 1,000 m arc ----
+AR = "fixed-arc-road"
+arc_lls = local("arc", GEOM["arc"]["road"])
+r = Route(arc_lls[0])
+follow(r, arc_lls, 90 / 3.6)
+r.fixes = r.fixes[int((2618 - 2000) / 25):]
+ev, _ = sim_point(r.fixes, AR)
+assert [e["kind"] for _, e in ev] == ["warn", "passed"] and ev[0][1]["level"] == "full", ev
+passed_near(AR, ev)
+vector("road-arc-1000m", "90 km/h round a 1,000 m radius curve into a radar: the warning comes at 625 m measured along the curve, not as the crow flies, and the pass is at the radar.", r, sorted_events(ev))
+
+# ---- 16. Three switchbacks ----
+HR = "fixed-hairpin-road"
+hp = GEOM["hairpin"]
+to_radar_lls = local("hairpin", hp["to_radar"])
+appr = approaches_of(HR)[0]
+start_along = appr.length - 1480.0
+hairpin_road_lls = local("hairpin", hp["road"])
+# Start on the approach, 1,480 m before the radar along the road, 40 km/h, and drive 200 m past it on the top leg.
+start_ll = appr.at(start_along)
+def hairpin_path():
+    pts = local("hairpin", hp["road"])
+    # Cut the road at the start point (on leg 1).
+    k = min(range(len(pts)), key=lambda j: hav(pts[j], start_ll))
+    return [start_ll] + pts[k + 1:]
+hpath = hairpin_path()
+r = Route(start_ll)
+follow(r, hpath, 40 / 3.6, stop_after=1480.0 + 200.0)
+ev, _ = sim_point(r.fixes, HR)
+assert [e["kind"] for _, e in ev] == ["warn", "passed"] and ev[0][1]["level"] == "full", ev
+passed_near(HR, ev)
+vector("road-hairpin", "40 km/h up a road with three switchbacks to a radar on the top leg: the straight-line distance falls and rises on every leg, but along the road it only falls, so exactly one full warning at the along-road warn distance and the pass at the radar.", r, sorted_events(ev))
+hairpin_fixes = r.fixes
+
+rb = Route(start_ll)
+follow(rb, hpath, 40 / 3.6, bias=(0.0, 20.0), stop_after=1480.0 + 200.0)
+ev, _ = sim_point(rb.fixes, HR)
+assert [e["kind"] for _, e in ev] == ["warn", "passed"] and ev[0][1]["level"] == "full", ev
+first_pass = next(i for i, e in ev if e["kind"] == "passed")
+assert hav((rb.fixes[first_pass]["lat"], rb.fixes[first_pass]["lon"]), RADARS[HR]["start"]) < 60, "no pass before the radar"
+vector("road-hairpin-biased", "The switchback drive with every fix 20 m north of the road, toward the leg above: the nearer leg runs the other way, so the course test keeps the car on its own leg; still exactly one full warning, and no pass before the radar.", rb, sorted_events(ev))
+
+ev, _ = sim_point(hairpin_fixes, HR, use_roads=False)
+vector("road-hairpin-fallback", "The switchback drive with no road geometry: today's straight-line rule, which fires on the bottom leg while the radar is 105 m away above it and then marks it passed as the car climbs away from it. This is the status quo the road rule fixes, kept so the fallback stays byte for byte.", Route(start_ll), sorted_events(ev), roadsDisabled=True)
+VECTORS[-1]["fixes"] = hairpin_fixes
+fallback_events = VECTORS[-1]["expected"]
+
+# ---- 17. Dual carriageway with a high- and a low-confidence travel bearing ----
+du = GEOM["dual"]
+north_lls, south_lls = local("dual", du["north"]), local("dual", du["south"])
+DH, DL = "fixed-dual-high-road", "fixed-dual-low-road"
+r = Route(north_lls[0])
+follow(r, north_lls, 100 / 3.6, stop_after=7500.0)
+r.fixes = r.fixes[int(500 / (100 / 3.6)):]
+eh, _ = sim_point(r.fixes, DH)
+el, _ = sim_point(r.fixes, DL)
+assert [e["level"] for _, e in eh + el if e["kind"] == "warn"] == ["full", "full"], (eh, el)
+vector("road-dual-same", "100 km/h on the northbound carriageway past both radars of the dual carriageway (one with a high-confidence travel bearing, one with a low one): both are the car's flow, two full warnings and two passes.", r, sorted_events(eh, el))
+
+r = Route(south_lls[0])
+follow(r, south_lls, 100 / 3.6)
+r.fixes = [f for f in r.fixes if 1000 <= hav((f["lat"], f["lon"]), south_lls[-1]) <= 5000]
+eh, hid = sim_point(r.fixes, DH)
+el, _ = sim_point(r.fixes, DL)
+assert eh == [] and el == [] and [x[1] for x in hid] == [DH], (eh, el, hid)
+vector("road-dual-opposite-high", "100 km/h on the southbound carriageway, 25 m from a radar whose travel bearing is northbound with high confidence: nothing is shown or spoken. The engine still produces the hidden warning (for the log row with suppressedByDirection), which the harness checks apart.", r, [], hidden=[DH])
+
+r = Route(south_lls[0])
+follow(r, south_lls, 100 / 3.6)
+r.fixes = [f for f in r.fixes if 4800 <= hav((f["lat"], f["lon"]), south_lls[-1]) <= 8500]
+el, hid = sim_point(r.fixes, DL)
+eh, _ = sim_point(r.fixes, DH)
+assert eh == [] and hid == [] and el[0][1]["level"] == "visual" and el[0][1]["opposite"], el
+vector("road-dual-opposite-low", "The same southbound drive past the radar whose northbound bearing has low confidence: shown as sentido contrario, silent, as an OSM bearing is today; then passed.", r, sorted_events(el))
+
+# ---- 18. A side road joining 300 m before the radar ----
+SJ = "fixed-sidejoin-road"
+sj = GEOM["sidejoin"]
+path = local("sidejoin", sj["side"]) + local("sidejoin", [(0.0, 0.0), (0.0, 300.0)])
+r = Route(path[0])
+follow(r, path, 90 / 3.6)
+ev, _ = sim_point(r.fixes, SJ)
+kinds = [(e["kind"], e.get("level"), e.get("held", False)) for _, e in ev]
+assert kinds == [("warn", "visual", True), ("warn", "full", False), ("passed", None, False)], kinds
+assert ev[1][1]["late"] and 200 <= ev[1][1]["distance"] <= 340, ev[1]
+passed_near(SJ, ev)
+vector("road-side-join-late", "90 km/h on a side road that joins the radar's road 300 m before it: while the car is on the side road the straight-line warning is held silent; once it joins the road it is spoken once, late, with the along-road distance; then passed.", r, sorted_events(ev))
+
+# ---- 19. The bowed corridor: gate entry, along, mid-join, polyline loss ----
+CR = "dgt_invive-curve-road"
+line, gates_start, gates_end = line_of(CR)
+co = GEOM["corridor"]
+S_ll, E_ll = RADARS[CR]["start"], RADARS[CR]["end"]
+
+
+def chord_along(p, a, b):
+    """Geo.alongChord, spherical."""
+    d13 = hav(a, p)
+    if d13 <= 0 or hav(a, b) <= 0:
+        return 0.0
+    crs = bearing(a, b)
+    xt = math.asin(math.sin(d13 / R) * math.sin(math.radians(bearing(a, p) - crs)))
+    ratio = min(1, max(-1, math.cos(d13 / R) / math.cos(xt)))
+    along = math.acos(ratio) * R
+    return -along if angle_diff(crs, bearing(a, p)) > 90 else along
+
+
+def sim_corridor(fixes, rid):
+    """One stretch through design 2.5 with a road line: entry along a gate approach (else the cone), the join along
+    the line, the remaining along it (the chord after Thresholds.stretchPolylineLossFixes misses), the four exits."""
+    r = RADARS[rid]
+    p = r["p"]
+    S, E = r["start"], r["end"]
+    chord_len = hav(S, E)
+    road_m = abs(p["km_to"] - p["km_from"]) * 1000
+    boxes = line.chunk_boxes()
+    events, remaining = [], {}
+    speeds, hist, gate_hist, mid_run = [], [], {}, 0
+    inside = None
+    done = False
+    for i, f in enumerate(fixes):
+        t = fix_time(f)
+        if f["speed"] is not None and f["speed"] >= 0:
+            speeds = (speeds + [f["speed"]])[-3:]
+        med = median3(speeds)
+        w = warn(med or 0)
+        pos = (f["lat"], f["lon"])
+        course = f["course"]
+        # A candidate by its chord (store) or by a box of its road (roads.lineCandidates).
+        dlat = (w + BAND) / 111320
+        dlon = (w + BAND) / (111320 * max(0.01, math.cos(math.radians(pos[0]))))
+        in_box = any(not (b[1] < pos[0] - dlat or b[0] > pos[0] + dlat or b[3] < pos[1] - dlon or b[2] > pos[1] + dlon) for b in boxes)
+        along_c = chord_along(pos, S, E)
+        chord_d = hav(pos, S) if along_c <= 0 else hav(pos, E) if along_c >= chord_len else abs(math.asin(math.sin(hav(S, pos) / R) * math.sin(math.radians(bearing(S, pos) - bearing(S, E)))) * R)
+        cand = (not done and inside is None) and (chord_d <= w + BAND or in_box)
+        gd = min(hav(pos, S), hav(pos, E))
+        prev = hist[:]
+        if cand:
+            hist = hist + [gd]
+            if len(hist) > 8:
+                del hist[1]
+        else:
+            hist = [] if inside is None else hist
+        if inside is not None:
+            st = inside
+            far = st["far"]
+            fwd = st["gate"] == S
+            a_chord = min(hav(st["gate"], far), max(0, chord_along(pos, st["gate"], far)))
+            prevo = {"index": 0, "along": st["last"][0], "at": st["last"][1]} if st["last"] else None
+            m = road_match([line], pos, course, f["accuracy"], prevo, t, med if med is not None else f["speed"], forward=fwd, backward=not fwd)
+            if m:
+                st["last"] = (m["along"], t)
+                st["misses"], st["lost"], st["once"] = 0, False, True
+                st["rem"] = max(0, line.length - (m["along"] if fwd else line.length - m["along"]))
+            else:
+                st["last"] = None
+                if f["accuracy"] <= LOSS_ACC:
+                    st["misses"] += 1
+                if st["misses"] >= LOSS_FIXES:
+                    st["lost"] = True
+                if st["lost"] or not st["once"]:
+                    st["rem"] = max(0, st["chord"] - a_chord)
+            remaining[i] = st["rem"]
+            length_m = max(road_m, chord_len, st["chord"], line.length)
+            elapsed = (t - st["t"]).total_seconds()
+            reason = None
+            if hav(pos, far) <= EXIT_GATE:
+                reason = "farGate"
+            elif hav(pos, st["gate"]) > length_m + EXIT_SLACK:
+                reason = "distance"
+            elif st["v"] and elapsed > EXIT_TIME * (length_m / st["v"]):
+                reason = "time"
+            if reason:
+                events.append((i, exited(rid, reason, "Fin de tramo." if reason == "farGate" else None)))
+                inside, done = None, True
+            continue
+        if not cand or course is None:
+            if course is None:
+                mid_run = 0
+            gate_hist = {} if course is None else gate_hist
+            continue
+        entered_now = None
+        matches, on_gate = {}, False
+        kept = {}
+        for side, pls, g, fr in (("start", gates_start, S, E), ("end", gates_end, E, S)):
+            if not pls:
+                continue
+            m = road_evaluate(pls, f, t, course, med if med is not None else f["speed"], gate_hist.get(side), w)
+            if m is None:
+                continue
+            kept[side] = m["hist"]
+            on_gate = True
+            if m["level"] and (side not in matches or m["distance"] < min(x["distance"] for x in matches.values())):
+                matches = {side: dict(m, gate=g, far=fr)}
+        gate_hist = kept
+        if matches:
+            m = list(matches.values())[0]
+            entered_now = (m["gate"], m["far"], m["distance"], None)
+        elif not on_gate:
+            near, far = (S, E) if hav(pos, S) <= hav(pos, E) else (E, S)
+            a = straight_eval(f, near, course, prev, w, None, True)
+            if a["level"] and angle_diff(course, bearing(near, far)) <= 60:
+                entered_now = (near, far, a["distance"], None)
+        if entered_now is None:
+            m = road_match([line], pos, course, f["accuracy"], forward=True, backward=True)
+            ok = m is not None and EXIT_GATE < m["along"] < line.length - EXIT_GATE
+            mid_run = mid_run + 1 if ok else 0
+            if ok and mid_run >= MID_FIXES:
+                rem = line.length - m["along"] if m["forward"] else m["along"]
+                entered_now = ((S, E) if m["forward"] else (E, S)) + (rem, rem)
+                last = (m["along"], t)
+            else:
+                last = None
+        else:
+            last = None
+        if entered_now:
+            g, fr, d, rem = entered_now
+            inside = {"gate": g, "far": fr, "chord": hav(g, fr), "t": t, "v": med, "last": last, "misses": 0, "lost": False,
+                      "once": last is not None, "rem": rem if rem is not None else line.length}
+            remaining[i] = inside["rem"]
+            mid_run = 0
+            spoken = corridor_joined_sentence(rid, rem) if rem is not None else corridor_sentence(rid)
+            events.append((i, entered(rid, d, spoken, tol=60 if rem is not None else 40)))
+    return events, remaining
+
+
+bow_lls = local("corridor", co["bow"])
+gate_in_lls = local("corridor", co["gate_in"])
+beyond_lls = local("corridor", co["beyond_east"])
+full_path = gate_in_lls + bow_lls[1:] + beyond_lls[1:301]
+r = Route(full_path[0])
+follow(r, full_path, 90 / 3.6, stop_after=1500.0 + 1000.0)
+ev, rem = sim_corridor(r.fixes, CR)
+assert [e["kind"] for _, e in ev] == ["stretchEntered"] and abs(ev[0][1]["distance"] - 625) <= 40, ev
+# What the cone would do on the same fixes: the course is more than 60 degrees off the chord until about 200 m.
+cone_i = None
+hist = []
+for i, f in enumerate(r.fixes):
+    pos = (f["lat"], f["lon"])
+    d = hav(pos, S_ll)
+    a = straight_eval(f, S_ll, f["course"], hist, warn(25), None, True)
+    hist = (hist + [d])
+    if a["level"] and angle_diff(f["course"], bearing(S_ll, E_ll)) <= 60:
+        cone_i = i
+        break
+cone_d = hav((r.fixes[cone_i]["lat"], r.fixes[cone_i]["lon"]), S_ll)
+assert cone_d < 300, cone_d
+vector("corridor-curve-gate-entry", f"90 km/h on a road that curves into a bowed mobile corridor and meets it at 40 degrees to its chord: the gate approach enters it at 625 m along the road. The straight-line cone would enter only {int(cone_d)} m before the gate, because the course is more than 60 degrees off the chord until then.", r, sorted_events(ev))
+
+r = Route(full_path[0])
+follow(r, full_path, 90 / 3.6)
+ev, rem = sim_corridor(r.fixes, CR)
+assert [e["kind"] for _, e in ev] == ["stretchEntered", "stretchExited"] and ev[1][1]["exitReason"] == "farGate", ev
+enter_i = ev[0][0]
+mid = enter_i + 200
+along_mid = line.projections((r.fixes[mid]["lat"], r.fixes[mid]["lon"]))
+along_mid = min(along_mid)[1]
+assert abs(rem[mid] - (line.length - along_mid)) < 5
+vector("corridor-curve-along", "The bowed corridor driven end to end: inside, the remaining distance is the road line's length minus the car's position along it (not chord minus projection, 1.4 km short on this bow); Fin de tramo at the far gate.", r, sorted_events(ev),
+       snapshots=[{"fixIndex": mid, "stretch": CR, "remainingMetres": round(line.length - along_mid), "tolerance": 60, "phase": "insideStretch"}])
+
+join_along = line.length / 2 - 600
+mid_path = [line.at(join_along + k * 100) for k in range(int((line.length - join_along) / 100) + 1)] + [line.at(line.length)] + beyond_lls[1:5]
+r = Route(mid_path[0])
+follow(r, mid_path, 90 / 3.6)
+ev, rem = sim_corridor(r.fixes, CR)
+assert [e["kind"] for _, e in ev] == ["stretchEntered", "stretchExited"] and ev[0][0] == 2, ev
+chord_off = abs(math.asin(math.sin(hav(S_ll, mid_path[0]) / R) * math.sin(math.radians(bearing(S_ll, mid_path[0]) - bearing(S_ll, E_ll)))) * R)
+assert chord_off > 1900, chord_off
+mid = 100
+along_mid = min(line.projections((r.fixes[mid]["lat"], r.fixes[mid]["lon"])))[1]
+vector("corridor-curve-mid-join-on-bow", f"The bowed corridor joined from a side road at its middle, {int(chord_off)} m off the chord: the car is on the road line, so it is inside after three fixes and the remaining road is spoken (the chord rule needs 150 m and would never join here).", r, sorted_events(ev),
+       snapshots=[{"fixIndex": mid, "stretch": CR, "remainingMetres": round(line.length - along_mid), "tolerance": 60, "phase": "insideStretch"}])
+
+# Polyline loss: 2.5 km into the bow the car leaves the line for a bypass 400 m inside it, and rejoins 4.5 km later.
+inner = offset_lls = None
+leave_at, back_at = 2500.0, 7000.0
+by = [line.at(leave_at)]
+for k in range(0, 36):
+    a = 3000.0 + k * 100
+    pt = line.at(a)
+    nxt = line.at(a + 10)
+    h = bearing(pt, nxt)
+    by.append(dest(pt, (h + 90) % 360, 400.0))
+by.append(line.at(back_at))
+loss_path = gate_in_lls + [line.at(x * 100) for x in range(1, int(leave_at / 100))] + by + [line.at(back_at + k * 100) for k in range(1, int((line.length - back_at) / 100) + 1)] + [E_ll] + beyond_lls[1:5]
+r = Route(loss_path[0])
+follow(r, loss_path, 90 / 3.6)
+ev, rem = sim_corridor(r.fixes, CR)
+assert [e["kind"] for _, e in ev] == ["stretchEntered", "stretchExited"] and ev[1][1]["exitReason"] == "farGate", ev
+leave_i = next(i for i, f in enumerate(r.fixes) if i > ev[0][0] + 30 and line.min_lateral((f["lat"], f["lon"])) > 100)
+lost_i = leave_i + 30
+f = r.fixes[lost_i]
+chord_est = hav(S_ll, E_ll) - min(hav(S_ll, E_ll), max(0, chord_along((f["lat"], f["lon"]), S_ll, E_ll)))
+assert abs(rem[lost_i] - chord_est) < 1, (rem[lost_i], chord_est)
+vector("corridor-curve-polyline-loss", "The bowed corridor with a 4.5 km detour 400 m off its road line: after five fixes off the line the remaining distance falls back to the chord estimate, nothing ends the corridor, the car comes back to the line and Fin de tramo is spoken at the far gate.", r, sorted_events(ev),
+       snapshots=[{"fixIndex": lost_i, "stretch": CR, "remainingMetres": round(chord_est), "tolerance": 60, "phase": "insideStretch"}])
+
+# The other carriageway at the west gate, leaving the corridor: never entered.
+out_lls = local("corridor", co["gate_out"])
+r = Route(out_lls[0])
+follow(r, out_lls, 90 / 3.6)
+ev, rem = sim_corridor(r.fixes, CR)
+assert ev == [], ev
+vector("corridor-curve-gate-opposite-carriageway", "The other carriageway of the road into the corridor's west gate, driven away from the corridor from 25 m beside the gate: the gate approach runs the other way, nothing is entered.", r, [])
+
+assert fallback_events != next(v for v in VECTORS if v["name"] == "road-hairpin")["expected"], "the fallback must differ from the road rule"
+
+# Negative control for the road rule: the switchback drive expected with today's straight-line events.
+VECTORS.append(
+    {
+        "name": "broken-road-hairpin-straight-line",
+        "description": "Deliberately wrong: the switchback drive with the sidecar loaded but the status quo's expectation (a warning on the bottom leg and a false pass). The suite asserts that the engine's output differs, which proves the road rule changes what the car hears.",
+        "locale": "es-ES",
+        "negativeControl": True,
+        "fixes": hairpin_fixes,
+        "expected": fallback_events,
+    }
 )
 
 # ---- 13. Negative control: a2-120kmh-ne with its warning removed. The test asserts the engine disagrees. ----
