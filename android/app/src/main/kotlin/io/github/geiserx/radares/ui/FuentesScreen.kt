@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// Fuentes (SPEC 11): every source in the feed with its attribution verbatim, its link and its count; the licences;
+// Fuentes (SPEC 11): every source in the feed with its attributions verbatim, its link and its count; the licences;
 // the Google Play services dependency; the legal line.
 
 package io.github.geiserx.radares.ui
@@ -31,13 +31,18 @@ import io.github.geiserx.radares.AppGraph
 import io.github.geiserx.radares.R
 import io.github.geiserx.radares.core.model.Radar
 
-/** One row per distinct (source, attribution), the most radars first. */
-data class SourceRow(val source: String, val attribution: String, val url: String?, val count: Int)
+/** One row per source with its total count and each distinct attribution once, the most radars first. */
+data class SourceRow(val source: String, val attributions: List<String>, val url: String?, val count: Int)
 
 fun sourceRows(radars: List<Radar>): List<SourceRow> =
-    radars.groupBy { it.source to it.attribution }
-        .map { (key, list) -> SourceRow(key.first, key.second, list.firstNotNullOfOrNull { it.url }, list.size) }
-        .sortedWith(compareByDescending<SourceRow> { it.count }.thenBy { it.source }.thenBy { it.attribution })
+    radars.groupBy { it.source }
+        .map { (source, list) ->
+            val attributions = list.groupingBy { it.attribution }.eachCount().entries
+                .sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key })
+                .map { it.key }
+            SourceRow(source, attributions, list.firstNotNullOfOrNull { it.url }, list.size)
+        }
+        .sortedWith(compareByDescending<SourceRow> { it.count }.thenBy { it.source })
 
 @Composable
 fun FuentesScreen(graph: AppGraph) {
@@ -45,13 +50,13 @@ fun FuentesScreen(graph: AppGraph) {
     val rows = remember(store) { sourceRows(store?.all.orEmpty()) }
     LazyColumn(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item { Header(stringResource(R.string.sources_header)) }
-        items(rows, key = { it.source + "\n" + it.attribution }) { row ->
+        items(rows, key = { it.source }) { row ->
             Column(Modifier.padding(vertical = 4.dp)) {
                 Row(Modifier.fillMaxWidth()) {
                     Text(row.source, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                     Text(pluralStringResource(R.plurals.sources_count, row.count, row.count), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Text(row.attribution, style = MaterialTheme.typography.bodyMedium)
+                row.attributions.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
                 row.url?.let { Link(it.toUri().host ?: it, it) }
             }
             HorizontalDivider()
