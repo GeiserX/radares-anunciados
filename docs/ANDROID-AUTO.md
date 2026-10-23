@@ -75,6 +75,9 @@ Library" (same page). So:
 | APK from the GitHub release, real car | yes | no | no |
 | Debug APK, Desktop Head Unit on a computer | yes | yes | yes |
 
+The table states what Google's documentation says should happen. Nobody has seen the banner yet, on a Desktop
+Head Unit or in a car: that needs a phone paired to the DHU, which is still pending.
+
 The Internal testing track needs no review and takes up to 100 testers
 (https://google.play/business/internal-testing/). Every `android-v*` GitHub release attaches the `.aab`
 built by the same run as the APK, so it can be uploaded to Play without a rebuild.
@@ -127,6 +130,14 @@ Once the app is installed from Play:
 
 Android Auto gives no delivery receipt for a `CarAppExtender` notification. The log records what was posted and
 whether a car host was connected, not whether the car drew the banner.
+
+The banner itself has not been observed yet. The Desktop Head Unit check above and the car checks are still to do.
+
+The radar screen in the car can only change its rows a few times. Android Auto allows five templates per task and
+closes the app with an error on the sixth; a template with the same number of rows and the same row titles is a
+refresh and does not count. The screen updates distances freely, takes a new set of rows at most twice by itself,
+and after that keeps the rows it shows until the driver taps refresh (car API 5 and later) or opens the app again
+from the launcher or a warning.
 
 ## The legal line
 
