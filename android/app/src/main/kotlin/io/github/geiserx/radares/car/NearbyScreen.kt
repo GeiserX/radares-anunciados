@@ -80,7 +80,7 @@ class NearbyScreen(
         fun next(shown: NearbyContent, fresh: NearbyContent, data: CarData, newSetsLeft: Int): Pair<NearbyContent, Int> =
             when {
                 shown.isRefreshedBy(fresh) -> fresh to 0
-                newSetsLeft >= 0 -> fresh to 1
+                newSetsLeft > 0 -> fresh to 1
                 else -> shown.withDistancesFrom(data.position(), data.store()) to 0
             }
     }
