@@ -28,15 +28,23 @@ Parked, the app uses no GPS. Google Play services holds the wake-ups while the a
 | `STILL` enter | you stopped | marks the fixes as stationary, which pauses the drive |
 
 The drive service (`DriveService`) is a foreground service of type `location` that reads one position per second
-from the fused location provider. During the 60 s probe, three fixes at 6 m/s or more start the drive; if the probe
-ends without a drive, the fence is set again where the phone is and the service stops. An `IN_VEHICLE` transition in
+from the fused location provider. During the 60 s probe, three fixes at 6 m/s or more start the drive; a stationary
+fix ends the probe at once; if the probe ends without a drive, the fence is set again where the phone is and the
+service stops. An `IN_VEHICLE` transition in
 the last 3 minutes starts the drive without waiting for the probe.
 
 While driving, a stationary fix or 120 s under 1 m/s pauses the drive; a resume at 3 m/s or more within 10 minutes
 continues it with the same pass ledger. A pause over 10 minutes, walking, or the core detector's end ends the drive:
 the engine closes any open stretch, the ledger is written, a `driveEnded` row goes to the log, and the fence is set
-400 m around the last fix. After a reboot or an app update `BootReceiver` registers the transitions and the fence
-again.
+400 m around the last fix. After a pause over 10 minutes the service does not stop: it probes again with the fixes
+that follow, so a car that parked twelve minutes and leaves is warned from its first metres. After a reboot or an
+app update `BootReceiver` registers the transitions and the fence again.
+
+A drive survives the process. The service writes a small drive record (start, wake-up time, pause start, last
+position) to SharedPreferences at drive start, pause and resume, and once a minute while fixes arrive; drive end
+clears it. When Android kills the process mid-drive and restarts the service, a record younger than 10 minutes
+resumes the same drive: no probe, no second `driveStarted` row, and the engine keeps the stretch it was inside, so
+"Fin de tramo" is still said at the far gate. An older record is dropped and the restart probes as usual.
 
 Why "Allow all the time" is required: from Android 14, a foreground service of type `location` started while the
 app is in the background is refused unless the app holds `ACCESS_BACKGROUND_LOCATION`. Every drive starts in the
@@ -51,7 +59,8 @@ Each warning goes to two places at once, with the iOS rules ([AlertDispatcher.sw
 
 - **The voice.** `TextToSpeech` in Spanish (English when the phone is in English), as navigation guidance
   (`USAGE_ASSISTANCE_NAVIGATION_GUIDANCE`), with transient audio focus that ducks the music and is given back when
-  the sentence ends. A missing Spanish voice turns the Voz row red.
+  the sentence ends. A sentence that arrives while the voice engine is still starting (half a second to a few seconds
+  on a cold process) waits and is spoken as soon as it is ready. A missing Spanish voice turns the Voz row red.
 - **The notification**, on the `radares` channel. Every warning and stretch entry posts one, tagged
   `<radarId>#<passSeq>` so a later pass of the same radar is a new banner. The previous radar's notification is
   removed when the next one posts, and a radar's own when it is passed. A radar for the opposite flow posts silently
@@ -174,9 +183,10 @@ Requirements: JDK 17 and the Android SDK (platform 37, build tools 37). From `an
 ```
 
 The app tests run every route vector through the app's own drive path (`DriveController` → engine → dispatcher,
-with a fake voice) and check the spoken sentences against each vector's `spoken` lines; they also cover the notifier
-(car extender, channel, one per pass), the drive rules (probe timeout, motion start, walking, pause end, fence
-re-arm), the feed store and client (against a local HTTP server), the twelve Estado rows, onboarding, the
+with a fake voice) and check the spoken sentences against each vector's `spoken` lines (the vectors over the road
+fixture are skipped, as in `:core`, until the Kotlin port has the road rule); they also cover the notifier
+(car extender, channel, one per pass), the drive rules (probe timeout, a stationary probe, motion start, walking,
+pause end and the probe after it, fence re-arm, a drive resumed after a process restart), the feed store and client (against a local HTTP server), the twelve Estado rows, onboarding, the
 release manifest, and the user-facing text. Robolectric runs at SDK 34 ([`robolectric.properties`](../android/app/src/test/resources/robolectric.properties))
 because SDK 36 needs JDK 21. The Android workflow runs all of it on every pull request.
 

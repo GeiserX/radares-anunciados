@@ -13,13 +13,14 @@ import android.content.Intent
 class DebugWakeReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != ACTION) return
-        val wake = when (intent.getStringExtra("reason")) {
-            "in_vehicle", null -> Wake.InVehicle
-            "fence" -> Wake.Fence
-            "on_foot" -> Wake.OnFoot
-            else -> Wake.InVehicle
+        when (intent.getStringExtra("reason")) {
+            "fence" -> DriveService.start(context, Wake.Fence)
+            // Walking and standing still only matter to a drive already on, exactly as the real TransitionReceiver
+            // routes them: they never start the service.
+            "on_foot" -> DriveService.notify(context, Wake.OnFoot)
+            "still" -> DriveService.notify(context, Wake.Still)
+            else -> DriveService.start(context, Wake.InVehicle)
         }
-        DriveService.start(context, wake)
     }
 
     companion object {

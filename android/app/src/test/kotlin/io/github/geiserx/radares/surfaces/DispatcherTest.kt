@@ -32,13 +32,15 @@ class DispatcherTest {
         var seq = 0
         val dispatcher = AlertDispatcher(speaker, poster, events, { ++seq }, vector.locale)
         var now = vector.fixes.first().timestamp
+        var saved = PassLedger()
         val controller = DriveController(
             clock = { now },
-            // The wall-clock default, exactly as the core vector suite builds the engine.
-            engineFactory = { AlertEngine(Fixtures.store, PassLedger(), locale = vector.locale) },
+            // The wall-clock default, exactly as the core vector suite builds the engine; the ledger carries over
+            // from one drive to the next as passes.json does in the app.
+            engineFactory = { resuming -> AlertEngine(Fixtures.store, if (resuming) saved else saved.copy(stretch = null), locale = vector.locale) },
             sink = dispatcher,
             events = events,
-            ledgerSaver = {},
+            ledgerSaver = { saved = it },
             armFence = {},
             stopService = {},
             recentInVehicle = { true },
@@ -53,7 +55,7 @@ class DispatcherTest {
     }
 
     @TestFactory
-    fun everyVectorSpeaksItsSentences(): List<DynamicTest> = Fixtures.vectors().filter { !it.negativeControl }.map { vector ->
+    fun everyVectorSpeaksItsSentences(): List<DynamicTest> = Fixtures.vectors().filter { !it.negativeControl && !it.roadFixture }.map { vector ->
         DynamicTest.dynamicTest(vector.name) {
             val run = drive(vector)
             assertEquals(vector.expected.mapNotNull { it.spoken }, run.speaker.spoken, "spoken sentences of ${vector.name}")
@@ -73,7 +75,7 @@ class DispatcherTest {
 
     @Test
     fun theNegativeControlDiffers() {
-        val control = Fixtures.vectors().single { it.negativeControl }
+        val control = Fixtures.vectors().single { it.negativeControl && !it.roadFixture }
         val run = drive(control)
         // The vector is deliberately wrong (it expects no warning); the app path must warn, so the two differ.
         assertNotEquals(control.expected.count { it.kind == "warn" }, run.poster.posted.size)

@@ -51,11 +51,12 @@ class DriveService : LifecycleService() {
         location = FusedLocationSource(this) { isStationary(this) }
         controller = DriveController(
             clock = Instant::now,
-            engineFactory = {
+            engineFactory = { resuming ->
                 graph.feed.loadIfNeeded()?.let { store ->
                     val ledger = graph.ledger.load().prune(Instant.now())
-                    // A new drive never resumes the stretch of an earlier one (SPEC 5).
-                    AlertEngine(store, ledger.copy(stretch = null))
+                    // The stretch belongs to the drive that was inside it: a drive restored after a process death
+                    // keeps it, a new drive never does (SPEC 5).
+                    AlertEngine(store, if (resuming) ledger else ledger.copy(stretch = null))
                 }
             },
             sink = graph.dispatcher,
@@ -68,6 +69,7 @@ class DriveService : LifecycleService() {
                 graph.driveOn.value = true
                 io.execute { graph.feed.refreshIfNeeded(FeedRefreshPolicy.Trigger.DRIVE_START) }
             },
+            records = DriveRecordPrefs(WakeUps.prefs(this)),
         )
         controller.onSnapshot = { snapshot, on ->
             graph.snapshot.value = if (on) snapshot else null
@@ -97,7 +99,13 @@ class DriveService : LifecycleService() {
             }
             locationStarted = true
         }
-        // A restart by the system after the process died carries no intent: probe again.
+        // The process died mid-drive (a START_STICKY restart carries no intent, or a wake-up found it gone): the same
+        // drive continues from its record. Otherwise a restart with no intent probes again.
+        val restored = controller.restore()
+        if (restored) {
+            graph().driveOn.value = true
+            graph().snapshot.value = controller.snapshot
+        }
         controller.onWake(Wake.from(intent?.getStringExtra(EXTRA_WAKE)) ?: Wake.Fence)
         return START_STICKY
     }
@@ -111,6 +119,8 @@ class DriveService : LifecycleService() {
         io.shutdown()
         super.onDestroy()
     }
+
+    private fun graph() = RadaresApp.graph(this)
 
     private fun foregroundNotification(): Notification =
         NotificationCompat.Builder(this, Notifier.CHANNEL_CONDUCCION)

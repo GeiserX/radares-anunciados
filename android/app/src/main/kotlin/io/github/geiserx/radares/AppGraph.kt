@@ -52,11 +52,13 @@ class AppGraph(val context: Context) {
     /** Copies the bundled snapshot on first launch (assets/feed-snapshot.*, copied from the iOS app at build time). */
     fun installSnapshotIfNeeded() {
         runCatching {
-            if (files.copySnapshotIfNeeded(
+            val copied = feed.exclusive {
+                files.copySnapshotIfNeeded(
                     snapshot = { context.assets.open("feed-snapshot.geojson") },
                     date = { context.assets.open("feed-snapshot.date").bufferedReader().use { it.readText() } },
                 )
-            ) log.note("snapshot copied")
+            }
+            if (copied) log.note("snapshot copied")
         }.onFailure { log.feedFailed("snapshot copy: ${it.message}") }
     }
 

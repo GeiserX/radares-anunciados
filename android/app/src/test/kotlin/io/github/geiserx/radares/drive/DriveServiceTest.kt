@@ -109,16 +109,47 @@ class DriveServiceTest {
     }
 
     @Test
-    fun aPauseOverTenMinutesEndsTheDrive() {
+    fun aPauseOverTenMinutesEndsTheDriveAndProbesAgain() {
         controller.onWake(Wake.InVehicle)
         for (i in 1..5) second(i, 15.0)
         second(6, 0.0, stationary = true)
         // The detector counts its own three fast fixes before its pause rules apply; the stationary flag pauses.
         assertTrue(controller.state is DriveController.State.Paused, controller.state.toString())
-        for (i in 7..(7 + 10 * 60)) second(6, 0.0, stationary = true)
+        now = now.plusSeconds(10 * 60)
+        controller.onTick()
+        assertTrue("driveEnded:pause_over" in events.rows, events.rows.toString())
+        assertTrue(controller.state is DriveController.State.Probing, "the service probes again, it does not stop")
+        assertEquals(0, stops)
+        assertEquals(1, fences.size, "the fence is re-armed at drive end")
+        // The car leaves: three fast fixes start the next drive with no fence exit and no new transition.
+        second(7, 15.0)
+        second(8, 15.0)
+        second(9, 15.0)
+        assertEquals(DriveController.State.Driving, controller.state)
+        assertEquals(2, events.rows.count { it == "driveStarted" })
+        assertEquals(0, stops)
+    }
+
+    @Test
+    fun aPauseOverTenMinutesThatStaysParkedStopsOnTheNextStationaryFix() {
+        controller.onWake(Wake.InVehicle)
+        for (i in 1..5) second(i, 15.0)
+        for (i in 0..(10 * 60 + 1)) second(6, 0.0, stationary = true)
         assertEquals(DriveController.State.Idle, controller.state)
         assertTrue("driveEnded:pause_over" in events.rows, events.rows.toString())
-        assertEquals(1, fences.size)
+        assertTrue("probe:idle" in events.rows, events.rows.toString())
+        assertEquals(1, stops)
+    }
+
+    @Test
+    fun aStationaryFixEndsTheProbeAtOnce() {
+        controller.onWake(Wake.Fence)
+        second(1, 0.5)
+        second(2, 0.0, stationary = true)
+        assertEquals(DriveController.State.Idle, controller.state)
+        assertEquals(listOf("wakeup:fence", "probe:idle"), events.rows)
+        assertEquals(1, stops)
+        assertEquals(fix(2, 0.0).coordinate, fences.single(), "the fence is re-armed where the phone rests")
     }
 
     @Test
