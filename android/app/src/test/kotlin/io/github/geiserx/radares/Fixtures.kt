@@ -34,6 +34,8 @@ object Fixtures {
         val name: String,
         val locale: Locale,
         val negativeControl: Boolean,
+        /** Drives over the road fixture: the Kotlin core has no road rule yet, so the app skips these as the core does. */
+        val roadFixture: Boolean,
         val fixes: List<Fix>,
         val expected: List<Expected>,
     )
@@ -52,6 +54,7 @@ object Fixtures {
             name = o.str("name") ?: file.nameWithoutExtension,
             locale = Locale.forLanguageTag(o.str("locale") ?: "es-ES"),
             negativeControl = o["negativeControl"]?.jsonPrimitive?.booleanOrNull ?: false,
+            roadFixture = o["roadFixture"]?.jsonPrimitive?.booleanOrNull ?: false,
             fixes = o.getValue("fixes").jsonArray.map { e ->
                 val f = e.jsonObject
                 Fix(

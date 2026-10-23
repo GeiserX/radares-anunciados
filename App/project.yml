@@ -14,8 +14,8 @@ options:
 settings:
   base:
     # Version and build number live only here. Bump CURRENT_PROJECT_VERSION for every TestFlight upload.
-    MARKETING_VERSION: 0.1.3
-    CURRENT_PROJECT_VERSION: 4
+    MARKETING_VERSION: 0.1.4
+    CURRENT_PROJECT_VERSION: 5
     DEVELOPMENT_TEAM: 624WUVM8B4
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete

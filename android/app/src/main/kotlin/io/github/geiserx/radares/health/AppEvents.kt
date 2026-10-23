@@ -34,4 +34,6 @@ interface AppEvents {
     fun feedUpdated(count: Int, etag: String?) {}
     fun feedFailed(error: String) {}
     fun bgTaskRan(expired: Boolean) {}
+    /** A free-text Android row (a refused service start, a drive resumed after a process restart). */
+    fun note(text: String) {}
 }

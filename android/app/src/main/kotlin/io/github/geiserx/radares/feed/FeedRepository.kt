@@ -43,6 +43,12 @@ class FeedRepository(
 
     fun meta(): FeedMeta = files.readMeta()
 
+    /**
+     * Runs the first-launch snapshot copy under the same lock as the load and the refresh: the app start and the
+     * refresh worker both call it, and two copies at once would race on feed.geojson.new.
+     */
+    fun <T> exclusive(block: () -> T): T = synchronized(lock) { block() }
+
     fun refreshIfNeeded(trigger: FeedRefreshPolicy.Trigger): Boolean {
         if (!FeedRefreshPolicy.shouldRefresh(files.readMeta(), clock(), trigger)) return false
         refresh()

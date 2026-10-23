@@ -3,7 +3,8 @@
 //
 // Application Support/Radares (design 5.3): folder creation, completeUntilFirstUserAuthentication on every file and
 // read back (protectionVerified), atomic feed replace with .bak, bundled snapshot copy, excluded from backup.
-// Also holds the decoded feed in memory (`CurrentFeed`), so every lane reads one RadarStore.
+// Also holds the decoded feed in memory (`CurrentFeed`), so every lane reads one RadarStore, and the road sidecar
+// (roads.json, design 5.5) beside it: same folder, same protection class, its own bundled snapshot.
 
 import Foundation
 import RadaresCore
@@ -20,6 +21,7 @@ public final class FileStore: Sendable {
     public static let protection = FileProtectionType.completeUntilFirstUserAuthentication
 
     static let snapshotName = "feed-snapshot"
+    static let roadsSnapshotName = "roads-snapshot"
 
     private let logger = Logger(subsystem: "io.github.geiserx.radares", category: "files")
     private let prepared = Mutex(false)
@@ -72,6 +74,40 @@ public final class FileStore: Sendable {
         let ok = verifyProtection()
         AppLog.shared.post(.protectionVerified(ok: ok))
         return ok
+    }
+
+    /// Atomic replace of roads.json (no backup: a refused download never gets here, and a radar without geometry runs
+    /// the straight-line rules). The same protection class as the feed.
+    public func replaceRoads(with data: Data) throws {
+        prepareFolder()
+        let fm = FileManager.default
+        let incoming = folder.appending(path: "roads.json.new")
+        try? fm.removeItem(at: incoming)
+        try data.write(to: incoming, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        if fm.fileExists(atPath: AppPaths.roads.path) {
+            _ = try fm.replaceItemAt(AppPaths.roads, withItemAt: incoming)
+        } else {
+            try fm.moveItem(at: incoming, to: AppPaths.roads)
+        }
+        try? fm.setAttributes([.protectionKey: Self.protection], ofItemAtPath: AppPaths.roads.path)
+    }
+
+    /// Copies the bundled road snapshot in when no roads.json exists yet. A bundle without one (a build made before the
+    /// publisher shipped the sidecar) is fine: every radar then runs the straight-line rules until the first download.
+    @discardableResult
+    public func copyRoadsSnapshotIfNeeded() -> Bool {
+        guard !FileManager.default.fileExists(atPath: AppPaths.roads.path),
+              let url = Bundle.main.url(forResource: Self.roadsSnapshotName, withExtension: "json")
+        else { return false }
+        do {
+            try replaceRoads(with: Data(contentsOf: url))
+            logger.info("roads snapshot copied")
+            return true
+        } catch {
+            logger.error("roads snapshot copy: \(error.localizedDescription, privacy: .public)")
+            AppLog.shared.post(.roadsFailed(error: "snapshot copy: \(error.localizedDescription)"))
+            return false
+        }
     }
 
     /// Reads the protection attribute back from the folder and the feed: the one check that proves the store is
@@ -159,6 +195,7 @@ public final class CurrentFeed: Sendable {
 
     private struct State {
         var store: RadarStore?
+        var roads: RoadGeometry?
         var loading: Task<RadarStore?, Never>?
     }
 
@@ -169,6 +206,10 @@ public final class CurrentFeed: Sendable {
 
     /// The store as loaded now; nil before the first load finishes or when there is no feed at all.
     public var store: RadarStore? { state.withLock { $0.store } }
+
+    /// The road sidecar as loaded now (with the feed, by `loadIfNeeded`); nil without one. The drive loop hands it to
+    /// the engine; a radar with no entry, or no sidecar at all, runs the straight-line rules.
+    public var roads: RoadGeometry? { state.withLock { $0.roads } }
 
     /// Copies the bundled snapshot when needed, then decodes feed.geojson off the main thread. Safe to call from
     /// anywhere and any number of times: one load per process, later callers await the same one.
@@ -193,9 +234,31 @@ public final class CurrentFeed: Sendable {
         }
     }
 
+    /// After a validated sidecar download: used by every engine built from now on.
+    public func install(roads: RoadGeometry) {
+        state.withLock { $0.roads = roads }
+    }
+
+    /// roads.json from disk, copying the bundled snapshot first when there is none. Never blocks the feed.
+    private static func loadRoads() {
+        let files = FileStore.shared
+        files.copyRoadsSnapshotIfNeeded()
+        guard let data = try? Data(contentsOf: AppPaths.roads) else { return }
+        do {
+            let roads = try RoadGeometry(data: data)
+            shared.state.withLock { state in
+                if state.roads == nil { state.roads = roads }
+            }
+            Logger(subsystem: "io.github.geiserx.radares", category: "feed").info("roads loaded, \(roads.count) entries")
+        } catch {
+            AppLog.shared.post(.roadsFailed(error: "decode: \(error.localizedDescription)"))
+        }
+    }
+
     private static func load() -> RadarStore? {
         let files = FileStore.shared
         files.prepareFolder()
+        loadRoads()
         let copied = files.copySnapshotIfNeeded()
         let logger = Logger(subsystem: "io.github.geiserx.radares", category: "feed")
         guard let data = try? Data(contentsOf: AppPaths.feed) else {

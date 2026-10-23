@@ -49,6 +49,9 @@ class Speaker(context: Context, private val locale: Locale = speechLocale()) : S
     @Volatile private var error: String? = null
     @Volatile private var settled = false
 
+    /** Sentences that arrived while the engine was still binding (0.5-3 s on a cold process): spoken once it is. */
+    private val waiting = mutableListOf<String>()
+
     override val lastError: String? get() = error
 
     private val tts: TextToSpeech = TextToSpeech(context.applicationContext) { status ->
@@ -57,7 +60,6 @@ class Speaker(context: Context, private val locale: Locale = speechLocale()) : S
             val result = engine().setLanguage(locale)
             languageOk = result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED
             if (!languageOk) error = "voice missing for ${locale.toLanguageTag()}"
-            settled = true
             engine().setAudioAttributes(attributes)
             engine().setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                 override fun onStart(utteranceId: String?) {}
@@ -68,8 +70,17 @@ class Speaker(context: Context, private val locale: Locale = speechLocale()) : S
             })
         } else {
             error = "TextToSpeech init failed ($status)"
-            settled = true
         }
+        settle()
+    }
+
+    /** Marks the engine settled and speaks what waited for it; a failed init drops them (the notification stands). */
+    private fun settle() {
+        val queued = synchronized(waiting) {
+            settled = true
+            waiting.toList().also { waiting.clear() }
+        }
+        if (ready && languageOk) queued.forEach { say(it) }
     }
 
     private fun engine() = tts
@@ -77,8 +88,20 @@ class Speaker(context: Context, private val locale: Locale = speechLocale()) : S
     override val voiceReady: Boolean? get() = if (!settled) null else ready && languageOk
 
     override fun speak(text: String): String? {
+        if (!settled) {
+            synchronized(waiting) {
+                if (!settled) {
+                    waiting += text
+                    return null
+                }
+            }
+        }
         if (!ready) return error ?: "TextToSpeech not ready"
         if (!languageOk) return error
+        return say(text)
+    }
+
+    private fun say(text: String): String? {
         val granted = audio.requestAudioFocus(focus)
         if (granted == AudioManager.AUDIOFOCUS_REQUEST_FAILED) return "audio focus refused"
         pending.incrementAndGet()

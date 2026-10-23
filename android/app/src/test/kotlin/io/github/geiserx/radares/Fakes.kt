@@ -42,6 +42,7 @@ class RecordingEvents : AppEvents {
     override fun wakeup(wake: Wake) { rows += "wakeup:${wake.wire}" }
     override fun probe(result: String, maxSpeedMps: Double, seconds: Double) { rows += "probe:$result" }
     override fun driveStarted(wake: Wake) { rows += "driveStarted" }
+    override fun note(text: String) { rows += "note:$text" }
     override fun alert(event: AlertEvent, level: Level, fix: Fix?, sinks: List<AppEvents.Sink>, spoken: String?) {
         rows += "alert"
         alerts += Triple(level, sinks, spoken)

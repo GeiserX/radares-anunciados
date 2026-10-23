@@ -109,6 +109,23 @@ head unit to the phone. The phone must run iOS 18.4 or later and the app's icon 
 | C13 | "Probar aviso" from the phone's Estado tab with the app open on the phone and CarPlay connected | The banner on the car screen as well as on the phone (foreground presentation `.banner`) | pending |
 | C14 | "Probar aviso" from the car screen, with the app's own CarPlay screen in front | The banner on the car screen over the app's template; if iOS does not draw it while the app is in front, note it: the template still names the radar within 10 s | pending |
 
+### Road geometry
+
+The road sidecar (`roads.json`, design 2.3, 2.5 and 5.1) only counts once the publisher ships it. First check it
+loaded: after a refresh the exported log has a `roadsChecked` row and, on the first download, a `roadsUpdated` row
+with the entry count; a `roadsFailed` row names why it was refused. Estado shows nothing new and must look exactly
+as before.
+
+| # | Test | Expectation | Result |
+|---|---|---|---|
+| R1 | Refresh with the publisher's roads.json live | `roadsChecked` (and `roadsUpdated` the first time, with about 4,000 entries); the next refresh is a 304 (`roadsChecked` with `notModified: true`); Estado unchanged | pending |
+| R2 | A dual carriageway past a DGT radar whose feed entry has `direction_confidence: "high"`, both ways | The car's flow: the sentence and the notification, one `alert` row with two sinks. The other carriageway: no voice, no notification, no card row, and one `alert` row with `suppressedByDirection: true`, `sinks: []` and no `spoken` | pending |
+| R3 | The same pair of drives past a radar with `direction_confidence: "low"` | The other carriageway gets the silent "sentido contrario" notification, as an OSM bearing does today | pending |
+| R4 | A bowed corridor entered from a road that curves into its gate | "Tramo de radar móvil…" at about the warn distance along the road (the `alert` row's distance is the along-road one), the card's remaining figure follows the road, "Fin de tramo." at the far gate | pending |
+| R5 | The same corridor joined from a side road in its middle | Inside after three fixes on the road, "…quedan {n} kilómetros." with the road's remaining length, "Fin de tramo." at the far gate | pending |
+| R6 | A mountain road with switchbacks up to a radar on an upper leg | One sentence at about the warn distance along the road, no "Radar superado" until the car is at the radar | pending |
+| R7 | A road beside or over a radar's road (parallel, overpass, slip road) | No voice; at most a silent notification (`alert` row with level `visual` and no `spoken`) | pending |
+
 ### Everything else
 
 | # | Test | Expectation | Result |

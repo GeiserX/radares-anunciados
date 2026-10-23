@@ -5,6 +5,9 @@
 # Downloads the live feed.geojson, refuses a file that does not look like the feed, and writes the sidecar
 # feed-snapshot.date with the feed's Last-Modified time in ISO 8601 (UTC). The release workflow fails when
 # that date is older than 30 days, and the app uses it as the feed's age until the first download.
+# Also downloads the road sidecar roads.json into roads-snapshot.json, refusing a file that fails the app's
+# RoadsValidator rules. A 404 (the publisher has not shipped it yet) leaves the road snapshot as it is: the app runs
+# the straight-line rules for every radar without one.
 #
 # Usage: scripts/update-snapshot.sh
 set -euo pipefail
@@ -14,6 +17,8 @@ min_features=2000
 dest_dir="$(cd "$(dirname "$0")/.." && pwd)/App/Sources/Resources"
 feed="$dest_dir/feed-snapshot.geojson"
 date_file="$dest_dir/feed-snapshot.date"
+roads_url="https://geiserx.github.io/radares-anunciados-ha/roads.json"
+roads_file="$dest_dir/roads-snapshot.json"
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
@@ -54,3 +59,73 @@ mkdir -p "$dest_dir"
 mv "$work/feed.geojson" "$feed"
 printf '%s\n' "$generated" > "$date_file"
 echo "snapshot $(wc -c < "$feed" | tr -d ' ') bytes, generated $generated"
+
+# The road sidecar. curl writes the status code; anything but 200 and 404 is an error.
+status=$(curl --silent --show-error --location --compressed --max-time 60 --output "$work/roads.json" --write-out '%{http_code}' "$roads_url")
+if [ "$status" = 404 ]; then
+  echo "no roads.json published yet: road snapshot left as it is" >&2
+  exit 0
+fi
+if [ "$status" != 200 ]; then
+  echo "roads.json: HTTP $status, road snapshot not replaced" >&2
+  exit 1
+fi
+# The app's RoadsValidator checks: at most 4,000,000 bytes, version 1, at least 500 usable entries (a line or an
+# approach), every polyline present (approaches, line, gates) decodes to at least two distinct vertices.
+python3 -I - "$work/roads.json" <<'PY'
+import json, os, sys
+path = sys.argv[1]
+if os.path.getsize(path) > 4_000_000:
+    sys.exit("roads.json is over 4,000,000 bytes")
+with open(path, encoding="utf-8") as f:
+    doc = json.load(f)
+if doc.get("version") != 1:
+    sys.exit(f"roads.json version {doc.get('version')}, need 1")
+features = doc.get("features") or {}
+
+def decode(s):
+    coords, lat, lon, i = [], 0, 0, 0
+    while i < len(s):
+        vals = []
+        for _ in range(2):
+            result = shift = 0
+            while True:
+                if i >= len(s):
+                    raise ValueError("cut inside a value")
+                b = ord(s[i]) - 63
+                i += 1
+                if b < 0 or b > 63:
+                    raise ValueError("byte outside the alphabet")
+                result |= (b & 0x1F) << shift
+                shift += 5
+                if b < 0x20:
+                    break
+            vals.append(~(result >> 1) if result & 1 else result >> 1)
+        lat += vals[0]
+        lon += vals[1]
+        coords.append((lat, lon))
+    return coords
+
+# An entry with no line and no approach (e.g. {"approaches": []}) is skipped and not counted, as in the app.
+usable = 0
+for fid, entry in features.items():
+    strings = [a["polyline"] for a in entry.get("approaches") or []]
+    if entry.get("line") or entry.get("approaches"):
+        usable += 1
+    if entry.get("line"):
+        strings.append(entry["line"])
+    gates = entry.get("gates") or {}
+    strings += [a["polyline"] for a in (gates.get("start") or []) + (gates.get("end") or [])]
+    for s in strings:
+        try:
+            coords = decode(s)
+        except ValueError as e:
+            sys.exit(f"{fid}: {e}")
+        if len(set(coords)) < 2:
+            sys.exit(f"{fid}: a polyline with fewer than two distinct vertices")
+if usable < 500:
+    sys.exit(f"only {usable} usable roads entries, need 500")
+print(f"{usable} usable roads entries of {len(features)}")
+PY
+mv "$work/roads.json" "$roads_file"
+echo "road snapshot $(wc -c < "$roads_file" | tr -d ' ') bytes"

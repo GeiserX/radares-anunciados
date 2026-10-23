@@ -1,0 +1,229 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "id": "fixed-straight-road",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.1748745,
+     39.2112415
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo carretera recta",
+    "source": "dgt",
+    "kind": "fixed",
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "13",
+    "url": null,
+    "attribution": "Synthetic road fixture"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "fixed-arc-road",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.7899498,
+     39.2044966
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo curva",
+    "source": "dgt",
+    "kind": "fixed",
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "maxspeed": 90,
+    "direction": null,
+    "province": "13",
+    "url": null,
+    "attribution": "Synthetic road fixture"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "fixed-hairpin-road",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.3988395,
+     39.2009443
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo puerto de montaña",
+    "source": "dgt",
+    "kind": "fixed",
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "13",
+    "url": null,
+    "attribution": "Synthetic road fixture"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "fixed-dual-high-road",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.0,
+     39.2269796
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo autovía",
+    "source": "dgt",
+    "kind": "fixed",
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "maxspeed": 120,
+    "direction": null,
+    "province": "13",
+    "url": null,
+    "attribution": "Synthetic road fixture",
+    "road_ref": "A-99",
+    "km": 3.0,
+    "km_direction": "positive",
+    "bearing": 0,
+    "direction_semantics": "travel",
+    "direction_confidence": "high",
+    "bearing_source": "official_km"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "fixed-dual-low-road",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -3.0,
+     39.2584559
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo autovía",
+    "source": "dgt",
+    "kind": "fixed",
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "maxspeed": 120,
+    "direction": null,
+    "province": "13",
+    "url": null,
+    "attribution": "Synthetic road fixture",
+    "road_ref": "A-99",
+    "km": 6.5,
+    "km_direction": "positive",
+    "bearing": 0,
+    "direction_semantics": "travel",
+    "direction_confidence": "low",
+    "bearing_source": "osm_tag"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "fixed-sidejoin-road",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.2,
+     39.5
+    ]
+   },
+   "properties": {
+    "name": "Radar fijo cruce",
+    "source": "dgt",
+    "kind": "fixed",
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "maxspeed": null,
+    "direction": null,
+    "province": "13",
+    "url": null,
+    "attribution": "Synthetic road fixture"
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-curve-road",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -3.7,
+      39.5
+     ],
+     [
+      -3.6067607,
+      39.5
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil N-999",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "13",
+    "url": null,
+    "attribution": "Synthetic road fixture",
+    "road": "N-999",
+    "km_from": 10.0,
+    "km_to": 19.368
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-switchback-road",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -3.0,
+      39.8009443
+     ],
+     [
+      -3.0608241,
+      39.8279239
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil N-998",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "13",
+    "url": null,
+    "attribution": "Synthetic road fixture",
+    "road": "N-998",
+    "km_from": 20.0,
+    "km_to": 26.0
+   }
+  }
+ ]
+}

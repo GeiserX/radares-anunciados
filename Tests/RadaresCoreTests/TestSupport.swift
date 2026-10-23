@@ -16,8 +16,24 @@ enum Fixtures {
         try Data(contentsOf: url("feed-sample", ext: "geojson"))
     }
 
+    /// feed-sample plus the synthetic road scenarios of feed-sample-roads (ids ending in -road, at least 10 km from
+    /// every feed-sample feature), so one store serves the straight-line and the road vectors.
     static func store() throws -> RadarStore {
+        try RadarStore(radars: FeedDecoder.decode(feedData()) + FeedDecoder.decode(Data(contentsOf: url("feed-sample-roads", ext: "geojson"))))
+    }
+
+    /// feed-sample alone: the counts the decoder tests pin.
+    static func sampleStore() throws -> RadarStore {
         try RadarStore.load(geojson: feedData())
+    }
+
+    /// The road sidecar of the synthetic scenarios (eight entries, so it is loaded without the validator's 500 floor).
+    static func roadsData() throws -> Data {
+        try Data(contentsOf: url("roads-sample", ext: "json"))
+    }
+
+    static func roads() throws -> RoadGeometry {
+        try RoadGeometry(data: roadsData())
     }
 
     static func radar(_ id: String) throws -> Radar {

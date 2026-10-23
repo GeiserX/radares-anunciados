@@ -42,7 +42,7 @@ class AppLog(file: File, private val inFront: () -> Boolean = { false }) : AppEv
     @Synchronized
     fun wipe() = log.wipe()
 
-    fun note(text: String) = post(LogEvent.MonitorEvent(identifier = "android", state = text.take(300), flags = emptyList()))
+    override fun note(text: String) = post(LogEvent.MonitorEvent(identifier = "android", state = text.take(300), flags = emptyList()))
 
     override fun wakeup(wake: Wake) = post(LogEvent.Wakeup(WakeSource.MONITOR, listOf(wake.wire)))
 

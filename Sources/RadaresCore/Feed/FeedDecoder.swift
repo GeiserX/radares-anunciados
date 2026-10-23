@@ -96,7 +96,15 @@ public enum FeedDecoder {
             role = .point
         }
 
-        let direction = parseDirection(props.direction)
+        var direction = parseDirection(props.direction)
+        var confidence: DirectionConfidence?
+        // The feed's travel bearing replaces the OSM `direction` number when present (design 2.4); the place-name
+        // text is still spoken. Without it, today's three vocabularies decide, with no confidence.
+        if let bearing = props.bearing, bearing.isFinite, props.directionSemantics == "travel" {
+            direction.bearing = Geo.normalize(bearing)
+            direction.bidirectional = false
+            confidence = DirectionConfidence(rawValue: props.directionConfidence ?? "") ?? .low
+        }
         var roadMetres: Double?
         if let from = props.kmFrom, let to = props.kmTo { roadMetres = abs(to - from) * 1000 }
 
@@ -115,6 +123,7 @@ public enum FeedDecoder {
             maxspeed: props.maxspeed,
             bearing: direction.bearing,
             bidirectional: direction.bidirectional,
+            directionConfidence: confidence,
             directionText: direction.text,
             validFrom: day(props.validFrom),
             validTo: day(props.validTo),
@@ -168,7 +177,7 @@ extension Radar {
         Radar(
             id: id, kind: kind, role: role, start: start, end: end, chordMetres: chordMetres, roadMetres: roadMetres,
             name: name, road: road, kmFrom: kmFrom, kmTo: kmTo, maxspeed: maxspeed, bearing: bearing,
-            bidirectional: bidirectional, directionText: directionText, validFrom: validFrom, validTo: validTo,
+            bidirectional: bidirectional, directionConfidence: directionConfidence, directionText: directionText, validFrom: validFrom, validTo: validTo,
             active: active, source: source, attribution: attribution, url: url, province: province
         )
     }
