@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.geiserx.radares.AppGraph
 import io.github.geiserx.radares.R
+import io.github.geiserx.radares.core.feed.SourceNames
 import io.github.geiserx.radares.core.model.Radar
 
 /** One row per source with its total count and each distinct attribution once, the most radars first. */
@@ -53,7 +54,7 @@ fun FuentesScreen(graph: AppGraph) {
         items(rows, key = { it.source }) { row ->
             Column(Modifier.padding(vertical = 4.dp)) {
                 Row(Modifier.fillMaxWidth()) {
-                    Text(row.source, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                    Text(SourceNames.displayName(row.source), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                     Text(pluralStringResource(R.plurals.sources_count, row.count, row.count), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 row.attributions.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }

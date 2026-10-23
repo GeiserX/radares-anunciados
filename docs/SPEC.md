@@ -419,4 +419,5 @@ a feed-sized file under 500 ms; validation and decode of a 1.5 MB sidecar under 
 The app warns from published positions only. Spain's Reglamento General de Circulación art. 18.3 bans detectors and
 jammers and excludes "los mecanismos de aviso que informan de la posición de los sistemas de vigilancia del tráfico".
 No port may sense, receive or interfere with a radar signal. Every radar keeps the `source` and `attribution` the
-feed gives it, shown verbatim.
+feed gives it, shown verbatim. The Fuentes screen titles each source with its readable name (`SourceNames`, the raw key for a
+key it does not know); the attribution under the title is still the feed's, verbatim.
