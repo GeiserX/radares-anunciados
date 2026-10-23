@@ -20,12 +20,16 @@ class AppCarData private constructor(private val context: Context, private val g
     private var lastKnown: Coordinate? = null
 
     init {
-        if (locationPermitted()) {
-            runCatching {
+        val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED
+        if (granted) {
+            try {
                 LocationServices.getFusedLocationProviderClient(context).lastLocation
                     .addOnSuccessListener { location ->
                         if (location != null) lastKnown = Coordinate(location.latitude, location.longitude)
                     }
+            } catch (_: SecurityException) {
+                // Revoked between the check and the call: the screen waits for the drive's own fixes.
             }
         }
     }
