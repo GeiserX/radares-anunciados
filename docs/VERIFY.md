@@ -124,7 +124,7 @@ as before.
 | R4 | A bowed corridor entered from a road that curves into its gate | "Tramo de radar móvil…" at about the warn distance along the road (the `alert` row's distance is the along-road one), the card's remaining figure follows the road, "Fin de tramo." at the far gate | pending |
 | R5 | The same corridor joined from a side road in its middle | Inside after three fixes on the road, "…quedan {n} kilómetros." with the road's remaining length, "Fin de tramo." at the far gate | pending |
 | R6 | A mountain road with switchbacks up to a radar on an upper leg | One sentence at about the warn distance along the road, no "Radar superado" until the car is at the radar | pending |
-| R7 | A road beside or over a radar's road (parallel, overpass, slip road) | No voice; at most a silent notification (`alert` row with level `visual`, cross-track over 60 m) | pending |
+| R7 | A road beside or over a radar's road (parallel, overpass, slip road) | No voice; at most a silent notification (`alert` row with level `visual` and no `spoken`) | pending |
 
 ### Everything else
 
