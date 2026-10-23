@@ -15,13 +15,21 @@ public struct PassLedger: Codable, Sendable, Hashable {
         /// Farthest the car has been from the radar since firing, metres.
         public var farthestMetres: Double
         public var passedAt: Date?
+        /// A straight-line warning held silent because the car was off the radar's road (design 2.3): may be upgraded
+        /// to `.full` once if the car joins the road. Optional, so a ledger written by 0.1.3 decodes; nil means false.
+        public var held: Bool?
+        /// Fired hidden: the opposite flow of a high-confidence bearing (design 2.4). Nothing was shown, and the pass is
+        /// silent. Optional for the same reason.
+        public var hidden: Bool?
 
-        public init(id: String, firedAt: Date, level: Level = .full, farthestMetres: Double = 0, passedAt: Date? = nil) {
+        public init(id: String, firedAt: Date, level: Level = .full, farthestMetres: Double = 0, passedAt: Date? = nil, held: Bool? = nil, hidden: Bool? = nil) {
             self.id = id
             self.firedAt = firedAt
             self.level = level
             self.farthestMetres = farthestMetres
             self.passedAt = passedAt
+            self.held = held
+            self.hidden = hidden
         }
 
         /// Both cooldown conditions hold: the minutes have gone by and the car has been far enough away.

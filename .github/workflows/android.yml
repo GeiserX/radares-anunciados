@@ -74,9 +74,17 @@ jobs:
             exit 1
           fi
           vectors=$(ls Tests/RadaresCoreTests/Fixtures/vectors/*.json | wc -l)
+          # Vectors over the road fixture carry "roadFixture": true and are skipped until the port has the road rule
+          # (docs/SPEC.md section 10). Every other vector must pass, and the skips must be exactly the flagged files.
+          flagged=$(grep -lE '"roadFixture": *true' Tests/RadaresCoreTests/Fixtures/vectors/*.json | wc -l)
           ran=$(grep -cE 'everyRouteVector\(\).*PASSED' "$RUNNER_TEMP/gradle.log" || true)
-          echo "executed $executed tests; route vectors on disk: $vectors; vector tests passed: $ran"
-          if [ "$ran" -ne "$vectors" ]; then
-            echo "::error::$vectors vectors on disk but $ran vector tests passed"
+          skipped=$(grep -cE 'everyRouteVector\(\).*SKIPPED' "$RUNNER_TEMP/gradle.log" || true)
+          echo "executed $executed tests; route vectors on disk: $vectors; passed: $ran; skipped: $skipped; flagged roadFixture: $flagged"
+          if [ "$skipped" -ne "$flagged" ]; then
+            echo "::error::$flagged vectors flagged roadFixture but $skipped vector tests skipped"
+            exit 1
+          fi
+          if [ $((ran + skipped)) -ne "$vectors" ]; then
+            echo "::error::$vectors vectors on disk but $ran passed and $skipped skipped"
             exit 1
           fi

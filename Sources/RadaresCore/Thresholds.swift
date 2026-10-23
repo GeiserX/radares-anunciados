@@ -109,6 +109,45 @@ public enum Thresholds {
     /// so a bowed stretch can be missed; wider would take a parallel road for the stretch.
     public static let stretchMidJoinCrossTrackM: Double = 150
 
+    /// After this many consecutive fixes that fail the road polyline of a stretch (lateral above the match limit or the
+    /// course off), with a usable accuracy, the stretch is tracked along its chord as before: a wrong or stale road line
+    /// must never end a real corridor, so loss only changes how the remaining distance is measured.
+    public static let stretchPolylineLossFixes: Int = 5
+    /// A fix counts toward stretchPolylineLossFixes only with a horizontal accuracy at or under this: a tunnel or an
+    /// urban canyon is not a car that left the road.
+    public static let stretchPolylineLossMaxAccuracyM: Double = 50
+
+    // MARK: Road geometry (design 2.3, 2.5, 5.5)
+
+    /// A fix matches a road polyline only within this lateral distance of a segment: a lane plus GPS error on a
+    /// motorway is under 15 m, and a dual carriageway's other side sits 20 to 40 m away, where the course test decides.
+    public static let roadMatchLateralM: Double = 25
+    /// With a poor fix the lateral limit grows to this many times the horizontal accuracy, so a 30 m fix on the road
+    /// still matches; the course test keeps it off the other carriageway.
+    public static let roadMatchAccuracyFactor: Double = 1.5
+    /// A segment is a candidate only when the course is within this angle of its travel direction: a curve or a
+    /// lane change stays inside 45°, the other carriageway, a crossing road or a switchback's other leg does not.
+    public static let roadMatchCourseDeg: Double = 45
+    /// While matched, the along-road position may move at most this many times speed x seconds since the last fix
+    /// (plus roadAlongJumpFloorM): a 20 m GPS bias onto the upper leg of a hairpin would otherwise put the car past the radar.
+    public static let roadAlongJumpFactor: Double = 3
+    /// The fixed part of the along-road jump limit, for slow speeds and the first fix after a gap.
+    public static let roadAlongJumpFloorM: Double = 50
+    /// A car farther than this from every approach polyline of a radar is off that road: a straight-line warning is
+    /// then held as a silent notification instead of spoken (a parallel road, an overpass, a slip road).
+    public static let roadOffLateralM: Double = 60
+    /// Off-road counts only with a fix at least this accurate: a 50 m fix on the right road is not a car on another one.
+    public static let roadOffMaxAccuracyM: Double = 20
+    /// Off-road needs this many consecutive fixes (this one included), so one bad fix never holds a warning.
+    public static let roadOffFixes: Int = 3
+    /// Stretch lines are indexed in pieces of at most this many metres, each with its own bounding box, so a bowed
+    /// corridor is found near the road and not across the whole box of its chord (about 19,000 boxes for Spain).
+    public static let roadChunkM: Double = 2000
+    /// A road file with fewer entries than this is refused: the first build covers about 4,000 radars and stretches.
+    public static let roadsMinEntries: Int = 500
+    /// A road file larger than this is refused: the publisher fails its own build above 2 MB, so 4 MB is a broken file.
+    public static let roadsMaxBytes: Int = 4_000_000
+
     // MARK: Feed (design 5)
 
     /// A feed with fewer features than this is refused: today's file has about 4,450.

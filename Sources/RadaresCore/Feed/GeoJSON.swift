@@ -56,12 +56,31 @@ public struct GeoJSONProperties: Decodable, Sendable {
     public let road: String?
     public let kmFrom: Double?
     public let kmTo: Double?
+    /// Travel bearing of the monitored traffic, 0..<360, written by the feed's roads step (design 5.5).
+    public let bearing: Double?
+    /// "travel" whenever `bearing` is present; anything else and the bearing is ignored.
+    public let directionSemantics: String?
+    /// "high" or "low"; an unknown value reads as low.
+    public let directionConfidence: String?
+    /// The strongest signal behind `bearing` ("official_km", "oneway", "osm_tag"): kept for audit, not used.
+    public let bearingSource: String?
+    /// The publisher's road number on a point ("A-7"). Not `road`, so 0.1.3's notification body is unchanged.
+    public let roadRef: String?
+    /// The publisher's km marker on a point.
+    public let km: Double?
+    /// "positive", "negative" or "both": the publisher's direction along the km markers, verbatim.
+    public let kmDirection: String?
 
     enum CodingKeys: String, CodingKey {
-        case kind, name, source, active, maxspeed, direction, province, url, attribution, road
+        case kind, name, source, active, maxspeed, direction, province, url, attribution, road, bearing, km
         case validFrom = "valid_from"
         case validTo = "valid_to"
         case kmFrom = "km_from"
         case kmTo = "km_to"
+        case directionSemantics = "direction_semantics"
+        case directionConfidence = "direction_confidence"
+        case bearingSource = "bearing_source"
+        case roadRef = "road_ref"
+        case kmDirection = "km_direction"
     }
 }

@@ -344,7 +344,7 @@ public actor DriveSession {
             ledger = decoded
         }
         ledger.prune(now: Date())
-        return AlertEngine(store: store, ledger: ledgerForEngine(ledger, resuming: resuming))
+        return AlertEngine(store: store, roads: CurrentFeed.shared.roads, ledger: ledgerForEngine(ledger, resuming: resuming))
     }
 
     /// The persisted ledger as the engine gets it: the passes always, the stretch only when the drive is the one

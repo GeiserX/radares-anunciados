@@ -43,7 +43,7 @@ final class FeedDecoderTests: XCTestCase {
     }
 
     func testNumericDirectionBecomesABearingAndNegativesFoldMod360() throws {
-        let store = try Fixtures.store()
+        let store = try Fixtures.sampleStore()
         let r = try XCTUnwrap(store.radar(id: "osm-619772731"))
         XCTAssertEqual(r.bearing, 320)
         XCTAssertFalse(r.bidirectional)
@@ -60,7 +60,7 @@ final class FeedDecoderTests: XCTestCase {
     }
 
     func testBothNameAndNullVocabularies() throws {
-        let store = try Fixtures.store()
+        let store = try Fixtures.sampleStore()
         let corridor = try XCTUnwrap(store.radar(id: "dgt_invive-Tramo_Invive_344"))
         XCTAssertTrue(corridor.bidirectional)
         XCTAssertNil(corridor.bearing)
@@ -82,7 +82,7 @@ final class FeedDecoderTests: XCTestCase {
     }
 
     func testSectionTwinsMergeIntoTheirStretchBothEnds() throws {
-        let store = try Fixtures.store()
+        let store = try Fixtures.sampleStore()
         XCTAssertNil(store.radar(id: "dgt-CVM_161274-from"))
         XCTAssertNil(store.radar(id: "dgt-CVM_161274-to"))
         let stretch = try XCTUnwrap(store.radar(id: "dgt-CVM_161274"))
@@ -94,7 +94,7 @@ final class FeedDecoderTests: XCTestCase {
     }
 
     func testUnpairedSectionsStayPoints() throws {
-        let store = try Fixtures.store()
+        let store = try Fixtures.sampleStore()
         for id in ["sct-A-2-539.2-545.1", "euskadi-trabakua-tramo-1"] {
             let r = try XCTUnwrap(store.radar(id: id), id)
             XCTAssertEqual(r.kind, .section)
@@ -104,7 +104,7 @@ final class FeedDecoderTests: XCTestCase {
     }
 
     func testThirteenVertexLinesKeepTheirPathLength() throws {
-        let store = try Fixtures.store()
+        let store = try Fixtures.sampleStore()
         for id in ["salamanca-tramo-2", "salamanca-tramo-4"] {
             let r = try XCTUnwrap(store.radar(id: id), id)
             let end = try XCTUnwrap(r.end)

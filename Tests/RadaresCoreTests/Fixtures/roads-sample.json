@@ -1,0 +1,84 @@
+{
+ "attribution": "© OpenStreetMap contributors (ODbL 1.0)",
+ "features": {
+  "dgt_invive-curve-road": {
+   "gates": {
+    "end": [
+     {
+      "bearing": null,
+      "polyline": "_u_pFln}TsCdCsCdCqCdCsCdCqCdCsCdCqCdCsCdCsCdCqCdCsCdCqCdCsCdCqCdCsCdC"
+     }
+    ],
+    "start": [
+     {
+      "bearing": null,
+      "polyline": "o~_pFlupU@l@?n@Al@Al@Al@El@Cl@Gl@Gl@Il@Ij@Kj@Kj@Mh@Mj@Of@Qh@Qf@Qf@Sd@Ud@Ub@Ub@Wb@Y`@Y^Y^[\\[\\[Z]X]X]V_@T_@T_@Ra@P_@Pa@Na@Lc@Ja@Jc@Ha@Fc@Dc@Dc@Bc@@c@?c@Ac@Ac@Cc@Ea@Gc@Gc@Ia@Ka@Ma@Ma@Oa@Q_@S_@S_@U_@U]Y]Y]Y[][[Y_@Y_@Y_@Wa@Wc@"
+     }
+    ]
+   },
+   "line": "_zapF~sqUqCgCoCiCkCoCkCqCgCwCeCyCcC{C_CaD_CcD{BgDwBiDwBoDsBoDoBsDmBwDkByDgB{DeB_EaBaE_BeE{AeEyAiEsAkEsAmEmAoEkAqEiAuEeAuEaAwE}@yEy@yEw@}Es@}Eq@}Ek@aFi@aFe@aFa@cF_@eFYeFWeFSeFQgFKgFIgFCgFAgF@gFBgFHgFJgFPgFReFVeFXeF^eF`@cFd@aFh@aFj@_Fp@_Fr@}Ev@}Ex@yE|@yE`AwEdAuEhAuEjAqElAoErAmErAkExAiEzAeE~AeE`BaEdB_EfB{DjByDlBwDnBsDrBoDvBmDvBkDzBgD~BcD~B_DbC}CdCyCfCuCjCsCjCmCnCkCpCgC"
+  },
+  "dgt_invive-switchback-road": {
+   "gates": {
+    "end": [],
+    "start": [
+     {
+      "bearing": null,
+      "polyline": "_m|qFfxhQ?W?y@?y@?{@?y@?y@?y@?{@?y@?y@?y@?{@?GCIAEEGECECG?E?GBEBCFCDAH?F?z@?x@?x@?x@?z@?x@?x@?x@?z@?x@?x@?x@?z@?x@AHAFCFCDEBGBE?G?ECECEEAGCG?I?y@?{@?y@?y@?y@?{@?y@?y@?y@?{@?y@?y@?y@?{@?GCIAEEGECECG?E?GBEBCFCDAH?F?z@?x@?x@?x@?z@?x@?x@?x@?z@?x@?x@?x@?z@?x@"
+     }
+    ]
+   },
+   "line": "{r|qF~|hQaMt^aMt^aMt^aMr^aMt^_Mt^aMt^aMt^aMt^aMt^aMt^_Mr^"
+  },
+  "fixed-arc-road": {
+   "approaches": [
+    {
+     "bearing": null,
+     "polyline": "qyhnFvdfV?AOi@Mk@Mi@Mi@Kk@Kk@Kk@Ik@Ik@Im@Gk@Gm@Gm@Em@Ek@Em@Cm@Cm@Ao@Am@Am@?m@?m@?m@@o@@m@@m@Bm@Bm@Bm@Dm@Fm@Dk@Fm@Fm@Hk@Hk@Hm@Jk@Ji@Jk@Jk@Li@Ni@Li@Ni@Ni@Pg@Pg@Pg@Rg@Pe@Te@Re@Te@Tc@Tc@Vc@Tc@Va@Xa@V_@X_@X_@Z_@X]Z]Z[Z[\\[\\YZY^Y\\W\\W"
+    }
+   ]
+  },
+  "fixed-dual-high-road": {
+   "approaches": [
+    {
+     "bearing": null,
+     "polyline": "i{inF~|hQaM?aM?_M?aM?aM?aM?"
+    }
+   ]
+  },
+  "fixed-dual-low-road": {
+   "approaches": [
+    {
+     "bearing": null,
+     "polyline": "a`pnF~|hQ_M?aM?aM?aM?aM?aM?"
+    }
+   ]
+  },
+  "fixed-hairpin-road": {
+   "approaches": [
+    {
+     "bearing": null,
+     "polyline": "_ggnFpcwS?W?y@?y@?y@?y@?y@?y@?y@?y@?y@?y@?y@?y@?y@?y@?y@?ICGAGEEECECG?E?GBEBCDCFAF?H?x@?x@?x@?x@?x@?x@?x@?x@?x@?x@?x@?x@?x@?x@AHAFCFCDEBGBE?G?ECECEEAGCG?I?y@?y@?y@?y@?y@?y@?y@?y@?y@?y@?y@?y@?y@?y@?ICGAGEEECECG?E?GBEBCDCFAF?H?x@?x@?x@?x@?x@?x@?x@?x@?x@?x@"
+    }
+   ]
+  },
+  "fixed-sidejoin-road": {
+   "approaches": [
+    {
+     "bearing": null,
+     "polyline": "ue_pF~hsXsD?sD?sD?sD?sD?sD?sD?qD?sD?sD?sD?sD?sD?sD?sD?"
+    }
+   ]
+  },
+  "fixed-straight-road": {
+   "approaches": [
+    {
+     "bearing": null,
+     "polyline": "cchnFdjqXyAiEyAgEyAiEyAgEwAiEyAgEyAiEyAgEyAiEyAgEyAiEyAgEyAiEyAgEyAiE"
+    }
+   ]
+  }
+ },
+ "precision": 5,
+ "version": 1
+}

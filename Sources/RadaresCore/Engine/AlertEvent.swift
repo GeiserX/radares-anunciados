@@ -64,6 +64,12 @@ public struct DriveContent: Sendable, Codable, Hashable {
     /// "Datos de hace 3 días", "Abre la app". The "aprox." of the stretch remainder is the surfaces' caption, not a note.
     public var note: String?
     public var updatedAt: Date
+    /// A straight-line warning for a radar whose road the car is clearly not on (design 2.3): posted silently, never
+    /// spoken, and upgraded to a spoken warning once if the car joins the road.
+    public var held: Bool
+    /// A radar for the opposite flow with a high-confidence bearing (design 2.4): nothing is posted or spoken, only
+    /// the log row is written, so a wrong hide can be found in an exported log.
+    public var hidden: Bool
 
     public init(
         phase: DrivePhase,
@@ -77,7 +83,9 @@ public struct DriveContent: Sendable, Codable, Hashable {
         stretchRemainingMetres: Int? = nil,
         avgKmh: Int? = nil,
         note: String? = nil,
-        updatedAt: Date
+        updatedAt: Date,
+        held: Bool = false,
+        hidden: Bool = false
     ) {
         self.phase = phase
         self.kindSymbol = kindSymbol
@@ -91,6 +99,31 @@ public struct DriveContent: Sendable, Codable, Hashable {
         self.avgKmh = avgKmh
         self.note = note
         self.updatedAt = updatedAt
+        self.held = held
+        self.hidden = hidden
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case phase, kindSymbol, title, subtitle, distanceMetres, limit, speedKmh, opposite, stretchRemainingMetres, avgKmh, note, updatedAt, held, hidden
+    }
+
+    /// `held` and `hidden` default to false when absent, so content written before they existed still decodes.
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        phase = try c.decode(DrivePhase.self, forKey: .phase)
+        kindSymbol = try c.decode(String.self, forKey: .kindSymbol)
+        title = try c.decode(String.self, forKey: .title)
+        subtitle = try c.decode(String.self, forKey: .subtitle)
+        distanceMetres = try c.decodeIfPresent(Int.self, forKey: .distanceMetres)
+        limit = try c.decodeIfPresent(Int.self, forKey: .limit)
+        speedKmh = try c.decodeIfPresent(Int.self, forKey: .speedKmh)
+        opposite = try c.decode(Bool.self, forKey: .opposite)
+        stretchRemainingMetres = try c.decodeIfPresent(Int.self, forKey: .stretchRemainingMetres)
+        avgKmh = try c.decodeIfPresent(Int.self, forKey: .avgKmh)
+        note = try c.decodeIfPresent(String.self, forKey: .note)
+        updatedAt = try c.decode(Date.self, forKey: .updatedAt)
+        held = try c.decodeIfPresent(Bool.self, forKey: .held) ?? false
+        hidden = try c.decodeIfPresent(Bool.self, forKey: .hidden) ?? false
     }
 
     /// The idle card: nothing ahead. English by phone locale, like every other title the core writes.

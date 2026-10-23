@@ -15,6 +15,7 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
@@ -27,6 +28,9 @@ data class Vector(
     val description: String,
     val locale: String? = null,
     val negativeControl: Boolean? = null,
+    /// Drives over the road fixture (feed-sample-roads.geojson and roads-sample.json): the Kotlin port has no road
+    /// sidecar and no road rule yet, so these are skipped, and the workflow counts the skips (SPEC 10).
+    val roadFixture: Boolean? = null,
     val fixes: List<VFix>,
     val expected: List<VEvent>,
     val snapshots: List<VSnapshot>? = null,
@@ -159,6 +163,7 @@ class VectorSuiteTest {
             DynamicTest.dynamicTest(file.nameWithoutExtension) {
                 val vector = Vector.load(file)
                 assertEquals(file.nameWithoutExtension, vector.name, "the vector's name matches its file")
+                assumeFalse(vector.roadFixture == true, "${vector.name} drives over the road fixture: no road rule in the Kotlin port yet")
                 val run = VectorRunner.run(vector, Fixtures.store)
                 if (vector.negativeControl == true) {
                     assertFalse(run.mismatches.isEmpty(), "${vector.name}: the harness accepted a vector whose expectation is known to be wrong")
@@ -187,7 +192,7 @@ class VectorSuiteTest {
     /// The deleted-warning negative control fails on the count line exactly as on iOS.
     @Test
     fun theNegativeControlFailsOnTheEventCount() {
-        val negatives = Vector.files().map { Vector.load(it) }.filter { it.negativeControl == true }
+        val negatives = Vector.files().map { Vector.load(it) }.filter { it.negativeControl == true && it.roadFixture != true }
         assertTrue(negatives.isNotEmpty())
         val countMismatches = negatives.map { VectorRunner.run(it, Fixtures.store).mismatches.first() }
         assertTrue(countMismatches.any { it.contains("expected 1 events, got 2") }, "$countMismatches")
