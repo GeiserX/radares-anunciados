@@ -11,7 +11,7 @@ public func healthReport(_ i: HealthInputs, locale: Locale = Locale(identifier: 
     let l = HealthText(en: Phrasing.isEnglish(locale))
     return [
         locationRow(i, l), sessionRow(i, l), launchesRow(i, l), fenceRow(i, l), slcRow(i, l), feedRow(i, l), refreshRow(i, l),
-        notificationsRow(i, l), motionRow(i, l), voiceRow(i, l), filesRow(i, l), lastDriveRow(i, l),
+        notificationsRow(i, l), carPlayRow(i, l), motionRow(i, l), voiceRow(i, l), filesRow(i, l), lastDriveRow(i, l),
     ]
 }
 
@@ -24,6 +24,7 @@ public enum HealthTitles {
     public static let feed = "Datos"
     public static let refresh = "Actualización en segundo plano"
     public static let notifications = "Notificaciones"
+    public static let carPlay = "CarPlay"
     public static let motion = "Movimiento"
     public static let voice = "Voz"
     public static let files = "Archivos"
@@ -206,6 +207,48 @@ private func notificationsRow(_ i: HealthInputs, _ l: HealthText) -> HealthItem 
         return HealthItem(status: .warn, title: t, detail: l("Notificaciones urgentes desactivadas", "Time Sensitive notifications off"), action: .openSettings)
     }
     return HealthItem(status: .ok, title: t, detail: l("Autorizadas, urgentes permitidas", "Allowed, Time Sensitive on"))
+}
+
+/// Whether the warning's banner can reach the car screen. Never red: the voice and the phone's notification still
+/// warn without it. Amber only when the phone has met CarPlay and something stops the banner there.
+private func carPlayRow(_ i: HealthInputs, _ l: HealthText) -> HealthItem {
+    let t = l.title(HealthTitles.carPlay)
+    if !i.carPlayNotificationsSupported {
+        return HealthItem(
+            status: i.carPlayConnected ? .warn : .ok, title: t,
+            detail: l("El aviso en la pantalla del coche necesita iOS 18.4 o posterior", "The warning on the car screen needs iOS 18.4 or later")
+        )
+    }
+    if i.notificationAuthorization != .authorized {
+        return HealthItem(
+            status: i.carPlayConnected ? .warn : .ok, title: t,
+            detail: l("Sin permiso de notificaciones no hay aviso en el coche", "No warning on the car screen without notification permission"),
+            action: .openSettings
+        )
+    }
+    switch i.carPlaySetting {
+    case .enabled:
+        return HealthItem(status: .ok, title: t, detail: l("Permitido: el aviso sale también en la pantalla del coche", "Allowed: the warning also shows on the car screen"))
+    case .disabled:
+        return HealthItem(
+            status: .warn, title: t,
+            detail: l("Desactivado en Ajustes › Notificaciones › Radares Anunciados › Mostrar en CarPlay", "Off in Settings › Notifications › Radares Anunciados › Show in CarPlay"),
+            action: .openSettings
+        )
+    case .notSupported:
+        if i.carPlayConnected {
+            return HealthItem(
+                status: .warn, title: t,
+                detail: l("El permiso de notificaciones no incluye CarPlay: solo avisan la voz y el iPhone", "The notification permission does not include CarPlay: only the voice and the phone warn"),
+                action: .openSettings
+            )
+        }
+        return HealthItem(
+            status: .ok, title: t,
+            detail: l("El permiso de notificaciones no incluye CarPlay (aún no conectado a CarPlay)", "The notification permission does not include CarPlay (not connected to CarPlay yet)"),
+            action: .openSettings
+        )
+    }
 }
 
 private func motionRow(_ i: HealthInputs, _ l: HealthText) -> HealthItem {

@@ -118,6 +118,21 @@ public final class HealthMonitor {
         @unknown default: .disabled
         }
 
+        // CarPlay: the setting, whether the phone has met CarPlay (the scene connected once, or the car is the audio
+        // route right now), and the iOS 18.4 floor for banners from a driving-task app.
+        inputs.carPlaySetting = switch settings.carPlaySetting {
+        case .notSupported: .notSupported
+        case .disabled: .disabled
+        case .enabled: .enabled
+        @unknown default: .disabled
+        }
+        if AVAudioSession.sharedInstance().currentRoute.outputs.contains(where: { $0.portType == .carAudio }) {
+            Notifier.noteCarPlaySeen(now)
+        }
+        inputs.carPlayConnected = UserDefaults.standard.object(forKey: Notifier.carPlaySeenKey) != nil
+        inputs.carPlayNotificationsSupported = ProcessInfo.processInfo
+            .isOperatingSystemAtLeast(OperatingSystemVersion(majorVersion: 18, minorVersion: 4, patchVersion: 0))
+
         // Voz.
         inputs.spanishVoiceAvailable = AVSpeechSynthesisVoice(language: "es-ES") != nil
 

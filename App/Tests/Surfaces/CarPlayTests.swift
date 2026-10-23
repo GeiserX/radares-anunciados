@@ -123,4 +123,32 @@ final class CarPlayTests: XCTestCase {
         XCTAssertEqual(content.sound, Notifier.sound(voiceEnabled: true), "the sound stays as the voice setting decides")
         XCTAssertNil(Notifier.radarContent(phrase, voiceEnabled: true, silent: true).sound)
     }
+
+    /// A permission granted before 0.1.2 has no CarPlay setting; the app re-asks (silently) only then. A driver who
+    /// switched "Show in CarPlay" off keeps that choice, and nothing is asked before the person decided.
+    func testOnlyAGrantWithoutCarPlayIsAskedAgain() {
+        XCTAssertTrue(Notifier.shouldAddCarPlay(status: .authorized, carPlay: .notSupported))
+        XCTAssertFalse(Notifier.shouldAddCarPlay(status: .authorized, carPlay: .enabled))
+        XCTAssertFalse(Notifier.shouldAddCarPlay(status: .authorized, carPlay: .disabled), "the driver's own choice stays")
+        for status in [UNAuthorizationStatus.notDetermined, .denied, .provisional, .ephemeral] {
+            XCTAssertFalse(Notifier.shouldAddCarPlay(status: status, carPlay: .notSupported), "status \(status.rawValue)")
+        }
+    }
+
+    /// With the app open the warning is still a banner, so it reaches the car screen too.
+    func testAForegroundNotificationIsStillABanner() {
+        XCTAssertTrue(Notifier.foregroundPresentation.contains(.banner))
+        XCTAssertTrue(Notifier.foregroundPresentation.contains(.sound))
+    }
+
+    /// The built Info.plist declares the CarPlay scene, and its delegate class resolves: what puts the icon on the
+    /// CarPlay Home Screen, the condition Apple names for notifications on the car screen.
+    func testTheInfoPlistDeclaresTheCarPlayScene() throws {
+        let manifest = try XCTUnwrap(Bundle.main.object(forInfoDictionaryKey: "UIApplicationSceneManifest") as? [String: Any])
+        let configurations = try XCTUnwrap(manifest["UISceneConfigurations"] as? [String: Any])
+        let carPlay = try XCTUnwrap(configurations["CPTemplateApplicationSceneSessionRoleApplication"] as? [[String: Any]])
+        let delegateName = try XCTUnwrap(carPlay.first?["UISceneDelegateClassName"] as? String)
+        XCTAssertNotNil(NSClassFromString(delegateName), "\(delegateName) must resolve")
+        XCTAssertTrue(NSClassFromString(delegateName) is CarPlaySceneDelegate.Type)
+    }
 }

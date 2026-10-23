@@ -114,6 +114,15 @@ public struct HealthInputs: Sendable, Codable, Hashable {
     public var notificationAuthorization: NotificationAuthorization
     public var timeSensitiveSetting: NotificationSetting
 
+    // CarPlay
+    /// `UNNotificationSettings.carPlaySetting`: whether iOS draws this app's notifications on the car screen.
+    public var carPlaySetting: NotificationSetting
+    /// The phone has been on CarPlay with this app installed: the app's CarPlay scene connected once, or the audio
+    /// route was the car when Estado was collected. Without it a missing CarPlay setting is expected, not a fault.
+    public var carPlayConnected: Bool
+    /// iOS 18.4 or later, the first release that draws a driving-task app's notifications on the car screen.
+    public var carPlayNotificationsSupported: Bool
+
     // Movimiento
     public var motionAuthorization: MotionAuthorization
 
@@ -151,6 +160,9 @@ public struct HealthInputs: Sendable, Codable, Hashable {
         lowPowerMode: Bool = false,
         notificationAuthorization: NotificationAuthorization = .notDetermined,
         timeSensitiveSetting: NotificationSetting = .notSupported,
+        carPlaySetting: NotificationSetting = .notSupported,
+        carPlayConnected: Bool = false,
+        carPlayNotificationsSupported: Bool = true,
         motionAuthorization: MotionAuthorization = .notDetermined,
         lastSpeechSetActiveError: String? = nil,
         spanishVoiceAvailable: Bool = true,
@@ -180,6 +192,9 @@ public struct HealthInputs: Sendable, Codable, Hashable {
         self.lowPowerMode = lowPowerMode
         self.notificationAuthorization = notificationAuthorization
         self.timeSensitiveSetting = timeSensitiveSetting
+        self.carPlaySetting = carPlaySetting
+        self.carPlayConnected = carPlayConnected
+        self.carPlayNotificationsSupported = carPlayNotificationsSupported
         self.motionAuthorization = motionAuthorization
         self.lastSpeechSetActiveError = lastSpeechSetActiveError
         self.spanishVoiceAvailable = spanishVoiceAvailable

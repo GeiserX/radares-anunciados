@@ -34,6 +34,9 @@ final class HealthReportTests: XCTestCase {
             lowPowerMode: false,
             notificationAuthorization: .authorized,
             timeSensitiveSetting: .enabled,
+            carPlaySetting: .enabled,
+            carPlayConnected: true,
+            carPlayNotificationsSupported: true,
             motionAuthorization: .authorized,
             lastSpeechSetActiveError: nil,
             spanishVoiceAvailable: true,
@@ -52,7 +55,7 @@ final class HealthReportTests: XCTestCase {
         var i = healthy()
         i.locationAuthorization = .whenInUse
         let en = healthReport(i, locale: Fixtures.en)
-        XCTAssertEqual(en.map(\.title), ["Location", "Always session", "Background launches", "Parked fence", "Significant change", "Data", "Background refresh", "Notifications", "Motion", "Voice", "Files", "Last drive"])
+        XCTAssertEqual(en.map(\.title), ["Location", "Always session", "Background launches", "Parked fence", "Significant change", "Data", "Background refresh", "Notifications", "CarPlay", "Motion", "Voice", "Files", "Last drive"])
         XCTAssertEqual(en[0].detail, "While Using only: open the app before you drive, or grant Always")
         XCTAssertEqual(en[5].detail, "4500 radars, 1 h ago")
         let spanishWords = ["hace", "Siempre", "Sin ", "Valla", "viajes", "Voz", "Datos", "Última"]
@@ -64,13 +67,13 @@ final class HealthReportTests: XCTestCase {
         XCTAssertEqual(HealthTitles.localized(HealthTitles.lastDrive, locale: Fixtures.es), HealthTitles.lastDrive)
     }
 
-    func testAHealthyPhoneIsAllGreenWithTwelveRows() {
+    func testAHealthyPhoneIsAllGreenWithThirteenRows() {
         let report = healthReport(healthy())
-        XCTAssertEqual(report.count, 12)
+        XCTAssertEqual(report.count, 13)
         XCTAssertEqual(report.filter { $0.status != .ok }.map(\.title), [])
         XCTAssertEqual(report.map(\.title), [
             HealthTitles.location, HealthTitles.session, HealthTitles.launches, HealthTitles.fence, HealthTitles.slc,
-            HealthTitles.feed, HealthTitles.refresh, HealthTitles.notifications, HealthTitles.motion,
+            HealthTitles.feed, HealthTitles.refresh, HealthTitles.notifications, HealthTitles.carPlay, HealthTitles.motion,
             HealthTitles.voice, HealthTitles.files, HealthTitles.lastDrive,
         ])
     }
@@ -193,6 +196,44 @@ final class HealthReportTests: XCTestCase {
         XCTAssertEqual(row(HealthTitles.notifications, i).status, .fail)
         i.notificationAuthorization = .provisional
         XCTAssertEqual(row(HealthTitles.notifications, i).status, .fail, "provisional is quiet delivery, not what the driver needs")
+    }
+
+    /// CarPlay: green when iOS draws the banner on the car screen, amber only once the phone has met CarPlay and
+    /// something stops the banner there, never red (the voice and the phone still warn).
+    func testCarPlay() {
+        var i = healthy()
+        XCTAssertEqual(row(HealthTitles.carPlay, i).status, .ok)
+        XCTAssertEqual(row(HealthTitles.carPlay, i).detail, "Permitido: el aviso sale también en la pantalla del coche")
+
+        i.carPlaySetting = .disabled
+        XCTAssertEqual(row(HealthTitles.carPlay, i).status, .warn)
+        XCTAssertEqual(row(HealthTitles.carPlay, i).action, .openSettings)
+        XCTAssertTrue(row(HealthTitles.carPlay, i, locale: Fixtures.en).detail.contains("Show in CarPlay"))
+
+        // A permission granted before the app asked for `.carPlay` (0.1.0, 0.1.1) reads as not supported.
+        i.carPlaySetting = .notSupported
+        XCTAssertEqual(row(HealthTitles.carPlay, i).status, .warn)
+        i.carPlayConnected = false
+        XCTAssertEqual(row(HealthTitles.carPlay, i).status, .ok, "no CarPlay seen yet: green")
+        XCTAssertEqual(row(HealthTitles.carPlay, i).detail, "El permiso de notificaciones no incluye CarPlay (aún no conectado a CarPlay)",
+                       "the permission fact shows before the phone ever meets CarPlay")
+        XCTAssertEqual(row(HealthTitles.carPlay, i).action, .openSettings)
+
+        i = healthy()
+        i.carPlayNotificationsSupported = false
+        XCTAssertEqual(row(HealthTitles.carPlay, i).status, .warn, "iOS 18.0 to 18.3 on CarPlay")
+        XCTAssertTrue(row(HealthTitles.carPlay, i).detail.contains("18.4"))
+
+        i = healthy()
+        i.notificationAuthorization = .denied
+        XCTAssertEqual(row(HealthTitles.carPlay, i).status, .warn)
+        XCTAssertEqual(row(HealthTitles.notifications, i).status, .fail, "the Notificaciones row stays the red one")
+
+        for setting in [HealthInputs.NotificationSetting.enabled, .disabled, .notSupported] {
+            i = healthy()
+            i.carPlaySetting = setting
+            XCTAssertNotEqual(row(HealthTitles.carPlay, i).status, .fail)
+        }
     }
 
     func testMotion() {

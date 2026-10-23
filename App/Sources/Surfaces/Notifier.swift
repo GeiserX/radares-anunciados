@@ -10,6 +10,11 @@
 // deprecated, the level comes from the entitlement). Every radar notification carries the `radar` category,
 // registered with `allowInCarPlay`: the two things iOS requires before it mirrors a notification on the car
 // screen. A driver with Driving Focus may not see these: speech is the surface that always arrives.
+//
+// A permission granted before 0.1.2, when the request had no `.carPlay`, reads `carPlaySetting == .notSupported`.
+// `addCarPlayToGrantedAuthorization()` asks again at every launch and when the car connects: "Subsequent calls to
+// this method don't prompt the person again", so the call should be silent and should record the missing option;
+// Apple does not say it does, so VERIFY C10 confirms it on a real phone. If it does not, delete and reinstall the app.
 
 import RadaresCore
 import UIKit
@@ -30,6 +35,8 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     /// The sound of the radar notification beside the voice: a 150 ms tick, so it does not stack with the sentence.
     public nonisolated static let alertSoundName = "radar-tick.caf"
     private static let healthNoticeKey = "surfaces.healthNoticePostedAt"
+    /// When the phone was last seen on CarPlay (the scene connected, or the audio route was the car): Estado's CarPlay row.
+    public nonisolated static let carPlaySeenKey = "surfaces.carPlaySeenAt"
 
     private let logger = Logger(subsystem: "io.github.geiserx.radares", category: "notifications")
 
@@ -41,6 +48,29 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     /// you must enable CarPlay for the notification types you want displayed".
     public nonisolated static func radarNotificationCategory() -> UNNotificationCategory {
         UNNotificationCategory(identifier: radarCategory, actions: [], intentIdentifiers: [], options: [.allowInCarPlay])
+    }
+
+    /// True when the person already allowed notifications but iOS has no CarPlay setting for the app: the grant
+    /// predates the `.carPlay` option. A `.disabled` setting is the driver's own choice in Settings and stays.
+    public nonisolated static func shouldAddCarPlay(status: UNAuthorizationStatus, carPlay: UNNotificationSetting) -> Bool {
+        status == .authorized && carPlay == .notSupported
+    }
+
+    /// Re-asks with `authorizationOptions` when `shouldAddCarPlay` says so. Apple says no prompt appears; iOS should
+    /// record the added option, which VERIFY C10 confirms (fallback: delete and reinstall the app). Logs the CarPlay
+    /// setting before and after.
+    public func addCarPlayToGrantedAuthorization() async {
+        let center = UNUserNotificationCenter.current()
+        let before = await center.notificationSettings()
+        guard Self.shouldAddCarPlay(status: before.authorizationStatus, carPlay: before.carPlaySetting) else { return }
+        let granted = (try? await center.requestAuthorization(options: Self.authorizationOptions)) ?? false
+        let after = await center.notificationSettings().carPlaySetting
+        logger.notice("carPlay setting \(before.carPlaySetting.rawValue) -> \(after.rawValue), granted \(granted)")
+    }
+
+    /// Records that the phone is on CarPlay now (Estado's CarPlay row reads it).
+    public nonisolated static func noteCarPlaySeen(_ now: Date = Date()) {
+        UserDefaults.standard.set(now, forKey: carPlaySeenKey)
     }
 
     /// Registered at launch, before any warning can post.
@@ -144,12 +174,16 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
 
     // MARK: UNUserNotificationCenterDelegate
 
+    /// What a notification does while the app is in the foreground, on the phone or on the car screen: a banner,
+    /// in the list, with its sound. Without `.banner` iOS would hold it back from both screens while the app is open.
+    public nonisolated static let foregroundPresentation: UNNotificationPresentationOptions = [.banner, .list, .sound]
+
     /// In the foreground a radar notification still shows as a banner: the self-test and a driver with the app open see it.
     public nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
-        [.banner, .list, .sound]
+        Self.foregroundPresentation
     }
 
     public nonisolated func userNotificationCenter(
