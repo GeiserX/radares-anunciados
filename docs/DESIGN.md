@@ -119,15 +119,25 @@ Course in use (2.1's `course` field): the platform course when the fix's speed i
 
 Distances are haversine (one `cos` per candidate is nothing at this size), bearings via `atan2`. Candidates come from `RadarStore.candidates(near:within:on:)`, a linear scan over all entries with a precomputed lat/lon bounding box per radar (about 20 µs per fix on 4,452 entries). No spatial index; threshold to revisit: 50k features.
 
+**Along the road (`RoadApproach`).** The straight-line rule above cannot tell the radar's road from a road beside it, an overpass, a slip road or the other carriageway, and on a mountain road it marks a radar passed on the lower leg of a switchback while the radar is still ahead. When the road sidecar (5.1, 5.5) has approaches for a point radar (one polyline per monitored direction, up to 1.5 km, ending at the radar), the fix is measured along them:
+- A segment is a candidate only when the fix is within 25 m of it (or 1.5 × the horizontal accuracy, whichever is larger) AND the course is within 45° of its travel direction; the smallest lateral among candidates wins. 25 m holds a lane plus GPS error on a motorway; a dual carriageway's other side is 20 to 40 m away, and there the course decides. 45° keeps curves and lane changes and drops the other carriageway, a crossing road and a switchback's other leg. The two tests are applied together: picking the nearest segment first and testing the course afterwards fails on a switchback, where two legs sit within 25 m with opposite bearings.
+- While matched, the along-road position may move at most 3 × speed × seconds since the last fix + 50 m. A 20 m GPS bias toward the upper leg of a hairpin otherwise puts the car hundreds of metres along the road, past the radar; 3× leaves room for a speed that changes and a skipped fix, and the 50 m floor for slow speeds.
+- Matched: distance = approach length − along, closing over two decreases of that distance, late from the first along-road distance of the run, the direction always holds (an approach exists only for a monitored flow). Pass when along reaches length − 30 m; the rising-distance pass rule is not used while matched.
+- Not matched: the straight-line rule as before, with one change. A car farther than 60 m from every approach, with an accuracy of 20 m or better, on three consecutive fixes, is off that road: a full straight-line result is **held**, posted as a silent notification and never spoken. 60 m is past any lateral error the match accepts; 20 m keeps a poor fix on the right road from looking like another road; three fixes keep one bad fix from holding a warning. A held radar is upgraded to full once, if the car later joins the road (a side road joining 300 m before the radar): late, with the along-road distance.
+- A radar with no approaches behaves exactly as before, and so does every radar when there is no sidecar: the 28 original route vectors run both ways.
+
 ### 2.4 Direction and heading summary
 
 | feed value | app behaviour |
 |---|---|
+| `bearing` + `direction_semantics: "travel"` + `direction_confidence: "high"` | heading gate ±90°; mismatch → hidden: nothing posted or spoken, the pass is silent, one `alert` row with `suppressedByDirection` and no sinks |
+| `bearing` + `direction_semantics: "travel"`, confidence `low` or absent | heading gate ±90°; mismatch → `.visual`, logged `suppressedByDirection` |
 | numeric (OSM) | heading gate ±90°; mismatch → `.visual`, logged `suppressedByDirection` |
 | `both` | always `.full` |
 | name (DGT "sentido ZARAGOZA") | always `.full`; the name is spoken and shown so the driver judges |
 | null | always `.full` |
-| future `bearing` + `direction_semantics: "travel"` (section 5.5) | hard suppression on mismatch; the only field that may hide a radar |
+
+The feed sets confidence high only when two independent signals agree: the DGT (or Navarra) km direction resolved against the road, and the one-way carriageway the radar sits on, at least 5 m nearer it than the other one. One signal alone is low. A travel bearing replaces the OSM number but keeps a DGT place name, which is still spoken.
 
 ### 2.5 Stretches and sections (`StretchTracker`)
 
@@ -142,6 +152,13 @@ Rules:
 - Relaunch inside: the ledger (2.6) carries the stretch the car is inside (radar, entry gate and position, entry time and speed), written at entry and cleared at exit; an engine rebuilt after a kill resumes it (a resumed drive only: a new drive starts outside every stretch, whatever the ledger says), says *"Fin de tramo."* at the far gate, and estimates the path driven before the relaunch as the straight distance from the entry position (exact on a straight road), so the section average does not restart from zero.
 - Exit, whichever first: within 300 m of the far gate (voice *"Fin de tramo."*); straight-line distance from the entry gate > `max(roadMetres, chordMetres) + 1,000 m` (exact for a road: a car on the road is never farther from the entry than the road length; silent); 2× the traverse time expected at entry speed (silent); drive end.
 - The pass state (2.6) is keyed by the stretch id, so a stretch is one pass.
+
+With a road line in the sidecar (`line`, and gate approaches under `gates`):
+- **Gate entry.** The road rule of 2.3 runs on each gate's approaches (the roads that lead into that end). A full result enters at that gate with the along-road distance; while the car is on a gate approach without a result yet, the straight-line cone is not tried for that stretch. Today a road that curves into a stretch at 40° to the chord, or a stretch whose road leaves its gate at 55° to the chord, keeps the course outside the 60° entry test until a few hundred metres before the gate; the gate approach enters it at the warn distance. No gates, or no gate approach matched: the cone as before.
+- **Join along the road.** Three consecutive fixes matched to the line (25 m / 45° either way along it) between the 300 m gate margins put the car inside, the gate behind it as entry, the road ahead as the remaining length. This replaces the 150 m chord rule for such a stretch: a corridor whose road bows 2 km off its chord is joined where the road is.
+- **Remaining** is the line length minus the car's position along it (the along-jump guard of 2.3 applies), not chord minus projection, which on a bowed corridor is short by the bow.
+- **Loss falls back to the chord.** Five consecutive accurate fixes (50 m or better) off the line switch the stretch to the chord estimate until the line matches again; a few missed fixes keep the last figure. The far-gate, distance and time exits are unchanged (the distance and time exits also count the line's length). There is deliberately no off-road exit: a wrong or stale road line plus a silent exit would end a real corridor quietly, and the driver would lose "Fin de tramo" with it.
+- **Resume after a relaunch.** The ledger is unchanged; the line is looked up again from the sidecar on the first fix, and the path before the relaunch is the entry position's distance to the entry gate plus the along-road distance from it when that fix matches the line, the straight estimate otherwise.
 
 ### 2.6 Once per pass and cooldown (`PassTracker` + `PassLedger`)
 
@@ -262,9 +279,11 @@ So a Live Activity could only begin with the app on screen at the start of the d
 
 `UNMutableNotificationContent.interruptionLevel = .timeSensitive`: "The system presents the notification immediately, lights up the screen, can play a sound, and breaks through system notification controls [...] such as Notification Summary and Focus" (https://developer.apple.com/documentation/usernotifications/unnotificationinterruptionlevel/timesensitive). Capability "Time Sensitive Notifications" (entitlement `com.apple.developer.usernotifications.time-sensitive`, WWDC21 10091 https://developer.apple.com/videos/play/wwdc2021/10091/). Authorization `requestAuthorization(options: [.alert, .sound])`: the `.timeSensitive` option is deprecated (availability iOS 15.0 to 15.0: https://developer.apple.com/documentation/usernotifications/unauthorizationoptions). Posted for every warning, unconditionally: a `.full` warning with the core's phrase, a `.visual` one with the same title and body built from `Phrasing`, `, sentido contrario` appended for the opposite flow and no sound then. `sound` is the 150 ms `radar-tick.caf` when voice is on (speech can fail on a cold background launch or during a call, and a lit screen with no sound is a missed warning), `.default` when the driver turned voice off. One per radar pass and per stretch entry; `passed` and `Fin de tramo` post nothing (the pass removes the radar's notification). Estado reads `UNNotificationSettings.authorizationStatus` and `timeSensitiveSetting` (https://developer.apple.com/documentation/usernotifications/unnotificationsettings/timesensitivesetting). It passes the Focus modes that allow Time Sensitive notifications; **Driving Focus may silence it.** No Apple page says Time Sensitive passes Driving Focus: Apple's Driving Focus page documents only people (calls, Auto-Reply) as what comes through (https://support.apple.com/guide/iphone/stay-focused-while-driving-iphae754533b/ios), Driving has no Apps section where the "Time Sensitive Notifications" toggle of other Focuses lives, and hands-on reports from users (not Apple staff) say "app notifications, even time sensitive ones, will have to wait until you exit driving focus mode" (https://discussions.apple.com/thread/256018482). So the notification is the visual surface for the no-Focus case; speech is the only Focus-proof surface (audio sessions are not Focus-filtered), and onboarding says that with Driving Focus the warning arrives by voice. "Time Sensitive through a Driving Focus" is an explicit pass/fail row in VERIFY.md. Drawn on the CarPlay screen by iOS under the driving-task entitlement (4.5), with no change to how the app warns: the request asks `[.alert, .sound, .carPlay]` (`Notifier.authorizationOptions`) and every radar notification carries the `radar` category, registered with `allowInCarPlay` at launch.
 
+Every `.visual` post is silent: the opposite flow, a pacing gap and a warning held off the radar's road (2.3) are shown, never sounded, and a silent post never removes another radar's pending `.full` notification, so a radar on the other carriageway firing a moment later cannot replace the warning for the radar ahead on the Lock Screen or the car screen. A hidden warning (2.4) posts nothing.
+
 ### 4.4 In-app map and status
 
-SwiftUI `Map` with the radars within 5 km (points by kind, polylines for stretches, grey `reported` labelled "sin confirmar"), the user's position, a "next radar" card fed by `AlertEngine.snapshot`, the Estado strip above the map, and "Últimos avisos" (24 h: time, kind, road, distance, speed, level, sinks). Settings: voice on/off, "Avisos" master switch, "Pausar hoy", export log. Sources screen with each `attribution` verbatim and its `url`.
+SwiftUI `Map` with the radars within 5 km (points by kind, polylines for stretches, grey `reported` labelled "sin confirmar"), the user's position, a "next radar" card fed by `AlertEngine.snapshot`, the Estado strip above the map, and "Últimos avisos" (24 h: time, kind, road, distance, speed, level, sinks). Settings: voice on/off, "Avisos" master switch, "Pausar hoy", export log. Sources screen with each `attribution` verbatim and its `url`. The map draws a stretch along its road when the sidecar has a road line for it (approach and gate polylines are not drawn), hides announced radars whose dates are over, and keeps a corridor whose chord crosses the 5 km box even when both of its ends are outside it.
 
 ### 4.5 CarPlay driving-task scene (`CarPlayScene`): the icon that lets the notification reach the car screen
 
@@ -280,6 +299,8 @@ Source: `https://geiserx.github.io/radares-anunciados-ha/feed.geojson` only. `st
 
 A plain `URLSession` GET with `If-None-Match: <etag>`, 15 s timeout, `allowsCellularAccess = true` (about 160 KB gzipped; measured 0.24 to 0.49 s for a full body, 0 bytes on a 304). No background `URLSession`, no `handleEventsForBackgroundURLSession`: the whole transfer fits inside a `BGAppRefreshTask`'s "30 seconds of run time" (WWDC19 707, https://nonstrict.eu/wwdcindex/wwdc2019/707/) and inside a running drive. 304 → `checkedAt` moves; 200 → `FeedValidator` (parses, `type == FeatureCollection`, `features.count ≥ 2,000` against 4,452 today, at least one `fixed`, every feature has `id`, `kind`, `geometry`), then `FileStore.replace` (atomic rename, previous file kept as `feed.geojson.bak`), `RadarStore.reload()`, log `feedUpdated(count, etag)`. A failed validation keeps the old file and logs a red event: a half-empty publish never replaces a good file.
 
+**Road sidecar (`RoadsClient`, core).** After every feed request that answered 200 or 304, a second conditional GET of `https://geiserx.github.io/radares-anunciados-ha/roads.json` with its own ETag (`FeedMeta.roadsEtag`), the same timeout, cellular allowed. The publisher writes it deterministically, so it changes only when roads or radars change and most requests are a 304 (about 0.85 MB gzipped when it changes). `RoadsValidator`: at most 4,000,000 bytes, version 1, at least 500 entries, every polyline decodes to two distinct vertices; a refused file, a 404 or an error keeps the previous file and writes a `roadsFailed` row; a stored one writes `roadsChecked` and `roadsUpdated`. Alerts never depend on it, so it has no Estado row.
+
 ### 5.2 Refresh schedule (`FeedRefreshPolicy`, pure, core)
 
 - `BGAppRefreshTaskRequest("io.github.geiserx.radares.refresh")`, `earliestBeginDate = now + 6 h`, resubmitted at the end of each run; requires the `fetch` background mode (https://developer.apple.com/documentation/backgroundtasks/bgapprefreshtask). 6 h matches the publisher's cadence.
@@ -293,11 +314,15 @@ A plain `URLSession` GET with `If-None-Match: <etag>`, 15 s timeout, `allowsCell
 
 `Application Support/Radares/`: `feed.geojson`, `feed.geojson.bak`, `feed.meta.json` (`etag`, `lastModified`, `fetchedAt`, `checkedAt`, `featureCount`, `countsByKind`, `lastError`), `passes.json`, `events.jsonl`. All written with `Data.write(to:options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])` and the directory attribute `.protectionKey = .completeUntilFirstUserAuthentication`: "After the user unlocks the device for the first time, your app can access the file and continue to access it even if the user subsequently locks the device." (https://developer.apple.com/documentation/foundation/fileprotectiontype/completeuntilfirstuserauthentication). Not `.none`: nothing needs the file before first unlock because iOS delivers no location events before first unlock either. `FileStore` reads the attribute back after each feed swap and logs `protectionVerified(ok)`: the one check that proves C is closed on the device. `isExcludedFromBackup = true` on the folder (re-downloadable). No SQLite, no app group container for the feed, no file held open across suspension.
 
+`roads.json` sits in the same folder with the same protection class; `feed.meta.json` also carries `roadsEtag`, `roadsFetchedAt`, `roadsCheckedAt` and `roadsLastError` (optional, so an older meta decodes). A bundled `roads-snapshot.json` is copied in when no roads file exists; `scripts/update-snapshot.sh` downloads it beside the feed once the publisher ships it, and refuses a file that fails the validator's rules.
+
 Bundled snapshot `App/Sources/Resources/feed-snapshot.geojson`, copied into the folder on first launch when no feed exists, so the first drive after install works offline; `scripts/update-snapshot.sh` refreshes it; `release.yml` fails when the snapshot is older than 30 days (a gate that can go red).
 
 ### 5.4 Decoding, memory, lookup
 
 `FeedDecoder` parses GeoJSON with `JSONDecoder` into `[Radar]` (value types, about 4,452 × ~120 bytes ≈ 0.5 MB resident; the two 13-vertex lines keep their arrays). Decoding 2.9 MB is expected at 80 to 200 ms on an A15-class core; the perf test asserts < 500 ms. Transient JSON memory is tens of MB and is freed before the probe starts; backgrounded apps should stay under 50 MB (WWDC20 10078, https://developer.apple.com/videos/play/wwdc2020/10078/). No binary cache in v1; it is the upgrade path if the TestFlight measurement says otherwise.
+
+Road sidecar in memory (`RoadGeometry`): the encoded polyline strings are kept (about 1.3 MB for the live file) and decoded on first use into a cache of at most 512 shapes; decoding the whole file into coordinates would be about 260,000 vertices, over 10 MB. Stretch lines are decoded once at load for their index: pieces of at most 2 km of road, one lat/lon box each (about 19,000 boxes for Spain, a linear scan well under 0.1 ms), so a stretch is a candidate near its road and not only near its chord. Projection runs in a flat frame around each polyline's middle, one cosine per polyline. Measured on a build Mac in a debug build: validate and decode of a 1.5 MB synthetic sidecar 212 ms, ingest with an approach on every radar of a 4,500-feature store 1.6 ms per fix.
 
 Lookup: `RadarStore.candidates(near:within:on:)` is a linear scan with a precomputed lat/lon bounding box per radar (points: the point; lines: their bbox), then the exact distance for survivors. Densest 0.1° 3×3 neighbourhood today: 280 features.
 
@@ -305,11 +330,9 @@ Lookup: `RadarStore.candidates(near:within:on:)` is a linear scan with a precomp
 
 What the app reads today: `FeatureCollection` of `Feature { id, geometry: Point|LineString, properties: { kind, name, source, active, maxspeed, direction, province, url, attribution, radius_m?, valid_from?, valid_to?, reported?, road?, km_from?, km_to? } }`. Unknown kinds and properties are ignored. `radius_m` is an HA zone artefact, unused.
 
-Requests for the feed repo (`radares-anunciados-ha`), none blocking, all honoured when present and ignored when absent:
-1. `bearing` (degrees, heading of the monitored traffic) where the source allows it (OSM `direction` mapped under the community reading; DGT "sentido X" resolved from the road geometry the feed repo already has), plus `direction_semantics: "travel"` so clients may gate with confidence. Until then single-direction DGT radars warn both ways with the direction spoken.
-2. Stretch geometry following the road where a source has it (OSM ways), or `geometry_is_chord: true` otherwise.
-3. An explicit `section_of: <stretch id>` on `section` points instead of the `-from`/`-to` suffix convention.
-4. `generated` (ISO date) at the top level of `feed.geojson` (today freshness comes from `Last-Modified`).
+Also read on points, all optional: `bearing`, `direction_semantics`, `direction_confidence` (2.4), and `road_ref`, `km`, `km_direction`, `bearing_source` (kept for later, unused). The feed's geometry is unchanged by them: points stay points, stretches stay their published chords, so 0.1.3 and Home Assistant read the same file.
+
+The road geometry lives in the sidecar `roads.json` (`docs/SPEC.md`, "Road geometry sidecar"): approaches for points (directed, ending at the radar snapped to the road), a road line plus gate approaches for stretches, Google polylines at precision 5, derived from OpenStreetMap (ODbL 1.0). A section point folded into its stretch has no entry. Still requested from the feed repo, ignored until present: an explicit `section_of` on section points, and `generated` at the top level of `feed.geojson`.
 
 ---
 
@@ -398,12 +421,16 @@ radares-anunciados/
     Feed/FeedMeta.swift                              core                    etag, lastModified, fetchedAt, checkedAt, counts, lastError
     Feed/FeedClient.swift                            core                    conditional GET (URLSession, 15 s), FeedFetch result
     Feed/FeedRefreshPolicy.swift                     core                    shouldRefresh(meta:now:trigger:)
+    Feed/RoadsClient.swift                           core                    conditional GET of roads.json with its own ETag
+    Roads/Polyline.swift                             core                    polyline5 decode/encode, flat-frame projection, chunk boxes
+    Roads/RoadGeometry.swift                         core                    RoadShape, lazy decode cache, line index; RoadsValidator
     Feed/RadarStore.swift                            core                    load, candidates(near:within:on:), radar(id:), count
     Geo/Geo.swift                                    core                    haversine, bearing, angleDiff, crossTrack, projection
     Engine/WarnPolicy.swift                          core                    warnDistance(speed:), median speed
     Engine/ApproachEvaluator.swift                   core                    ahead, closing, inRange, directionMatch, late
     Engine/PassTracker.swift, PassLedger.swift       core                    per-id state machine; Codable ledger, prune
-    Engine/StretchTracker.swift                      core                    gates, inside, remaining, avg, exits
+    Engine/StretchTracker.swift                      core                    gates, inside, remaining, avg, exits; gate approaches, road-line join, loss fallback
+    Engine/RoadApproach.swift                        core                    the road rule of 2.3: candidate segments, along-jump guard, along-road approach
     Engine/DrivingDetector.swift                     core                    3 fixes ≥ 6 m/s; paused/resume rules as pure functions
     Engine/AlertEngine.swift                         core                    ingest(_:) -> [AlertEvent], endDrive(), snapshot, pacing
     Phrasing/Phrasing.swift                          core                    Phrase(spoken, title, body) for every event
@@ -411,7 +438,8 @@ radares-anunciados/
     Health/HealthReport.swift                        core                    healthReport(_:) rules
   Tests/RadaresCoreTests/                            core
     Fixtures/feed-sample.geojson                                             ~250 real features: all kinds, both 13-vertex lines, -from/-to twins, the A-2 radar, the N-232 stretch dgt_invive-Tramo_Invive_344, a negative OSM bearing
-    Fixtures/vectors/*.json                                                  route vectors (fix arrays + expected events); the Android contract; one deliberately broken vector
+    Fixtures/vectors/*.json                                                  route vectors (fix arrays + expected events); the Android contract; two deliberately broken vectors
+    Fixtures/feed-sample-roads.geojson, roads-sample.json                    seven synthetic road scenarios and their sidecar (scripts/make-roads-fixture.py)
     FeedDecoderTests, FeedValidatorTests, FeedRefreshPolicyTests, RadarStoreTests, GeoTests, WarnPolicyTests,
     ApproachTests, PassTrackerTests, StretchTrackerTests, DrivingDetectorTests, AlertEngineVectorTests, PhrasingTests,
     EventLogTests, HealthReportTests, PerformanceTests
@@ -438,7 +466,7 @@ radares-anunciados/
   docs/VERIFY.md                                     location                device checklist; DTS 799094 / 770063 session rules; forum 826964 risk; background-launch speech, Driving Focus (notification), the notification rows, fence wake distance
   docs/CARPLAY.md                                    surfaces                the granted entitlement, what the scene shows, every condition for the car-screen banner, the iOS 18.4 floor, the icon rule
   README.md, PRIVACY.md, CONTRIBUTING.md, LICENSE, NOTICE   app
-  scripts/update-snapshot.sh (app), scripts/sim-drive.sh (location)
+  scripts/update-snapshot.sh (app; feed and road snapshots), scripts/sim-drive.sh (location), scripts/make-roads-fixture.py (core)
 ```
 
 Public types each lane exposes (the frozen signatures lanes stub against on day one):
@@ -514,6 +542,7 @@ Cross-lane rules: location is the only runtime writer of `EventLog` for location
 - FeedValidator: a truncated file, a 1,000-feature file and a file without `fixed` fail; the fixture passes.
 - WarnPolicy table (50/80/90/100/120/144 km/h), the clamp edges, the median over a spiky speed series.
 - Route vectors (`Fixtures/vectors/*.json`, fixes at 1 Hz along a line): 120 km/h fires once at 833 ± 40 m with the exact sentence; 50 km/h at 347 ± 20 m; a radar 150 m beside a parallel line never fires (not closing); a radar behind never fires; opposite OSM `bearing` → `.visual`; `both` → `.full`; a DGT name → `.full` with the name spoken; course nil at 2 m/s → nothing; late wake at 150 m → `.full` with `late`; first seen at 40 m → card only; U-turn and re-approach after 5 min → no second alert; after 11 min and 3 km → fires; two radars 100 m apart → one spoken, one visual; two in one fix → the combined sentence; corridor entry at either end, remaining distance, `Fin de tramo` at the far gate, silent exit by the straight-line rule, silent exit at 2× traverse; average-speed section with the average computed from the path. Every "must not fire" vector has a "must fire" twin, and one deliberately broken vector (expected warning removed) must fail the suite once during CI setup, so the gate is known to go red. CI fails on zero executed tests.
+- Road vectors over the synthetic scenarios, with the sidecar loaded: `road-on-approach-2km` (full at 625 ± 40 m along the road, passed within 30 m), `road-parallel-150m-from-2km` and `road-overpass-90deg` (held: a silent row where the straight rule spoke, no voice), `road-arc-1000m`, `road-hairpin` and `road-hairpin-biased` (one full warning, no pass before the radar, with a 20 m bias toward the upper leg too), `road-hairpin-fallback` (no sidecar: today's early warning and false pass, kept as the status quo), `road-dual-same`, `road-dual-opposite-high` (hidden, checked apart), `road-dual-opposite-low` (visual, sentido contrario), `road-side-join-late` (held, then one late full warning at 300 m), `corridor-curve-gate-entry` (the cone would enter only 174 m before the gate), `corridor-curve-gate-opposite-carriageway`, `corridor-curve-along`, `corridor-curve-mid-join-on-bow` (2 km off the chord), `corridor-curve-polyline-loss`; negative control `broken-road-hairpin-straight-line`. The 27 straight-line vectors pass with and without the sidecar.
 - PassLedger round-trips through JSON and prunes at 24 h; DrivingDetector: 3 fixes ≥ 6 m/s → started; `isStationary` → paused; a resume at 9 min continues, at 11 min re-probes; 120 s under 1 m/s → paused.
 - healthReport: each red/amber rule with a positive and a negative input.
 - Performance: `ingest` over the full feed < 10 ms per fix (expected ~0.1 ms); decode < 500 ms.
@@ -529,8 +558,8 @@ Cross-lane rules: location is the only runtime writer of `EventLog` for location
 1. iOS 26 may not relaunch a force-quit app for SLC or regions: a developer reports that on iOS 26.4.2 "the app is never relaunched" from force-quit while "the same code on iOS 18 and earlier did relaunch the app", 0 replies (https://developer.apple.com/forums/thread/826964). Mitigation: onboarding says never swipe the app away; Estado turns red on `userTerminated`; opening the app restarts the chain.
 2. The notification on the car screen is drawn by iOS under rules only a device can prove (4.5): iOS 18.4 or later, the icon on the CarPlay Home Screen, and a developer on the forum thread still failing on 18.6. Until the device rows of `docs/VERIFY.md` pass, the voice is the one surface known to reach the car. The Live Activity that used to fill that gap needed the app on screen at the start of every drive and was dropped (4.2).
 3. OSM `direction` semantics are contested; a mis-tagged camera flips `.full` and `.visual` for that camera. Demotion, never suppression, bounds the damage; `suppressedByDirection` in the log; the feed contract asks for explicit semantics.
-4. DGT direction names (453 features) warn both ways with the name spoken until the feed ships `bearing`.
-5. Stretch geometry is a chord: gates are exact, the inside state and "remaining" are estimates; road-following geometry is a feed request.
+4. DGT direction names (453 features) warn both ways with the name spoken where the feed has no travel bearing for them.
+5. Stretch geometry in the feed is a chord: gates are exact; with the sidecar's road line the inside state follows the road, without it "remaining" is an estimate.
 6. The first kilometres of a drive: the fence exit is reported about 0.9 / 1.1 / 1.3 km into the drive at 50 / 90 / 120 km/h at best (radius + cushion + 20 s dwell), Apple's own average for region reports is 3 to 5 minutes (6 to 10 km at 120 km/h, network-dependent), SLC is 500 m / 5 min, and after the wake come the launch, up to 30 s of GPS warm-up and the probe fixes; a radar inside that window is missed unless the drive started with the app on screen (While Using) or from "Probar aviso". The missed window is sized on the pessimistic figure, so the case for v1.1 radar rings is stronger than a 600 m wake would suggest: v1.1 adds up to 19 radar rings of 2,500 m (nearest first, diffed against `monitor.identifiers`, `assuming: .unsatisfied`, every flag surfaced, wake-ups only) if `firstWarnAfterWakeM` on real drives confirms the miss; the expectation written in VERIFY.md for that log field is 1 to 3 km, not 600 m.
 7. CLMonitor flakiness reports on iOS 18; SLC is the second wake-up and the fence is re-added at every launch.
 8. Motion activity flags buses and trains as automotive; passengers get warnings. "Pausar hoy" (Ajustes) is the answer: wake-ups are ignored until midnight and opening the app starts nothing; "Probar aviso" still starts a drive, because the user asked for one.
@@ -539,10 +568,11 @@ Cross-lane rules: location is the only runtime writer of `EventLog` for location
 11. Decode cost and memory of the 2.9 MB feed on a background launch are estimates until measured on the TestFlight build; the binary cache is the fallback.
 12. `BGAppRefreshTask` slots are rare for an app the user never opens; the drive-start refresh at 24 h, the foreground refresh and the red-after-7-days notice cover it.
 13. The `audio` background mode may draw a question in review; the note answers it.
-14. A parallel road within about 300 m at the warn distance produces a false sentence (section 2.3); `crossTrackMetres` in the log decides whether a lateral limit is added later.
+14. Resolved where the road sidecar has an approach for the radar: a parallel road, an overpass or a slip road gets a held silent row, not a sentence (2.3). Radars without an approach (about 15% of points: no drivable way within 40 m) keep the straight-line rule and this risk.
 15. Data provenance and licence: the León and Murcia `mobile_announced` lists come from newspapers (ILEÓN under CC BY-NC 4.0, La Opinión de Murcia), not from a police publication (section 8). Decision for the maintainer before submission: re-source the two scrapers to the police's own weekly lists, or keep them and settle the BY-NC question; the app never claims "solo publicaciones oficiales" meanwhile.
 16. Speech from a cold background launch is unproven (4.1); the once-per-drive activation fallback is designed and the VERIFY.md test decides which is shipped.
 17. Driving Focus may silence the Time Sensitive notification (4.3); voice is the surface that always arrives, and onboarding says so.
+18. Stale or wrong OpenStreetMap geometry in the sidecar (a road rebuilt, a carriageway mis-tagged one-way). Bounded by design: a car off the approaches still gets the held silent row and never silence, only a high-confidence bearing (two independent signals agreeing) can hide, every hide writes a log row, and a stretch that loses its line falls back to chord tracking with its exits unchanged.
 
 ---
 

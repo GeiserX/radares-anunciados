@@ -37,7 +37,11 @@ event. Refresh: at app open if the body is older than 6 h, a periodic job every 
 
 What is read from each feature: `id`, `geometry` (`Point` or `LineString`, `[lon, lat]`), and in `properties`:
 `kind`, `name`, `source`, `active`, `maxspeed`, `direction`, `province`, `url`, `attribution`, `valid_from`,
-`valid_to`, `road`, `km_from`, `km_to`. Unknown properties are ignored. A feature with an unknown `kind`, an unknown
+`valid_to`, `road`, `km_from`, `km_to`, and on points the optional `bearing` (number, 0 to 359), `direction_semantics`
+(string, `"travel"` whenever `bearing` is present), `direction_confidence` (`"high"` or `"low"`), `bearing_source`
+(`"official_km"`, `"oneway"` or `"osm_tag"`, audit only), `road_ref` (string, the publisher's road number), `km`
+(number) and `km_direction` (`"positive"`, `"negative"` or `"both"`). Each optional key is absent, never null, when
+unknown. Unknown properties are ignored. A feature with an unknown `kind`, an unknown
 geometry type, no `id` or no usable coordinates is skipped, never fatal.
 
 Kinds: `fixed`, `section`, `stretch`, `mobile_announced`, `mobile_recurring` (a spot where a mobile radar is set up
@@ -69,8 +73,56 @@ direction (22 stretches have `km_from >= km_to`).
 Alertable, evaluated per fix: `active`, `kind != reported`, and for `mobile_announced` the Europe/Madrid calendar day
 of the fix inside `valid_from...valid_to` (an entry with neither date is never alertable).
 
-Optional future fields, honoured when present and ignored when absent: `bearing` with `direction_semantics: "travel"`
-(the only field that may hide a radar), `geometry_is_chord`, `section_of`, `generated`.
+Travel bearing. When a point has `bearing` and `direction_semantics` is `"travel"`, that bearing replaces whatever
+`direction` says as the radar's bearing (normalised to 0..<360), the radar is not bidirectional, and
+`direction_confidence` is kept: `"high"`, or low for `"low"`, a missing value or anything else. A place-name
+`direction` is still spoken. `direction_confidence: "high"` is the only value that may hide a radar (section 3); it
+means two independent signals agree, the publisher's km direction and the one-way carriageway the radar sits on.
+`road_ref`, `km`, `km_direction` and `bearing_source` are read and not used yet. `geometry_is_chord`, `section_of` and
+`generated` are ignored.
+
+### Road geometry sidecar
+
+`GET https://geiserx.github.io/radares-anunciados-ha/roads.json` after every feed request that answered 200 or 304,
+with its own `If-None-Match` ETag, the same 15 s timeout, cellular allowed. It changes only when roads or radars
+change, so most requests end in a 304. A body is accepted when it is at most 4,000,000 bytes, parses, has
+`version` 1, at least 500 entries in `features`, and every polyline (approaches, line, gates) decodes to at least two
+distinct vertices; it then replaces the stored file atomically. A refused body, a 404 or a network error keeps the
+previous file. The app bundles a snapshot of it beside the feed snapshot when one exists. A radar with no entry, or
+no sidecar at all, runs the straight-line rules of sections 3 and 5 unchanged.
+
+```json
+{
+  "version": 1,
+  "attribution": "© OpenStreetMap contributors (ODbL 1.0)",
+  "precision": 5,
+  "features": {
+    "<point id>": {"approaches": [{"polyline": "<polyline>", "bearing": 123}]},
+    "<line id>": {"line": "<polyline>", "gates": {"start": [{"polyline": "...", "bearing": 123}], "end": [{"polyline": "...", "bearing": 301}]}}
+  }
+}
+```
+
+- A polyline is Google's encoded polyline algorithm at precision 5 (1e-5 degrees), latitude then longitude per
+  vertex. Reference: `_p~iF~ps|U_ulLnnqC_mqNvxq`@` is (38.5, -120.2), (40.7, -120.95), (43.252, -126.453).
+- `approaches` (points of kind fixed, section, trailer): one polyline per monitored direction, each running in the
+  direction of travel and ending at the radar's position snapped onto the road, up to 1,500 m long. One entry when
+  the monitored direction is known, two on a two-way road when it is not. An approach exists only for a monitored
+  flow, so a fix matched to one is always the right direction.
+- `line` (stretches): the road from the feed's first vertex to its last, undirected. `gates.start` holds the
+  approaches that end at the first vertex and run toward the stretch, `gates.end` those that end at the last vertex;
+  either may be empty or absent.
+- A `section` point that sits exactly on a stretch's endpoint is folded into the stretch (section 1) and has no entry.
+- `bearing` inside an entry is the travel direction of the last segment, for audit; the app reads the polyline.
+
+Polylines are measured in a flat frame around the middle of each line's bounding box: x = (lon − lon0) × k × cos(lat0),
+y = (lat − lat0) × k with k = 6,371,000 × π / 180. Each segment has a length (metres) and a travel bearing (atan2 of
+its x and y steps). Projecting a point onto a segment clamps to the segment's ends: `lateral` is the distance to the
+foot, `along` the line's length up to it.
+
+Stretch lines are indexed in pieces of at most 2,000 m of road, each with its own bounding box, and a line is a
+candidate (section 3) when the box around the fix (`warn + 200 m` in each direction) meets one of its pieces, as well
+as by its chord.
 
 ## 2. Fix
 
@@ -116,6 +168,38 @@ radar's notification is removed. Vector `a2-stopped-jitter-200m`.
 
 Only points, corridors and sections fire. `reported`, inactive and expired entries are never candidates.
 
+**Hidden.** A radar with `direction_confidence` high whose straight-line warning is visual because the direction test
+failed is hidden: it is fired in the ledger as visual and hidden, nothing is posted, spoken or shown, its pass is
+silent (no passed event), and one `alert` log row is written with `suppressedByDirection` true and no sinks, so a
+wrong hide can be found in an exported log. Low confidence and an OSM number stay visual. Vectors
+`road-dual-opposite-high` and `road-dual-opposite-low`.
+
+### The road rule (a point with approaches)
+
+On every fix while the radar is a candidate:
+
+1. **Match.** Project the fix onto every segment of every approach. A segment is a candidate when BOTH hold: lateral ≤
+   `max(25 m, 1.5 × horizontal accuracy)`, and the course within 45° of the segment's travel bearing. Among the
+   candidates the smallest lateral wins. The course is never tested after a pick by lateral: on a switchback two legs
+   sit within 25 m with opposite bearings. While the previous fix matched the same approach, a candidate whose along
+   differs from the previous along by more than `3 × speed × seconds since + 50 m` is dropped (speed: the median of
+   section 2). A fix with no match drops the road history of that radar.
+2. **Measure.** distance = approach length − along; ahead = along < length; closing = the along-road distance
+   decreased by at least 1 m on each of the last two matched fixes; in range = distance ≤ `warn`; late when the first
+   along-road distance of the current matched run was under `warn − 100 m`; direction always holds (an approach is a
+   monitored flow); the event's cross-track is the lateral.
+3. **Fire.** Matched: the four tests above decide, with pacing and the 60 m no-voice rule of section 4. Not matched:
+   the straight-line rule of this section, except that a full result is **held** when the car is off the road: lateral
+   to every approach over 60 m with an accuracy of 20 m or better, on this fix and the two before. A held warning
+   fires visual (marked `held`, a silent notification, no voice, not "sentido contrario"). Once per pass, a held radar
+   is **upgraded**: on a later fix that matches an approach with a full result it fires full, with pacing and the 60 m
+   rule, late from the along-road history. If pacing or the 60 m rule would demote it, nothing is emitted and it stays
+   held. Vectors `road-parallel-150m-from-2km`, `road-overpass-90deg`, `road-side-join-late`.
+4. **Pass.** While matched, passed only when along ≥ length − 30 m; the rising-distance rule is not used (on a
+   hairpin the straight-line distance rises and falls), and its watch restarts from the current distance. Unmatched,
+   the straight-line pass rule applies. Vectors `road-hairpin`, `road-hairpin-biased`; `road-hairpin-fallback` is the
+   same drive with no sidecar and today's events.
+
 ## 4. Once per pass, cooldown, pacing
 
 Per radar id: idle → armed (candidate and ahead) → fired(level) → passed → cooldown → idle. A fired or passed radar
@@ -134,13 +218,25 @@ one sentence, nearest first: *"Radar fijo a 500 metros, y otro a 600."*; the sec
 ## 5. Stretches
 
 A stretch is two gates (its endpoints) plus an inside state; the straight line between the gates is only used for the
-remaining estimate.
+remaining estimate and, without a road line, for the join between the gates.
 
 Entry: the point rule of section 3 against the nearer endpoint, plus the course within 60° of the bearing from that
 endpoint toward the other. A mobile corridor (always `both`) and an average-speed section without a bearing enter
 from either end. An average-speed section with an OSM bearing follows the direction gate: on mismatch the entry is a
 visual warning and the car is not inside. Spoken at entry: corridor *"Tramo de radar móvil, {road}, {length}."*;
 section *"Radar de tramo a {d} metros, {length}[, sentido {Name}].[ Límite {max}.]"*.
+
+Entry along a gate (a stretch whose sidecar entry has gates): on every fix the road rule of section 3 runs on
+`gates.start` and on `gates.end`, each side with its own history. A full result enters the stretch at the gate that
+approach ends at, with the along-road distance as the event's `distance`; a visual one (a section bearing against the
+course) is the visual entry warning as at a gate. While the fix matches a gate approach without a result yet, the
+straight-line entry is not tried for that stretch. With no gates, or no gate approach matched, the straight-line
+entry above applies unchanged. Vectors `corridor-curve-gate-entry` and `corridor-curve-gate-opposite-carriageway`.
+
+Entry between the gates along the road line (a stretch with a `line`): 3 consecutive fixes matched to the line (lateral
+≤ `max(25 m, 1.5 × accuracy)`, course within 45° of the segment's bearing in either direction) with along between
+300 m and length − 300 m; the gate behind is the entry gate and the remaining is length − along (or along, against
+the vertex order). This replaces the chord rule below for such a stretch. Vector `corridor-curve-mid-join-on-bow`.
 
 Entry between the gates (a car that joined from a side road and crosses no gate): the car is inside after 3
 consecutive fixes whose projection onto the chord falls between the gates with a 300 m margin at each end, within
@@ -150,19 +246,27 @@ chord ahead, the event's `distance` is that remaining length, and the sentence s
 *"Tramo de radar móvil, {road}, quedan {length}."*; section *"Radar de tramo, quedan {length}[, sentido {Name}].[ Límite {max}.]"*.
 Vector `corridor-n232-mid-join`.
 
-Inside: remaining = straight-line gate distance minus the projection of the car onto it, captioned "aprox." by the
+Inside: with a road line, remaining = line length minus the car's along from the entry gate, on every fix that matches
+the line (the course with the travel direction from the entry gate; the along may not jump more than in section 3);
+a fix that misses keeps the last figure; 5 consecutive misses with an accuracy of 50 m or better switch the stretch to
+the chord estimate until the line matches again. Before the first match after entry (the car still short of the
+gate) the chord estimate is used. Without a road line, remaining = straight-line gate distance minus the projection of
+the car onto it. The figure is captioned "aprox." by the
 surfaces, shown in 500 m steps; for an average-speed section also the average = path length since entry / elapsed
 time. No second voice prompt. The stretch is "fired" in the ledger from entry, so it is one pass. A point inside the
 stretch fires as any point does and owns the in-app card while ahead and for its 4 s "Radar superado"; the stretch
 card returns afterwards. The ledger carries the stretch the car is inside (radar, entry gate, entry position, time and
 speed), written at entry and cleared at exit: a process restarted mid-stretch resumes it (a resumed drive only, never a new one) and still says
 *"Fin de tramo."* at the far gate, estimating the path before the restart as the straight distance from the entry
-position.
+position, or, when the first fix matches the road line, as the entry position's distance to the entry gate plus the
+along-road distance from it.
 
 Exit, whichever comes first: within 300 m of the far gate (spoken *"Fin de tramo."*); straight-line distance from the
-entry gate over `max(roadMetres, chordMetres) + 1,000 m` (silent); elapsed time over 2× the traverse time expected
+entry gate over `max(roadMetres, chordMetres, gate-to-gate distance, road line length) + 1,000 m` (silent); elapsed time over 2× the traverse time expected
 at the entry speed (silent); drive end (silent). After an exit the next stretch sharing that gate may enter on the
-following fixes. Vectors `corridor-n232-*` and `section-z40-100kmh`.
+following fixes. A road line never ends a stretch: there is no off-road exit, and losing the line only changes how
+the remaining distance is measured. Vectors `corridor-n232-*`, `section-z40-100kmh`, `corridor-curve-along` and
+`corridor-curve-polyline-loss`.
 
 ## 6. Phrasing
 
@@ -188,7 +292,8 @@ Never spoken: `reported`, inactive, expired, in cooldown, behind, visual, passed
 Notification title `Radar fijo a 800 m`, body `A-2 km 202,3 · límite 90 km/h` (road and km when the feed has them,
 else the name; then the limit, then `sentido Zaragoza`). Every warning posts one, at the platform's time-sensitive
 level, with a short tick beside the voice (the default sound when the voice is off); a visual warning posts the same
-text without the voice, with `, sentido contrario` in the title and no sound for the opposite flow. One notification
+text without the voice and without a sound, with `, sentido contrario` in the title for the opposite flow. A hidden
+warning (section 3) posts nothing. One notification
 per radar pass and per stretch entry; the previous radar's is removed when the next fires or at pass. Nothing has to
 be opened or left on screen for it.
 
@@ -234,9 +339,15 @@ red by the rules in `Sources/RadaresCore/Health/HealthReport.swift`, with a posi
 ## 10. The route vectors: how the Kotlin port runs them
 
 `Tests/RadaresCoreTests/Fixtures/feed-sample.geojson` is a 254-feature slice of the live feed (built by
-`scripts/make-fixture.py`); `Tests/RadaresCoreTests/Fixtures/vectors/*.json` are drives over it (built by
-`scripts/make-vectors.py`, whose expectations come from the rules above in Python, not from the Swift engine). The
-Kotlin tests load the same two things unchanged and must produce the same events.
+`scripts/make-fixture.py`); `feed-sample-roads.geojson` and `roads-sample.json` are seven synthetic road scenarios
+and their sidecar (built by `scripts/make-roads-fixture.py`, ids ending in `-road`, each at least 10 km from every
+feed-sample feature): a straight road with a parallel road 150 m off and an overpass, a 1,000 m radius curve, three
+switchbacks, a dual carriageway 25 m apart with a high- and a low-confidence bearing, a side road joining 300 m before
+a radar, and a mobile corridor bowing 2 km off its chord (chord / road 0.85) with gates at both ends.
+`Tests/RadaresCoreTests/Fixtures/vectors/*.json` are drives over both (built by `scripts/make-vectors.py`, whose
+expectations come from the rules above in Python, not from the Swift engine). The store is both GeoJSON files decoded
+into one; the sidecar is passed to the engine for every vector unless the vector sets `"roadsDisabled": true`. The
+Kotlin tests load the same files unchanged and must produce the same events.
 
 A vector:
 
@@ -260,17 +371,24 @@ locale; feed every fix in order, collecting the events; after the fix at each `s
 snapshot and check the listed fields within their tolerances; then compare the collected events with `expected` in
 order. `kind` is one of `warn`, `passed`, `stretchEntered`, `stretchExited`, `driveEnded`; `level` is `full` or
 `visual` (a `stretchEntered` is always full); `distance` is checked within `tolerance` (default 40 m); `late`,
-`opposite` and `spoken` are checked when present; a `warn` with `level: visual` and a silent `stretchExited` must
+`opposite` and `spoken` are checked when present; `held` is checked always (absent means false); a `warn` with `level: visual` and a silent `stretchExited` must
 carry no sentence; `exitReason` is one of `farGate`, `distance`, `time`, `driveEnd` and rides on the
 `stretchExited` event itself. Any difference fails the
 vector. A vector with `negativeControl: true` is deliberately wrong and the suite must assert that the engine's
-output differs from it: that is the proof the harness can fail. A test suite that executes zero tests fails.
+output differs from it: that is the proof the harness can fail (`broken-a2-no-warning`, and
+`broken-road-hairpin-straight-line` for the road rule). A hidden warning is not in `expected`: the vector lists the
+radar ids that must fire hidden in `"hidden"`, and each must be a visual warning for the opposite flow with no
+sentence. A test suite that executes zero tests fails.
 
 Every "must not fire" vector has a "must fire" twin on the same radar: `leon-50kmh-tomorrow` / `leon-50kmh-today`,
 `a2-parallel-150m` and `a2-behind` / `a2-head-on-90kmh`, `a2-no-course-2mps` / `a2-no-course-20mps`,
-`a2-uturn-5min` / `a2-uturn-11min-3km`, `osm-bearing-opposite` / `osm-bearing-same`.
+`a2-uturn-5min` / `a2-uturn-11min-3km`, `osm-bearing-opposite` / `osm-bearing-same`, `road-dual-opposite-high` /
+`road-dual-same`, `corridor-curve-gate-opposite-carriageway` / `corridor-curve-gate-entry`. Every held vector has a
+spoken twin: `road-parallel-150m-from-2km` and `road-overpass-90deg` / `road-on-approach-2km`,
+`road-dual-opposite-low` / `road-dual-same`. The 27 straight-line vectors pass both with the sidecar and without it.
 
-Budgets: ingest under 10 ms per fix on a 4,500-feature store; decode of a feed-sized file under 500 ms.
+Budgets: ingest under 10 ms per fix on a 4,500-feature store, with or without an approach on every radar; decode of
+a feed-sized file under 500 ms; validation and decode of a 1.5 MB sidecar under 500 ms.
 
 ## 11. The legal line
 
