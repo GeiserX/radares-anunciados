@@ -7,7 +7,7 @@ package io.github.geiserx.radares.core
 
 object Thresholds {
     // Warn distance (design 2.2)
-    const val warnLeadSeconds: Double = 25.0
+    const val warnLeadSeconds: Double = 20.0
     const val warnFloorM: Double = 300.0
     const val warnCapM: Double = 1000.0
     const val speedMedianFixes: Int = 3
