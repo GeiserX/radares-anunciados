@@ -1,8 +1,8 @@
 # Logo ideas
 
-Seventeen app-icon concepts for Radares Anunciados, to choose from. Nothing here replaces the current app icon
-(`App/Sources/Assets.xcassets/AppIcon.appiconset/AppIcon.png`) or the README banner (`docs/images/banner.svg`).
-Pick one and it gets its own change.
+Seventeen app-icon concepts for Radares Anunciados. The chosen one is **02 Pin objetivo**: it is the app icon
+(`App/Sources/Assets.xcassets/AppIcon.appiconset/AppIcon.png`) and sits beside the title in the README banner
+(`docs/images/banner.svg`). The other sixteen stay here for reference.
 
 ![All seventeen concepts under the iOS corner mask](contact-sheet.png)
 
