@@ -35,7 +35,7 @@ struct SourcesView: View {
                 ForEach(sources) { source in
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text(source.id).font(.headline)
+                            Text(SourceNames.displayName(source.id)).font(.headline)
                             Spacer()
                             Text(source.count.formatted()).monospacedDigit().foregroundStyle(.secondary)
                         }
