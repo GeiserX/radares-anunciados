@@ -214,8 +214,10 @@ final class HealthReportTests: XCTestCase {
         i.carPlaySetting = .notSupported
         XCTAssertEqual(row(HealthTitles.carPlay, i).status, .warn)
         i.carPlayConnected = false
-        XCTAssertEqual(row(HealthTitles.carPlay, i).status, .ok, "no CarPlay seen yet: nothing is wrong")
-        XCTAssertEqual(row(HealthTitles.carPlay, i).detail, "Aún no conectado a CarPlay")
+        XCTAssertEqual(row(HealthTitles.carPlay, i).status, .ok, "no CarPlay seen yet: green")
+        XCTAssertEqual(row(HealthTitles.carPlay, i).detail, "El permiso de notificaciones no incluye CarPlay (aún no conectado a CarPlay)",
+                       "the permission fact shows before the phone ever meets CarPlay")
+        XCTAssertEqual(row(HealthTitles.carPlay, i).action, .openSettings)
 
         i = healthy()
         i.carPlayNotificationsSupported = false

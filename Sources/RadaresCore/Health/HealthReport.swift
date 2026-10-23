@@ -213,7 +213,6 @@ private func notificationsRow(_ i: HealthInputs, _ l: HealthText) -> HealthItem 
 /// warn without it. Amber only when the phone has met CarPlay and something stops the banner there.
 private func carPlayRow(_ i: HealthInputs, _ l: HealthText) -> HealthItem {
     let t = l.title(HealthTitles.carPlay)
-    let notConnected = l("Aún no conectado a CarPlay", "Not connected to CarPlay yet")
     if !i.carPlayNotificationsSupported {
         return HealthItem(
             status: i.carPlayConnected ? .warn : .ok, title: t,
@@ -244,7 +243,11 @@ private func carPlayRow(_ i: HealthInputs, _ l: HealthText) -> HealthItem {
                 action: .openSettings
             )
         }
-        return HealthItem(status: .ok, title: t, detail: notConnected)
+        return HealthItem(
+            status: .ok, title: t,
+            detail: l("El permiso de notificaciones no incluye CarPlay (aún no conectado a CarPlay)", "The notification permission does not include CarPlay (not connected to CarPlay yet)"),
+            action: .openSettings
+        )
     }
 }
 

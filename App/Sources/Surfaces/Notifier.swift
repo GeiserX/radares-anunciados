@@ -13,7 +13,8 @@
 //
 // A permission granted before 0.1.2, when the request had no `.carPlay`, reads `carPlaySetting == .notSupported`.
 // `addCarPlayToGrantedAuthorization()` asks again at every launch and when the car connects: "Subsequent calls to
-// this method don't prompt the person again", so the call is silent and only adds the option iOS has not recorded.
+// this method don't prompt the person again", so the call should be silent and should record the missing option;
+// Apple does not say it does, so VERIFY C10 confirms it on a real phone. If it does not, delete and reinstall the app.
 
 import RadaresCore
 import UIKit
@@ -55,8 +56,9 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
         status == .authorized && carPlay == .notSupported
     }
 
-    /// Re-asks with `authorizationOptions` when `shouldAddCarPlay` says so. No prompt appears: the person already
-    /// decided, and iOS records the added option. Logs the CarPlay setting before and after.
+    /// Re-asks with `authorizationOptions` when `shouldAddCarPlay` says so. Apple says no prompt appears; iOS should
+    /// record the added option, which VERIFY C10 confirms (fallback: delete and reinstall the app). Logs the CarPlay
+    /// setting before and after.
     public func addCarPlayToGrantedAuthorization() async {
         let center = UNUserNotificationCenter.current()
         let before = await center.notificationSettings()
