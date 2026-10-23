@@ -204,3 +204,22 @@ the sentence in `adb logcat -s Radares`. The emulator's Google Play image has on
 banner needs a real phone and the Desktop Head Unit.
 
 ## Verifying a download
+
+Every APK and AAB on the [`android-v*` releases](https://github.com/GeiserX/radares-anunciados/releases) is signed
+with one release key. Its certificate's SHA-256 fingerprint is:
+
+```
+AC:6E:5F:B2:05:C0:0C:04:17:2D:90:7D:6A:6C:F6:E6:41:5A:76:DE:E2:02:8A:A5:DE:64:66:2C:3F:FF:37:AB
+```
+
+Check a download before installing it. `apksigner` is in the Android SDK's `build-tools`:
+
+```bash
+apksigner verify --print-certs radares-anunciados-0.1.0.apk
+```
+
+The line `Signer #1 certificate SHA-256 digest:` must read
+`ac6e5fb205c00c04172d907d6a6cf6e6415a76dee2028aa5de64662c3fff37ab`, the same fingerprint without colons. Each
+release also carries `SHA256SUMS` for the file checksums. The release workflow refuses to publish a build whose
+signer differs from the fingerprint on this page, and Android refuses to update an installed app with an APK signed
+by another key.

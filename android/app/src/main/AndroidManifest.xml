@@ -25,7 +25,8 @@
         android:name="android.permission.WAKE_LOCK"
         tools:node="remove" />
 
-    <!-- AUTO LANE: the androidx.car.app.MAP_TEMPLATES permission goes here. -->
+    <!-- The car screen's PlaceListMapTemplate: the host refuses the map template without it. -->
+    <uses-permission android:name="androidx.car.app.MAP_TEMPLATES" />
 
     <application
         android:name=".RadaresApp"
@@ -79,7 +80,22 @@
                 android:resource="@xml/export_paths" />
         </provider>
 
-        <!-- AUTO LANE: the CarAppService block (RadaresCarAppService, category POI), the
-             com.google.android.gms.car.application meta-data and androidx.car.app.minCarApiLevel go here. -->
+        <!-- Android Auto: a Car App Library app in the POI category, so the CarAppExtender warnings show as a banner
+             on the car screen (docs/ANDROID-AUTO.md). Exported: the car host binds it from its own process. -->
+        <service
+            android:name=".car.RadaresCarAppService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.car.app.CarAppService" />
+                <category android:name="androidx.car.app.category.POI" />
+            </intent-filter>
+        </service>
+
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc" />
+        <meta-data
+            android:name="androidx.car.app.minCarApiLevel"
+            android:value="1" />
     </application>
 </manifest>
