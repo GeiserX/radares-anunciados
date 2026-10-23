@@ -81,6 +81,10 @@ final class MapRulesTests: XCTestCase {
         XCTAssertEqual(item.line, road)
 
         let point = Radar(id: "p", kind: .fixed, role: .point, start: leon, name: "p", source: "dgt", attribution: "")
-        XCTAssertNil(MapRules.nearby(store: RadarStore(radars: [point]), centre: leon, on: today) { _ in road }.first?.line)
+        let pointItem = try XCTUnwrap(
+            MapRules.nearby(store: RadarStore(radars: [point]), centre: leon, on: today) { _ in road }.first,
+            "a point at the centre is drawn"
+        )
+        XCTAssertNil(pointItem.line, "a point never gets a line, even when a road is supplied")
     }
 }
