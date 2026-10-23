@@ -23,6 +23,14 @@ public enum Role: String, Codable, Sendable, Hashable {
     case averageSpeedSection
 }
 
+/// How far the feed trusts a radar's travel bearing (`direction_confidence`, design 2.4). `high` means two
+/// independent signals agree (the publisher's km direction and the one-way carriageway the radar sits on): only
+/// then may the opposite flow be hidden. `low` demotes the opposite flow to a silent notification, as an OSM bearing does.
+public enum DirectionConfidence: String, Codable, Sendable, Hashable {
+    case high
+    case low
+}
+
 /// One alertable thing from the feed, normalised. Value type, Codable so route vectors and the pass ledger can carry it.
 public struct Radar: Sendable, Codable, Identifiable, Hashable {
     /// `feature.id`, unique and stable per source.
@@ -43,10 +51,14 @@ public struct Radar: Sendable, Codable, Identifiable, Hashable {
     public let kmTo: Double?
     /// Speed limit in km/h; nil when the feed has none (most entries today).
     public let maxspeed: Int?
-    /// Degrees 0..<360, heading of the monitored traffic per OSM; nil when unknown. Contested data: demotes, never hides.
+    /// Degrees 0..<360, heading of the monitored traffic: the feed's travel bearing, else the OSM `direction`; nil when
+    /// unknown. Demotes the opposite flow; hides it only with `directionConfidence == .high`.
     public let bearing: Double?
     /// `direction == "both"`.
     public let bidirectional: Bool
+    /// Set when `bearing` came from the feed's `bearing` with `direction_semantics` "travel"; nil for an OSM bearing
+    /// or no bearing. Optional, so a ledger or snapshot written by 0.1.3 (no such key) still decodes.
+    public let directionConfidence: DirectionConfidence?
     /// A place name such as "ZARAGOZA": spoken and shown, never used to gate.
     public let directionText: String?
     /// `mobile_announced` only: the calendar day range (Europe/Madrid) the announcement covers.
@@ -73,6 +85,7 @@ public struct Radar: Sendable, Codable, Identifiable, Hashable {
         maxspeed: Int? = nil,
         bearing: Double? = nil,
         bidirectional: Bool = false,
+        directionConfidence: DirectionConfidence? = nil,
         directionText: String? = nil,
         validFrom: Date? = nil,
         validTo: Date? = nil,
@@ -96,6 +109,7 @@ public struct Radar: Sendable, Codable, Identifiable, Hashable {
         self.maxspeed = maxspeed
         self.bearing = bearing
         self.bidirectional = bidirectional
+        self.directionConfidence = directionConfidence
         self.directionText = directionText
         self.validFrom = validFrom
         self.validTo = validTo
