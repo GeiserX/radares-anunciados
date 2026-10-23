@@ -92,10 +92,12 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
         return content
     }
 
-    /// Posts `phrase` as `<radarId>#<passSeq>` and removes the previous radar's delivered notification. Nil on success.
+    /// Posts `phrase` as `<radarId>#<passSeq>`. Nil on success. A sounded post removes the previous radar's
+    /// delivered notification first; a silent one removes nothing (`removedBeforePosting`).
     /// Never silent for a radar ahead: the 150 ms tick when the voice is on (speech can fail on a cold background
     /// launch or during a call, and a lit screen with no sound is a missed warning), the default sound when the
-    /// driver turned the voice off. `silent` is the opposite-carriageway row: shown, never sounded.
+    /// driver turned the voice off. `silent` is a row that must not displace the real warning (the opposite
+    /// carriageway, a held visual): shown, never sounded.
     public func post(_ phrase: Phrase, id: String, silent: Bool = false) async -> (any Error)? {
         let center = UNUserNotificationCenter.current()
         let error: (any Error)?
@@ -104,7 +106,12 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
             error = NotifierError.notAuthorized(status.rawValue)
         } else {
             let content = Self.radarContent(phrase, voiceEnabled: AlertDispatcher.shared.voiceEnabled, silent: silent)
-            await removeRadarNotifications(except: id)
+            let delivered = await center.deliveredNotifications()
+                .map { (id: $0.request.identifier, thread: $0.request.content.threadIdentifier) }
+            let stale = Self.removedBeforePosting(id, silent: silent, delivered: delivered)
+            if !stale.isEmpty {
+                center.removeDeliveredNotifications(withIdentifiers: stale)
+            }
             do {
                 try await center.add(UNNotificationRequest(identifier: id, content: content, trigger: nil))
                 error = nil
@@ -121,6 +128,27 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
         return error
     }
 
+    /// The identifiers `removeRadarNotifications(except:radarID:)` removes from `delivered` (identifier, thread):
+    /// radar-thread ones other than `keep`, and with `radarID` only that radar's (`<radarID>#<passSeq>`).
+    nonisolated static func radarNotificationsToRemove(
+        delivered: [(id: String, thread: String)], except keep: String? = nil, radarID: String? = nil
+    ) -> [String] {
+        delivered
+            .filter { $0.thread == radarThread && $0.id != keep }
+            .filter { request in radarID.map { request.id.hasPrefix("\($0)#") } ?? true }
+            .map(\.id)
+    }
+
+    /// What posting `id` removes from `delivered` before it is added: every other radar's notification for a sounded
+    /// post, nothing for a silent one. Events go out in distance order, so at twin cameras the farther one (often the
+    /// other carriageway's) fires on the same or the next fix; if its silent row cleared the others, "Radar fijo a
+    /// 800 m, sentido contrario" would replace the ticked warning for the radar ahead on the Lock Screen and the car
+    /// screen. A silent row stays until its own pass or the next sounded post clears it.
+    nonisolated static func removedBeforePosting(_ id: String, silent: Bool, delivered: [(id: String, thread: String)]) -> [String] {
+        guard !silent else { return [] }
+        return radarNotificationsToRemove(delivered: delivered, except: id)
+    }
+
     /// The radar notification's sound: the tick beside the voice, the default sound without it; nil only for a
     /// silent (opposite direction) row.
     nonisolated static func sound(voiceEnabled: Bool, silent: Bool = false) -> UNNotificationSound? {
@@ -132,11 +160,9 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     /// `radarID` when that radar is passed (a later radar's notification stays).
     public func removeRadarNotifications(except keep: String? = nil, radarID: String? = nil) async {
         let center = UNUserNotificationCenter.current()
-        let ids = await center.deliveredNotifications()
-            .map(\.request)
-            .filter { $0.content.threadIdentifier == Self.radarThread && $0.identifier != keep }
-            .filter { request in radarID.map { request.identifier.hasPrefix("\($0)#") } ?? true }
-            .map(\.identifier)
+        let delivered = await center.deliveredNotifications()
+            .map { (id: $0.request.identifier, thread: $0.request.content.threadIdentifier) }
+        let ids = Self.radarNotificationsToRemove(delivered: delivered, except: keep, radarID: radarID)
         if !ids.isEmpty {
             center.removeDeliveredNotifications(withIdentifiers: ids)
         }
