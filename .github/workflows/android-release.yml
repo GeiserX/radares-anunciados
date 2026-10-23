@@ -1,0 +1,182 @@
+# Push a tag android-vX.Y.Z on main that matches VERSION_NAME in android/gradle.properties. The iOS release.yml
+# matches only v*, so an android-v* tag never starts a TestFlight upload. Every action is pinned by SHA.
+name: Release Android APK
+
+on:
+  push:
+    tags: ["android-v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build, sign and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SNAPSHOT_DATE_FILE: App/Sources/Resources/feed-snapshot.date
+      SNAPSHOT_MAX_AGE_DAYS: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Runs first so a tag with the wrong version goes red here, before any other check.
+      - name: Check the tag matches android/gradle.properties
+        id: version
+        run: |
+          TAG="$GITHUB_REF_NAME"
+          VERSION="${TAG#android-v}"
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Tag $TAG is not android-vX.Y.Z"
+            exit 1
+          fi
+          DECLARED=$(awk -F= '/^VERSION_NAME=/ {print $2; exit}' android/gradle.properties | tr -d '[:space:]')
+          if [ "$VERSION" != "$DECLARED" ]; then
+            echo "::error::Tag $TAG does not match VERSION_NAME '$DECLARED' in android/gradle.properties"
+            exit 1
+          fi
+          IFS=. read -r MAJOR MINOR PATCH <<< "$VERSION"
+          CODE=$(( MAJOR * 10000 + MINOR * 100 + PATCH ))
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          echo "version $VERSION, versionCode $CODE"
+
+      # The same guard as release.yml. The tests in this run stand in for release.yml's CI-conclusion lookup.
+      - name: Check the tag is on main
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::$GITHUB_REF_NAME points at $GITHUB_SHA, which is not on main"
+            exit 1
+          fi
+
+      # The bundled feed is what the first drive after install warns from, offline; the rule is shared with iOS.
+      # GNU date here: release.yml's `date -j -f` is BSD-only.
+      - name: Check the bundled feed snapshot is at most 30 days old
+        run: |
+          if [ ! -s App/Sources/Resources/feed-snapshot.geojson ] || [ ! -s "$SNAPSHOT_DATE_FILE" ]; then
+            echo "::error::The feed snapshot or its date file is missing; run scripts/update-snapshot.sh"
+            exit 1
+          fi
+          generated=$(tr -d '[:space:]' < "$SNAPSHOT_DATE_FILE")
+          generated_s=$(date -u -d "$generated" +%s) || {
+            echo "::error::$SNAPSHOT_DATE_FILE holds '$generated', not an ISO 8601 UTC time"
+            exit 1
+          }
+          age_days=$(( ($(date -u +%s) - generated_s) / 86400 ))
+          if [ "$age_days" -gt "$SNAPSHOT_MAX_AGE_DAYS" ]; then
+            echo "::error::The feed snapshot is $age_days days old (generated $generated); run scripts/update-snapshot.sh"
+            exit 1
+          fi
+          echo "feed snapshot generated $generated, $age_days days old"
+
+      - name: Check the signing secrets exist
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          missing=0
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then echo "::error::Secret $name is not set"; missing=1; fi
+          done
+          exit $missing
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+
+      - name: Decode the keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
+
+      - name: Test and build the signed APK and AAB
+        working-directory: android
+        env:
+          RADARES_KEYSTORE_PATH: release.keystore
+          RADARES_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          RADARES_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          RADARES_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          ./gradlew --no-daemon :core:test :app:testReleaseUnitTest :app:assembleRelease :app:bundleRelease \
+            -PVERSION_NAME=${{ steps.version.outputs.version }} -PVERSION_CODE=${{ steps.version.outputs.code }}
+
+      - name: Remove the keystore
+        if: always()
+        run: rm -f android/app/release.keystore
+
+      # docs/ANDROID.md "Verifying a download" publishes the certificate fingerprint; a build signed by any other
+      # key fails here instead of reaching a phone that already has the app.
+      - name: Check the APK is signed by the published key
+        run: |
+          apksigner=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner
+          apk=android/app/build/outputs/apk/release/app-release.apk
+          test -s "$apk" || { echo "::error::$apk was not built (unsigned builds are named app-release-unsigned.apk)"; exit 1; }
+          "$apksigner" verify --verbose --print-certs "$apk" | tee "$RUNNER_TEMP/apksigner.txt"
+          signed=$(awk -F': ' '/^Signer #1 certificate SHA-256 digest:/ {print $2; exit}' "$RUNNER_TEMP/apksigner.txt")
+          published=$(awk '/^## Verifying a download/ {on=1; next} /^## / {on=0} on' docs/ANDROID.md \
+            | grep -oE '([0-9A-Fa-f]{2}:){31}[0-9A-Fa-f]{2}' | head -1 | tr -d ':' | tr 'A-F' 'a-f')
+          if [ -z "$published" ]; then
+            echo "::error::docs/ANDROID.md has no SHA-256 fingerprint under '## Verifying a download'"
+            exit 1
+          fi
+          if [ "$signed" != "$published" ]; then
+            echo "::error::The APK is signed by $signed, but docs/ANDROID.md publishes $published"
+            exit 1
+          fi
+          echo "signer matches the published fingerprint $published"
+
+      - name: Name the artifacts
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/release/app-release.apk "dist/radares-anunciados-${{ steps.version.outputs.version }}.apk"
+          cp android/app/build/outputs/bundle/release/app-release.aab "dist/radares-anunciados-${{ steps.version.outputs.version }}.aab"
+          (cd dist && sha256sum ./*) | tee dist/SHA256SUMS
+
+      # Notes cover only the changes since the previous android-v* tag. GitHub's own "generate release notes" picks
+      # the previous tag of any kind, which is the iOS v* tag, and would list the iOS changes.
+      - name: Write the release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: android-v${{ steps.version.outputs.version }}
+        run: |
+          cat > dist/NOTES.md <<'EOF'
+          Android build of Radares Anunciados. Android 10 or later.
+
+          A sideloaded install (this APK) gives every voice warning through the car speakers. The Android Auto banner and radar screen appear only when the app is installed from Google Play; see https://github.com/GeiserX/radares-anunciados/blob/main/docs/ANDROID-AUTO.md
+
+          Check the signing certificate before installing: https://github.com/GeiserX/radares-anunciados/blob/main/docs/ANDROID.md#verifying-a-download
+          EOF
+          # The android-v* tag just below this one in version order; none for the first release.
+          previous=$(git tag --list 'android-v*' --sort=v:refname | grep -x -B1 -- "$TAG" | grep -vx -- "$TAG" | head -n 1 || true)
+          if [ -n "$previous" ]; then
+            printf '\n' >> dist/NOTES.md
+            gh api "repos/${{ github.repository }}/releases/generate-notes" \
+              -f tag_name="$TAG" -f target_commitish="$GITHUB_SHA" -f previous_tag_name="$previous" \
+              --jq .body >> dist/NOTES.md
+          else
+            printf '\nFirst Android release.\n' >> dist/NOTES.md
+          fi
+          cat dist/NOTES.md
+
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          tag_name: android-v${{ steps.version.outputs.version }}
+          name: Android ${{ steps.version.outputs.version }}
+          body_path: dist/NOTES.md
+          files: |
+            dist/radares-anunciados-${{ steps.version.outputs.version }}.apk
+            dist/radares-anunciados-${{ steps.version.outputs.version }}.aab
+            dist/SHA256SUMS

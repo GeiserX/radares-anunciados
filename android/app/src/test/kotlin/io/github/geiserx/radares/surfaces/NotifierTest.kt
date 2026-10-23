@@ -13,6 +13,7 @@ import androidx.car.app.notification.CarAppExtender
 import androidx.core.app.NotificationCompat
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -49,8 +50,8 @@ class NotifierTest {
         val car = CarAppExtender(n)
         assertEquals(text.title, car.contentTitle)
         assertEquals(text.body, car.contentText)
-        // No CarAppService in this build yet: no tap action on the car banner (the auto lane adds the service).
-        assertNull(car.contentIntent)
+        // Tapping the car banner opens the car screen of RadaresCarAppService.
+        assertNotNull(car.contentIntent)
         assertEquals(Notifier.CHANNEL_RADARES, n.channelId)
         assertEquals(text.title, n.extras.getCharSequence(NotificationCompat.EXTRA_TITLE).toString())
         assertTrue("one banner per post, never re-alerting on an update", n.flags and android.app.Notification.FLAG_ONLY_ALERT_ONCE != 0)

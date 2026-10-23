@@ -326,8 +326,10 @@ Android mapping: `FusedLocationProviderClient` at 1 Hz inside a foreground servi
 the Geofencing API for the parked fence; the Activity Recognition Transition API `IN_VEHICLE` as the motion gate;
 WorkManager periodic 6 h for the feed; `TextToSpeech` with `USAGE_ASSISTANCE_NAVIGATION_GUIDANCE` and
 `AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK`; a high-importance channel for the alert notification, one per warning as in
-section 6. Android Auto only shows CALL, MESSAGE and NAVIGATION
-categories and Do Not Disturb while driving can hold notifications, so speech is the one guaranteed car surface.
+section 6. The Android Auto screen shows only notifications extended with `CarAppExtender` from Car App Library
+apps and `MessagingStyle` notifications from messaging apps; a Car App Library app appears in a car only when
+installed from Google Play (docs/ANDROID-AUTO.md). Do Not Disturb while driving can hold notifications, so speech is
+the one car surface that works for every install.
 
 ## 9. Health
 

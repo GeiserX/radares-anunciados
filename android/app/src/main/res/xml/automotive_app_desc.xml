@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Tells Android Auto this is a Car App Library app (docs/ANDROID-AUTO.md). -->
+<automotiveApp>
+    <uses name="template" />
+</automotiveApp>

@@ -37,6 +37,16 @@ xcodegen generate --spec App/project.yml && open App/RadaresAnunciados.xcodeproj
 
 On first launch the app walks you through three screens: location (allow "Always" and Precise Location), notifications and Motion, and Estado.
 
+### Android
+
+Android 10 or later. Download `radares-anunciados-X.Y.Z.apk` from the newest [`android-v*` release](https://github.com/GeiserX/radares-anunciados/releases), check its signing certificate against the fingerprint in [docs/ANDROID.md](docs/ANDROID.md#verifying-a-download), and install it. The app then asks for three permissions:
+
+1. Location, precise. Then "Allow all the time" on the settings page the app opens: the drive starts with the app closed, which Android allows only with background location.
+2. Notifications, for the warning banner.
+3. Physical activity, so Android tells the app when you get into a car.
+
+An APK installed this way speaks every warning through the car speakers when the phone is on Android Auto. The banner on the Android Auto screen and the app's radar screen in the car appear only when the app is installed from Google Play; [docs/ANDROID-AUTO.md](docs/ANDROID-AUTO.md) explains why.
+
 ## How it works
 
 1. When the car starts moving, Apple's significant-change and region services wake the app; a GPS probe confirms you are driving.
@@ -54,6 +64,8 @@ Sources and licences: DGT (CC BY 4.0), the local police weekly lists of León (I
 
 Your location never leaves the phone; the only network request is the download of the public radar list. Details in [PRIVACY.md](PRIVACY.md).
 
+On Android the app uses Google Play services for location and activity recognition, the one Google dependency; there is no analytics, Firebase or Google Maps SDK, and the map uses OpenStreetMap tiles.
+
 ## Releasing
 
 `.github/workflows/release.yml` archives and uploads to TestFlight on a `vX.Y.Z` tag that matches `MARKETING_VERSION` in `App/project.yml`. Before tagging, bump `CURRENT_PROJECT_VERSION` (every upload needs a higher one) and refresh the bundled feed with `scripts/update-snapshot.sh` if it is older than 30 days. The workflow needs:
@@ -62,12 +74,16 @@ Your location never leaves the phone; the only network request is the download o
 - One App Store provisioning profile named exactly `Radares App Store` (App ID `io.github.geiserx.radares`).
 - The App ID must have the **Time Sensitive Notifications** and **CarPlay Driving Task** capabilities enabled before the profile is generated: `App/project.yml` writes `com.apple.developer.usernotifications.time-sensitive` and `com.apple.developer.carplay-driving-task` into the entitlements, and `xcodebuild archive` fails with "doesn't include the … capability" against a profile made without them. Regenerate and re-upload `PROFILE_APP` after enabling them, and again at every profile renewal.
 
+The Android app has its own workflow, `.github/workflows/android-release.yml`, started by an `android-vX.Y.Z` tag on main that matches `VERSION_NAME` in `android/gradle.properties`; `v*` tags never start it, and `android-v*` tags never start the TestFlight upload. It runs the tests, builds a signed APK and AAB, checks the signer against the fingerprint in `docs/ANDROID.md`, and attaches both to a GitHub release. It needs four repository secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`. The bundled feed snapshot is shared with iOS and follows the same 30-day rule.
+
 ## Documentation
 
 - [Design](docs/DESIGN.md): the alert model, location strategy, surfaces, data and health checks
 - [Spec](docs/SPEC.md): the platform-neutral rules and the route vectors, the contract for Android
 - [Device verification](docs/VERIFY.md): what only a real iPhone and a real drive can prove
 - [CarPlay](docs/CARPLAY.md): the driving-task scene, the notification on the car screen and its rules
+- [Android](docs/ANDROID.md): the Android app, how it detects a drive, builds and verifies a download
+- [Android Auto](docs/ANDROID-AUTO.md): the banner on the car screen, the car app and the Google Play rule
 - [Contributing](CONTRIBUTING.md) and [Security](SECURITY.md)
 
 ## License
