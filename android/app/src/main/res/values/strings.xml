@@ -6,7 +6,7 @@
     <string name="channel_radares">Avisos de radar</string>
     <string name="channel_radares_desc">Un aviso por radar publicado delante, con la voz. Emergente, también en Android Auto.</string>
     <string name="channel_conduccion">Conducción</string>
-    <string name="channel_conduccion_desc">Aviso silencioso que Android exige mientras la app sigue tu posición en un viaje. No hace falta mirarlo.</string>
+    <string name="channel_conduccion_desc">Aviso silencioso que Android exige mientras la app sigue tu posición en un viaje. No hace falta mirarlo. Abre la app antes de conducir.</string>
     <string name="channel_estado">Estado</string>
     <string name="channel_estado_desc">Como mucho un aviso al día cuando algo impide avisar de los radares.</string>
     <string name="drive_notification">Radares Anunciados vigila los radares publicados</string>
