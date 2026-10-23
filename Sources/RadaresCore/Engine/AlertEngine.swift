@@ -31,6 +31,10 @@ public final class AlertEngine {
     private var roadHistories: [String: RoadHistory] = [:]
     /// Per point with approaches: consecutive accurate fixes farther than Thresholds.roadOffLateralM from all of them.
     private var offRoadRuns: [String: Int] = [:]
+    /// Per point with approaches that matched its road since it entered the band: fixes since that last match. While
+    /// under Thresholds.roadOffFixes, an unmatched fix is a GPS excursion, not a car on another road, so the
+    /// straight-line rule does not speak for it (a 30 m jump toward a hairpin's other leg).
+    private var sinceRoadMatch: [String: Int] = [:]
     private var lastSpokenAt: Date?
     private var lastPassed: (radar: Radar, at: Date)?
     private var current: DriveSnapshot
@@ -174,7 +178,12 @@ public final class AlertEngine {
                     RoadApproach.evaluate(approaches: approaches, fix: fix, courseDegrees: $0, speedMps: median, previous: roadHistories[radar.id], warnDistance: warn)
                 }
                 roadHistories[radar.id] = match?.history
-                if let match { roadMatches[radar.id] = match }
+                if let match {
+                    roadMatches[radar.id] = match
+                    sinceRoadMatch[radar.id] = 0
+                } else if let n = sinceRoadMatch[radar.id] {
+                    sinceRoadMatch[radar.id] = n + 1
+                }
             }
 
             guard let course else { continue }
@@ -194,7 +203,14 @@ public final class AlertEngine {
                 switch approach.level {
                 case .full?:
                     let offRoad = approaches != nil && (offRoadRuns[radar.id] ?? 0) >= Thresholds.roadOffFixes
-                    fires.append((radar, approach, offRoad ? .held : .normal))
+                    if offRoad {
+                        fires.append((radar, approach, .held))
+                    } else if approaches != nil, let n = sinceRoadMatch[radar.id], n < Thresholds.roadOffFixes {
+                        // Matched to its road a fix or two ago: the road decides again on the next matched fix.
+                        continue
+                    } else {
+                        fires.append((radar, approach, .normal))
+                    }
                 case .visual?:
                     fires.append((radar, approach, radar.directionConfidence == .high ? .hidden : .normal))
                 case nil:
@@ -207,6 +223,7 @@ public final class AlertEngine {
         histories = histories.filter { seen.contains($0.key) }
         roadHistories = roadHistories.filter { seen.contains($0.key) }
         offRoadRuns = offRoadRuns.filter { seen.contains($0.key) }
+        sinceRoadMatch = sinceRoadMatch.filter { seen.contains($0.key) }
 
         // Pacing and the combined sentence (design 2.6): one voice per fix and per 8 s; the rest are shown. Held and
         // hidden fires are never spoken; an upgrade the pacing would demote waits for a later fix.
@@ -306,7 +323,7 @@ public final class AlertEngine {
         let firedNow = Set(passes.firedIds)
         passing = passing.filter { firedNow.contains($0.key) }
 
-        current = buildSnapshot(fix: fix, course: course, median: median, candidates: candidates, at: t)
+        current = buildSnapshot(fix: fix, course: course, median: median, candidates: candidates, roadMatches: roadMatches, at: t)
         return events
     }
 
@@ -323,6 +340,7 @@ public final class AlertEngine {
         passing = [:]
         roadHistories = [:]
         offRoadRuns = [:]
+        sinceRoadMatch = [:]
         speeds = []
         previousFix = nil
         recentFixes = []
@@ -402,7 +420,14 @@ public final class AlertEngine {
     /// The card, in this order: a full-fired point not yet passed (inside a stretch too, so the milestones and
     /// "Radar superado" of a point in a corridor reach the driver), the 4 s passed card, an armed point ahead, the
     /// stretch the car is inside, the nearest candidate as "cerca", nothing.
-    private func buildSnapshot(fix: Fix, course: Double?, median: Double?, candidates: [Radar], at t: Date) -> DriveSnapshot {
+    /// The card's distance to a point: along its road while this fix matches one of its approaches (the figure the
+    /// voice used), else the straight line, as without a sidecar.
+    private func cardDistance(to radar: Radar, from fix: Fix, roadMatches: [String: RoadMatch]) -> Double {
+        if let m = roadMatches[radar.id] { return max(0, m.distanceMetres) }
+        return Geo.distance(fix.coordinate, radar.start)
+    }
+
+    private func buildSnapshot(fix: Fix, course: Double?, median: Double?, candidates: [Radar], roadMatches: [String: RoadMatch], at t: Date) -> DriveSnapshot {
         var s = DriveSnapshot(content: .watching(at: t, locale: locale))
         s.speedMps = median
         s.courseDegrees = course
@@ -413,13 +438,14 @@ public final class AlertEngine {
         let visualIds = Set(passes.ledger.entries.filter { $0.passedAt == nil && $0.level == .visual && $0.hidden != true }.map(\.id))
         s.visualRows = visualIds.compactMap { id in
             guard let radar = store.radar(id: id) else { return nil }
-            return DriveSnapshot.VisualRow(radar: radar, distanceMetres: RadarStore.gateDistance(from: fix.coordinate, to: radar), opposite: passing[id]?.opposite ?? false)
+            let d = radar.isLine ? RadarStore.gateDistance(from: fix.coordinate, to: radar) : cardDistance(to: radar, from: fix, roadMatches: roadMatches)
+            return DriveSnapshot.VisualRow(radar: radar, distanceMetres: d, opposite: passing[id]?.opposite ?? false)
         }.sorted { $0.distanceMetres < $1.distanceMetres }
 
         // Points only: a line's entry stays "fired" until its exit, and the stretch card below shows it.
         let fullFired = passes.ledger.entries.filter { $0.passedAt == nil && $0.level == .full }.compactMap { store.radar(id: $0.id) }.filter { !$0.isLine }
-        if let radar = fullFired.min(by: { Geo.distance(fix.coordinate, $0.start) < Geo.distance(fix.coordinate, $1.start) }) {
-            let d = Geo.distance(fix.coordinate, radar.start)
+        if let radar = fullFired.min(by: { cardDistance(to: $0, from: fix, roadMatches: roadMatches) < cardDistance(to: $1, from: fix, roadMatches: roadMatches) }) {
+            let d = cardDistance(to: radar, from: fix, roadMatches: roadMatches)
             s.next = radar
             s.distanceMetres = d
             s.content = radarContent(radar, phase: .alert, distance: d, median: median, opposite: false, at: t)
@@ -434,7 +460,7 @@ public final class AlertEngine {
         // The card keeps the radar it already shows while that one stays armed: with several radars ahead at once
         // (a city), the nearest one flips every few fixes and the card would flicker.
         if let radar = armed.first(where: { $0.id == current.next?.id }) ?? armed.first {
-            let d = Geo.distance(fix.coordinate, radar.start)
+            let d = cardDistance(to: radar, from: fix, roadMatches: roadMatches)
             s.next = radar
             s.distanceMetres = d
             s.content = radarContent(radar, phase: .approaching, distance: d, median: median, opposite: false, at: t)

@@ -1378,5 +1378,6 @@
    "kind": "passed",
    "radar": "fixed-hairpin-road"
   }
- ]
+ ],
+ "roadFixture": true
 }

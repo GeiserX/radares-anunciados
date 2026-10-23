@@ -847,5 +847,6 @@
    "kind": "passed",
    "radar": "fixed-straight-road"
   }
- ]
+ ],
+ "roadFixture": true
 }

@@ -913,5 +913,6 @@
    "spoken": "Tramo de radar móvil, N-999, 9 kilómetros.",
    "level": "full"
   }
- ]
+ ],
+ "roadFixture": true
 }

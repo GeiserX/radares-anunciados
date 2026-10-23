@@ -225,10 +225,15 @@ def exited(rid, reason, spoken=None):
 
 
 VECTORS = []
+# Vectors over the road fixture (feed-sample-roads.geojson and roads-sample.json) carry "roadFixture": true, so a
+# port without the road rule (the Kotlin one today) can skip them by name of the reason and count what it skipped.
+ROAD_SECTION = False
 
 
 def vector(name, description, route, expected, **extra):
     v = {"name": name, "description": description, "locale": "es-ES", "fixes": route.fixes, "expected": expected}
+    if ROAD_SECTION:
+        v["roadFixture"] = True
     v.update(extra)
     VECTORS.append(v)
     return v
@@ -489,6 +494,7 @@ vector(
 # 3 x speed x seconds + 50 m, distance = length - along, closing over two decreases, pass at length - 30.
 # =====================================================================================================================
 
+ROAD_SECTION = True
 ROADS_FIXTURE = runpy.run_path(os.path.join(ROOT, "scripts", "make-roads-fixture.py"), run_name="roads_fixture")
 GEOM = ROADS_FIXTURE["GEOMETRY"]
 ROADS_JSON = json.load(open(os.path.join(ROOT, "Tests", "RadaresCoreTests", "Fixtures", "roads-sample.json"), encoding="utf-8"))
@@ -648,9 +654,11 @@ def straight_eval(f, gate, course, prev, warn_d, bearing_deg=None, bidir=False):
     return {"distance": d, "level": level, "late": first < warn_d - LATE_BAND, "ahead": ahead, "match": match}
 
 
-def sim_point(fixes, rid, use_roads=True):
+def sim_point(fixes, rid, use_roads=True, rematch_window=True, off_fixes=None):
     """One point radar through the rules of design 2.3 and 2.4 with road geometry: returns the warn and passed
-    events with their fix index, and the hidden fires. Single radar, so pacing never applies."""
+    events with their fix index, and the hidden fires. Single radar, so pacing never applies. `rematch_window=False`
+    is the rule before the one-bad-fix fix (an unmatched fix spoke at once by the straight line), used only to prove
+    the one-bad-fix vector would have spoken under it."""
     r = RADARS[rid]
     p = r["p"]
     gate = r["start"]
@@ -665,6 +673,8 @@ def sim_point(fixes, rid, use_roads=True):
     pls = approaches_of(rid) if use_roads else None
     events, hidden = [], []
     speeds, hist, road_hist, off_run = [], [], None, 0
+    since_match = None  # fixes since the last road match while in the band; None: no match yet
+    off_fixes = OFF_FIXES if off_fixes is None else off_fixes
     fired = None  # dict level/held/hidden
     passed = False
     watch = None
@@ -689,8 +699,12 @@ def sim_point(fixes, rid, use_roads=True):
                 off_run = off_run + 1 if off else 0
                 match = road_evaluate(pls, f, t, course, med if med is not None else f["speed"], road_hist, w) if course is not None else None
                 road_hist = match["hist"] if match else None
+                if match is not None:
+                    since_match = 0
+                elif since_match is not None:
+                    since_match += 1
         else:
-            hist, road_hist, off_run = [], None, 0
+            hist, road_hist, off_run, since_match = [], None, 0, None
         fired_now = False
         if cand and course is not None:
             if fired is None:
@@ -701,7 +715,12 @@ def sim_point(fixes, rid, use_roads=True):
                 else:
                     a = straight_eval(f, gate, course, prev, w, brg_deg, bidir)
                     if a["level"] == "full":
-                        kind = "held" if (pls is not None and off_run >= OFF_FIXES) else "normal"
+                        if pls is not None and off_run >= off_fixes:
+                            kind = "held"
+                        elif pls is not None and rematch_window and since_match is not None and since_match < off_fixes:
+                            kind = None  # matched a fix or two ago: the road decides on the next matched fix
+                        else:
+                            kind = "normal"
                     elif a["level"] == "visual":
                         kind = "hidden" if high else "normal"
                 if kind:
@@ -892,6 +911,89 @@ vector("road-hairpin-fallback", "The switchback drive with no road geometry: tod
 VECTORS[-1]["fixes"] = hairpin_fixes
 fallback_events = VECTORS[-1]["expected"]
 
+# ---- 16b. The switchbacks at 60 km/h: the warn distance (417 m) is longer than a leg, so the road rule fires while
+# the car is on the leg below the radar's, where the straight-line distance falls and then rises as the car drives
+# away from it along that leg. Only the along-road pass rule keeps that rise from being a pass. ----
+def first_warn(ev):
+    return next((i, e) for i, e in ev if e["kind"] == "warn")
+
+
+r60 = Route(start_ll)
+follow(r60, hpath, 60 / 3.6, stop_after=1480.0 + 200.0)
+ev, _ = sim_point(r60.fixes, HR)
+assert [e["kind"] for _, e in ev] == ["warn", "passed"] and ev[0][1]["level"] == "full", ev
+fi, fe = first_warn(ev)
+straight_at_fire = hav((r60.fixes[fi]["lat"], r60.fixes[fi]["lon"]), RADARS[HR]["start"])
+assert straight_at_fire < fe["distance"] - 150, (straight_at_fire, fe["distance"])
+# The straight-line distance rises at least three times after the fire, before the radar: the rule this proves.
+rises, mn, last = 0, None, None
+for f in r60.fixes[fi + 1:ev[1][0]]:
+    d = hav((f["lat"], f["lon"]), RADARS[HR]["start"])
+    if mn is None or d < mn:
+        mn, rises = d, 0
+    elif d - last >= 1:
+        rises += 1
+    last = d
+    if rises >= 3 and d - mn >= 3:
+        break
+assert rises >= 3, "the straight-line distance must rise after the fire, or the vector proves nothing"
+passed_near(HR, ev)
+vector("road-hairpin-60kmh", f"60 km/h up the switchbacks: the along-road warn distance (417 m) reaches back to the leg below the radar's, so the warning fires there, {int(straight_at_fire)} m from the radar as the crow flies; the straight-line distance then rises as the car drives that leg away from the radar, but along the road it only falls, so the pass is at the radar and nowhere before.", r60, sorted_events(ev))
+hairpin60_fixes = r60.fixes
+
+rb60 = Route(start_ll)
+follow(rb60, hpath, 60 / 3.6, bias=(0.0, 20.0), stop_after=1480.0 + 200.0)
+ev, _ = sim_point(rb60.fixes, HR)
+assert [e["kind"] for _, e in ev] == ["warn", "passed"] and ev[0][1]["level"] == "full", ev
+first_pass = next(i for i, e in ev if e["kind"] == "passed")
+assert hav((rb60.fixes[first_pass]["lat"], rb60.fixes[first_pass]["lon"]), RADARS[HR]["start"]) < 60, "no pass before the radar"
+vector("road-hairpin-60kmh-biased", "The 60 km/h switchback drive with every fix 20 m north of the road, toward the leg above: still exactly one full warning, and no pass before the radar.", rb60, sorted_events(ev))
+
+ev, _ = sim_point(hairpin60_fixes, HR, use_roads=False)
+early = [i for i, e in ev if e["kind"] == "passed" and hav((hairpin60_fixes[i]["lat"], hairpin60_fixes[i]["lon"]), RADARS[HR]["start"]) > 60]
+assert early, ("the straight-line rule must pass the radar early at 60 km/h, or the fallback shows nothing", ev)
+vector("road-hairpin-60kmh-fallback", "The 60 km/h switchback drive with no road geometry: today's straight-line rule marks the radar passed while the car is still on a leg below it. The status quo the along-road pass rule fixes.", Route(start_ll), sorted_events(ev), roadsDisabled=True)
+VECTORS[-1]["fixes"] = hairpin60_fixes
+assert VECTORS[-1]["expected"] != next(v for v in VECTORS if v["name"] == "road-hairpin-60kmh")["expected"]
+
+# ---- 16c. One bad fix on the switchbacks: matched to the road, then one fix 30 m toward the leg above (beyond the
+# 25 m match limit). The straight-line rule must not speak for that one fix; the road decides on the next one. ----
+bad_found = None
+for k in range(len(hairpin_fixes)):
+    fx = [dict(f) for f in hairpin_fixes]
+    moved = dest((fx[k]["lat"], fx[k]["lon"]), 0.0, 30.0)
+    fx[k]["lat"], fx[k]["lon"] = round(moved[0], 7), round(moved[1], 7)
+    old, _ = sim_point(fx, HR, rematch_window=False)
+    if old and old[0][0] == k and old[0][1]["level"] == "full":
+        bad_found = (k, fx, old)
+        break
+assert bad_found, "no fix on the switchbacks where one 30 m excursion makes the straight-line rule speak"
+k, fx, old = bad_found
+ev, _ = sim_point(fx, HR)
+assert [e["kind"] for _, e in ev] == ["warn", "passed"] and ev[0][1]["level"] == "full" and ev[0][0] != k, ev
+assert ev[0][1]["distance"] > old[0][1]["distance"] + 100, (ev, old)
+passed_near(HR, ev)
+rbad = Route(start_ll)
+rbad.fixes = fx
+vector("road-hairpin-one-bad-fix", f"The 40 km/h switchback drive with one fix (fix {k}) 30 m north of the road, toward the leg above: before the fix the straight-line rule spoke on that one fix (\"{old[0][1]['spoken']}\", the radar is above, not ahead). A radar matched to its road a fix or two before is left to the road: one full warning at the along-road warn distance, and the pass at the radar.", rbad, sorted_events(ev))
+
+# ---- 16d. A road 40 m beside the radar's road (a frontage road) with one stray fix 110 m out: the straight-line
+# rule speaks as it always did for a car 26 to 60 m off the road; one fix beyond 60 m is not three, so not held. ----
+stray = Route(road_lls[0])
+follow(stray, road_lls, 90 / 3.6, offset_m=40.0, stop_after=2800.0)
+stray.fixes = stray.fixes[int(500 / 25):]
+ev0, _ = sim_point(stray.fixes, SR)
+k = ev0[0][0]
+fx = [dict(f) for f in stray.fixes]
+moved = dest((fx[k]["lat"], fx[k]["lon"]), (st["heading"] - 90) % 360, 70.0)
+fx[k]["lat"], fx[k]["lon"] = round(moved[0], 7), round(moved[1], 7)
+stray.fixes = fx
+ev, _ = sim_point(fx, SR)
+one, _ = sim_point(fx, SR, off_fixes=1)
+assert ev[0][0] == k and ev[0][1]["level"] == "full" and not ev[0][1].get("held"), ev
+assert one[0][1].get("held"), ("with a one-fix off-road rule the stray fix would hold the warning", one)
+vector("road-stray-fix-not-held", "90 km/h on a road 40 m beside the radar's road, with the fix where the warning fires thrown 110 m out: one fix beyond 60 m is not a car on another road (three are needed), so the warning is spoken as it is for any car 26 to 60 m from the road.", stray, sorted_events(ev))
+
 # ---- 17. Dual carriageway with a high- and a low-confidence travel bearing ----
 du = GEOM["dual"]
 north_lls, south_lls = local("dual", du["north"]), local("dual", du["south"])
@@ -952,9 +1054,12 @@ def chord_along(p, a, b):
     return -along if angle_diff(crs, bearing(a, p)) > 90 else along
 
 
-def sim_corridor(fixes, rid):
+def sim_corridor(fixes, rid, on_gate_skip=True):
     """One stretch through design 2.5 with a road line: entry along a gate approach (else the cone), the join along
-    the line, the remaining along it (the chord after Thresholds.stretchPolylineLossFixes misses), the four exits."""
+    the line, the remaining along it (the chord after Thresholds.stretchPolylineLossFixes misses), the four exits.
+    `on_gate_skip=False` lets the cone enter while the car is on a gate's road but out of range: only to prove the
+    switchback vector depends on that rule."""
+    line, gates_start, gates_end = line_of(rid)
     r = RADARS[rid]
     p = r["p"]
     S, E = r["start"], r["end"]
@@ -1043,7 +1148,7 @@ def sim_corridor(fixes, rid):
         if matches:
             m = list(matches.values())[0]
             entered_now = (m["gate"], m["far"], m["distance"], None)
-        elif not on_gate:
+        elif not on_gate or not on_gate_skip:
             near, far = (S, E) if hav(pos, S) <= hav(pos, E) else (E, S)
             a = straight_eval(f, near, course, prev, w, None, True)
             if a["level"] and angle_diff(course, bearing(near, far)) <= 60:
@@ -1143,6 +1248,23 @@ assert abs(rem[lost_i] - chord_est) < 1, (rem[lost_i], chord_est)
 vector("corridor-curve-polyline-loss", "The bowed corridor with a 4.5 km detour 400 m off its road line: after five fixes off the line the remaining distance falls back to the chord estimate, nothing ends the corridor, the car comes back to the line and Fin de tramo is spoken at the far gate.", r, sorted_events(ev),
        snapshots=[{"fixIndex": lost_i, "stretch": CR, "remainingMetres": round(chord_est), "tolerance": 60, "phase": "insideStretch"}])
 
+# ---- 19b. A corridor at the top of a switchback road: on a gate's road the road decides, never the cone ----
+SWR = "dgt_invive-switchback-road"
+sw = GEOM["switchback_corridor"]
+sw_line, sw_gates, _ = line_of(SWR)
+sw_path = [sw_gates[0].at(a) for a in [x * 5.0 for x in range(int(sw_gates[0].length / 5) + 1)]] + [sw_line.at(a) for a in (100.0, 300.0, 500.0)]
+r = Route(sw_path[0])
+follow(r, sw_path, 60 / 3.6)
+ev, _ = sim_corridor(r.fixes, SWR)
+assert [e["kind"] for _, e in ev] == ["stretchEntered"] and abs(ev[0][1]["distance"] - warn(60 / 3.6)) <= 40, ev
+cone, _ = sim_corridor(r.fixes, SWR, on_gate_skip=False)
+assert cone and cone[0][0] < ev[0][0] and cone[0][1]["distance"] < ev[0][1]["distance"] - 50, (cone, ev)
+sw_cone_d = int(cone[0][1]["distance"])
+cf = r.fixes[cone[0][0]]
+sw_cone_road = sw_gates[0].length - min(sw_gates[0].projections((cf["lat"], cf["lon"])))[1]
+assert sw_cone_road > 1000, sw_cone_road
+vector("corridor-switchback-gate-road", f"60 km/h up a switchback road into the start of a mobile corridor: the gate approach enters it at 417 m along the road. On the legs below, heading the chord's way, the straight-line cone sees the gate {sw_cone_d} m ahead and closing and would enter there, {int(sw_cone_road)} m from the gate along the road; while the car is on a gate's road, the road decides.", r, sorted_events(ev))
+
 # The other carriageway at the west gate, leaving the corridor: never entered.
 out_lls = local("corridor", co["gate_out"])
 r = Route(out_lls[0])
@@ -1160,12 +1282,14 @@ VECTORS.append(
         "description": "Deliberately wrong: the switchback drive with the sidecar loaded but the status quo's expectation (a warning on the bottom leg and a false pass). The suite asserts that the engine's output differs, which proves the road rule changes what the car hears.",
         "locale": "es-ES",
         "negativeControl": True,
+        "roadFixture": True,
         "fixes": hairpin_fixes,
         "expected": fallback_events,
     }
 )
 
 # ---- 13. Negative control: a2-120kmh-ne with its warning removed. The test asserts the engine disagrees. ----
+ROAD_SECTION = False
 base = next(v for v in VECTORS if v["name"] == "a2-120kmh-ne")
 VECTORS.append(
     {

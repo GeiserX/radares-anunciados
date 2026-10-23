@@ -1224,5 +1224,6 @@
    "kind": "passed",
    "radar": "fixed-dual-low-road"
   }
- ]
+ ],
+ "roadFixture": true
 }

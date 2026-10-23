@@ -921,5 +921,6 @@
    "distance": 15.0,
    "tolerance": 15.0
   }
- ]
+ ],
+ "roadFixture": true
 }

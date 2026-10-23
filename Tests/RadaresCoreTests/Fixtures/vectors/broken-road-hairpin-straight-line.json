@@ -3,6 +3,7 @@
  "description": "Deliberately wrong: the switchback drive with the sidecar loaded but the status quo's expectation (a warning on the bottom leg and a false pass). The suite asserts that the engine's output differs, which proves the road rule changes what the car hears.",
  "locale": "es-ES",
  "negativeControl": true,
+ "roadFixture": true,
  "fixes": [
   {
    "t": "2026-10-07T10:00:01+02:00",

@@ -18,6 +18,18 @@
    },
    "line": "_zapF~sqUqCgCoCiCkCoCkCqCgCwCeCyCcC{C_CaD_CcD{BgDwBiDwBoDsBoDoBsDmBwDkByDgB{DeB_EaBaE_BeE{AeEyAiEsAkEsAmEmAoEkAqEiAuEeAuEaAwE}@yEy@yEw@}Es@}Eq@}Ek@aFi@aFe@aFa@cF_@eFYeFWeFSeFQgFKgFIgFCgFAgF@gFBgFHgFJgFPgFReFVeFXeF^eF`@cFd@aFh@aFj@_Fp@_Fr@}Ev@}Ex@yE|@yE`AwEdAuEhAuEjAqElAoErAmErAkExAiEzAeE~AeE`BaEdB_EfB{DjByDlBwDnBsDrBoDvBmDvBkDzBgD~BcD~B_DbC}CdCyCfCuCjCsCjCmCnCkCpCgC"
   },
+  "dgt_invive-switchback-road": {
+   "gates": {
+    "end": [],
+    "start": [
+     {
+      "bearing": null,
+      "polyline": "_m|qFfxhQ?W?y@?y@?{@?y@?y@?y@?{@?y@?y@?y@?{@?GCIAEEGECECG?E?GBEBCFCDAH?F?z@?x@?x@?x@?z@?x@?x@?x@?z@?x@?x@?x@?z@?x@AHAFCFCDEBGBE?G?ECECEEAGCG?I?y@?{@?y@?y@?y@?{@?y@?y@?y@?{@?y@?y@?y@?{@?GCIAEEGECECG?E?GBEBCFCDAH?F?z@?x@?x@?x@?z@?x@?x@?x@?z@?x@?x@?x@?z@?x@"
+     }
+    ]
+   },
+   "line": "{r|qF~|hQaMt^aMt^aMt^aMr^aMt^_Mt^aMt^aMt^aMt^aMt^aMt^_Mr^"
+  },
   "fixed-arc-road": {
    "approaches": [
     {

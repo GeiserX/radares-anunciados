@@ -191,6 +191,39 @@
     "km_from": 10.0,
     "km_to": 19.368
    }
+  },
+  {
+   "type": "Feature",
+   "id": "dgt_invive-switchback-road",
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -3.0,
+      39.8009443
+     ],
+     [
+      -3.0608241,
+      39.8279239
+     ]
+    ]
+   },
+   "properties": {
+    "name": "Tramo de radar móvil N-998",
+    "source": "dgt_invive",
+    "kind": "stretch",
+    "active": true,
+    "valid_from": null,
+    "valid_to": null,
+    "maxspeed": null,
+    "direction": "both",
+    "province": "13",
+    "url": null,
+    "attribution": "Synthetic road fixture",
+    "road": "N-998",
+    "km_from": 20.0,
+    "km_to": 26.0
+   }
   }
  ]
 }

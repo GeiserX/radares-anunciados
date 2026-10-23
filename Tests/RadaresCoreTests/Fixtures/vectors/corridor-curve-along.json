@@ -4466,6 +4466,7 @@
    "spoken": "Fin de tramo."
   }
  ],
+ "roadFixture": true,
  "snapshots": [
   {
    "fixIndex": 235,

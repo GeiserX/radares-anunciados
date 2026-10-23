@@ -258,6 +258,35 @@ ROADS["dgt_invive-curve-road"] = {
     "gates": {"start": [approach_entry(F6, gate_in)], "end": [approach_entry(F6, gate_east)]},
 }
 
+# ---- 7. A mobile corridor that starts at the top of a switchback road: the gate approach into its start is the last 1,500 m of the switchbacks, and the corridor runs on west-north-west from there. On the legs heading
+# west the straight-line cone sees the gate ahead, close and on the chord's course long before the road gets there. ----
+F7 = Frame(39.80, -3.00)
+s_legs = cat(
+    straight((-600.0, 0.0), 90.0, 600.0 + LEG, step=25.0),
+    arc((LEG, SEP / 2), SEP / 2, 180.0, 0.0, step=4.0),
+    straight((LEG, SEP), 270.0, LEG, step=25.0),
+    arc((0.0, SEP * 1.5), SEP / 2, 180.0, 360.0, step=4.0),
+    straight((0.0, 2 * SEP), 90.0, LEG, step=25.0),
+    arc((LEG, SEP * 2.5), SEP / 2, 180.0, 0.0, step=4.0),
+    straight((LEG, 3 * SEP), 270.0, LEG, step=25.0),
+)
+S7 = s_legs[-1]
+E7 = (S7[0] + heading_vec(300.0)[0] * 6000.0, S7[1] + heading_vec(300.0)[1] * 6000.0)
+line7 = straight(S7, 300.0, 6000.0, step=500.0)
+line7[-1] = E7
+GEOMETRY["switchback_corridor"] = {"frame": F7, "road": s_legs, "line": line7}
+FEATURES.append({
+    "type": "Feature", "id": "dgt_invive-switchback-road",
+    "geometry": {"type": "LineString", "coordinates": [[round(F7.ll(*S7)[1], 7), round(F7.ll(*S7)[0], 7)], [round(F7.ll(*E7)[1], 7), round(F7.ll(*E7)[0], 7)]]},
+    "properties": {"name": "Tramo de radar móvil N-998", "source": "dgt_invive", "kind": "stretch", "active": True, "valid_from": None, "valid_to": None,
+                   "maxspeed": None, "direction": "both", "province": "13", "url": None, "attribution": "Synthetic road fixture",
+                   "road": "N-998", "km_from": 20.0, "km_to": 26.0},
+})
+ROADS["dgt_invive-switchback-road"] = {
+    "line": encode(F7.lls(line7)),
+    "gates": {"start": [approach_entry(F7, cut_last(s_legs, APPROACH_M))], "end": []},
+}
+
 
 def place_check():
     """Every synthetic feature at least 10 km from every feed-sample feature and from the other scenarios."""
@@ -290,6 +319,6 @@ if __name__ == "__main__":
     for fid in sorted(ROADS):
         e = ROADS[fid]
         if "line" in e:
-            print(f"{fid:28} line {len(decode(e['line']))} vertices, gates {len(e['gates']['start'])}+{len(e['gates']['end'])}, road {road_len:.0f} m, chord {CHORD:.0f} m, bow {sag:.0f} m")
+            print(f"{fid:28} line {len(decode(e['line']))} vertices, gates {len(e['gates']['start'])}+{len(e['gates']['end'])}")
         else:
             print(f"{fid:28} {len(e['approaches'])} approach(es), {[len(decode(a['polyline'])) for a in e['approaches']]} vertices")

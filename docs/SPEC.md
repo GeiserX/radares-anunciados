@@ -194,11 +194,18 @@ On every fix while the radar is a candidate:
    fires visual (marked `held`, a silent notification, no voice, not "sentido contrario"). Once per pass, a held radar
    is **upgraded**: on a later fix that matches an approach with a full result it fires full, with pacing and the 60 m
    rule, late from the along-road history. If pacing or the 60 m rule would demote it, nothing is emitted and it stays
-   held. Vectors `road-parallel-150m-from-2km`, `road-overpass-90deg`, `road-side-join-late`.
+   held. Vectors `road-parallel-150m-from-2km`, `road-overpass-90deg`, `road-side-join-late`; one fix over 60 m does
+   not hold (`road-stray-fix-not-held`). A radar that matched an approach earlier in its candidate run is left to the
+   road for its next unmatched fixes: while this fix is the first or second unmatched one since the last match, a
+   full straight-line result emits nothing and the next matched fix decides; from the third on, the rules above
+   apply (`road-hairpin-one-bad-fix`). A radar that never matched in the run uses the rules above from the start.
 4. **Pass.** While matched, passed only when along ≥ length − 30 m; the rising-distance rule is not used (on a
    hairpin the straight-line distance rises and falls), and its watch restarts from the current distance. Unmatched,
-   the straight-line pass rule applies. Vectors `road-hairpin`, `road-hairpin-biased`; `road-hairpin-fallback` is the
-   same drive with no sidecar and today's events.
+   the straight-line pass rule applies. Vectors `road-hairpin`, `road-hairpin-biased`, `road-hairpin-60kmh` and
+   `road-hairpin-60kmh-biased` (fired on the leg below, where only this rule stops a false pass);
+   `road-hairpin-fallback` and `road-hairpin-60kmh-fallback` are the same drives with no sidecar and today's events.
+5. **Card.** The snapshot's distance to a point (the in-app and CarPlay card, the visual rows) is the along-road
+   distance while this fix matches the radar's approach, else the straight line.
 
 ## 4. Once per pass, cooldown, pacing
 
@@ -339,15 +346,22 @@ red by the rules in `Sources/RadaresCore/Health/HealthReport.swift`, with a posi
 ## 10. The route vectors: how the Kotlin port runs them
 
 `Tests/RadaresCoreTests/Fixtures/feed-sample.geojson` is a 254-feature slice of the live feed (built by
-`scripts/make-fixture.py`); `feed-sample-roads.geojson` and `roads-sample.json` are seven synthetic road scenarios
+`scripts/make-fixture.py`); `feed-sample-roads.geojson` and `roads-sample.json` are eight synthetic road scenarios
 and their sidecar (built by `scripts/make-roads-fixture.py`, ids ending in `-road`, each at least 10 km from every
 feed-sample feature): a straight road with a parallel road 150 m off and an overpass, a 1,000 m radius curve, three
 switchbacks, a dual carriageway 25 m apart with a high- and a low-confidence bearing, a side road joining 300 m before
-a radar, and a mobile corridor bowing 2 km off its chord (chord / road 0.85) with gates at both ends.
+a radar, a mobile corridor bowing 2 km off its chord (chord / road 0.85) with gates at both ends, and a mobile
+corridor starting at the top of a switchback road (its start gate is the last 1,500 m of the switchbacks).
 `Tests/RadaresCoreTests/Fixtures/vectors/*.json` are drives over both (built by `scripts/make-vectors.py`, whose
 expectations come from the rules above in Python, not from the Swift engine). The store is both GeoJSON files decoded
-into one; the sidecar is passed to the engine for every vector unless the vector sets `"roadsDisabled": true`. The
-Kotlin tests load the same files unchanged and must produce the same events.
+into one; the sidecar is passed to the engine for every vector unless the vector sets `"roadsDisabled": true`.
+
+A vector that drives over the road fixture carries `"roadFixture": true` (23 of the 51 today). The Kotlin suite
+(`android/core`) loads only `feed-sample.geojson`, has no sidecar and no road rule yet, so it runs the 28 vectors
+without the flag and must produce the same events for them, and skips each flagged vector as a skipped test. The
+Android workflow fails unless the passed vector tests plus the skipped ones equal the files on disk and the skipped
+ones equal the files carrying the flag, so a vector can neither vanish nor be skipped without the flag. The Swift
+suite checks that the flag is set exactly on the vectors that name a road-fixture radar or expect nothing over it.
 
 A vector:
 
@@ -386,6 +400,13 @@ Every "must not fire" vector has a "must fire" twin on the same radar: `leon-50k
 `road-dual-same`, `corridor-curve-gate-opposite-carriageway` / `corridor-curve-gate-entry`. Every held vector has a
 spoken twin: `road-parallel-150m-from-2km` and `road-overpass-90deg` / `road-on-approach-2km`,
 `road-dual-opposite-low` / `road-dual-same`. The 27 straight-line vectors pass both with the sidecar and without it.
+
+Road vectors that exist because a rule could otherwise be removed without any vector failing:
+`road-hairpin-60kmh` and `road-hairpin-60kmh-biased` (the warning fires on the leg below the radar's, where the
+straight-line distance then rises; only the along-road pass rule keeps that from being a pass; their twin
+`road-hairpin-60kmh-fallback` shows today's early pass with no sidecar), `road-hairpin-one-bad-fix` (one fix 30 m
+off a matched road is not spoken by the straight-line rule), `road-stray-fix-not-held` (one fix beyond 60 m does not
+hold a warning; three are needed) and `corridor-switchback-gate-road` (on a gate's road the cone never enters).
 
 Budgets: ingest under 10 ms per fix on a 4,500-feature store, with or without an approach on every radar; decode of
 a feed-sized file under 500 ms; validation and decode of a 1.5 MB sidecar under 500 ms.
