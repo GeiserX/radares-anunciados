@@ -19,6 +19,23 @@ updates:
         patterns: ["*"]
       minor-and-patch:
         update-types: [minor, patch]
+  - package-ecosystem: gradle
+    directory: /android
+    schedule:
+      interval: weekly
+    labels: ["dependencies", "automated"]
+    # Same rule as the swift entry: minor and patch only, through an allow rule so security updates still come.
+    allow:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
+    cooldown:
+      default-days: 3
+    groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
+      minor-and-patch:
+        update-types: [minor, patch]
   - package-ecosystem: github-actions
     directory: /
     schedule:
