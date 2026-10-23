@@ -16,6 +16,13 @@ public struct FeedMeta: Sendable, Codable, Hashable {
     public var countsByKind: [Kind: Int]
     public var lastError: String?
     public var consecutiveFailures: Int
+    /// The road sidecar (roads.json, design 5.1): its own ETag and dates. All optional, so an older meta decodes.
+    public var roadsEtag: String?
+    /// When a validated roads.json body was last stored.
+    public var roadsFetchedAt: Date?
+    /// When the server was last asked for roads.json (200 or 304).
+    public var roadsCheckedAt: Date?
+    public var roadsLastError: String?
 
     public init(
         etag: String? = nil,
