@@ -178,8 +178,12 @@ private fun markerIcon(context: Context, kind: Kind): Drawable {
         setStroke((2 * density).toInt(), android.graphics.Color.WHITE)
         setSize(size, size)
     }
+    // The layer's intrinsic size is the glyph's size plus its insets, so the 24 dp glyph is sized down to fit
+    // inside 30 dp; left at 24 dp it would make the marker 38 dp.
     val inset = (7 * density).toInt()
+    val glyphSize = size - 2 * inset
     return LayerDrawable(arrayOf(disc, ContextCompat.getDrawable(context, glyph)!!)).apply {
+        setLayerSize(1, glyphSize, glyphSize)
         setLayerInset(1, inset, inset, inset, inset)
     }
 }
