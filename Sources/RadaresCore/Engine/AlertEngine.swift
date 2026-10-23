@@ -11,6 +11,8 @@ import Foundation
 
 public final class AlertEngine {
     private let store: RadarStore
+    /// The road sidecar (design 5.5); nil, or a radar without an entry, runs the straight-line rules unchanged.
+    private let roads: RoadGeometry?
     private let now: @Sendable () -> Date
     private let locale: Locale
 
@@ -25,12 +27,25 @@ public final class AlertEngine {
     private var histories: [String: [Double]] = [:]
     /// Fired points not yet passed: the minimum seen and the run of increases after it.
     private var passing: [String: PassWatch] = [:]
+    /// Per point with approaches: the last matched fix along its road; dropped on a fix that does not match.
+    private var roadHistories: [String: RoadHistory] = [:]
+    /// Per point with approaches: consecutive accurate fixes farther than Thresholds.roadOffLateralM from all of them.
+    private var offRoadRuns: [String: Int] = [:]
     private var lastSpokenAt: Date?
     private var lastPassed: (radar: Radar, at: Date)?
     private var current: DriveSnapshot
 
     /// Why the last stretch was left, for the log row the location lane writes.
     public private(set) var lastStretchExitReason: StretchExitReason?
+
+    /// How a point fires on this fix: as today, held silent (off its road), hidden (opposite flow, high
+    /// confidence), or the one upgrade of a held fire.
+    private enum Fire {
+        case normal
+        case held
+        case hidden
+        case upgrade
+    }
 
     private struct PassWatch {
         var minDistance: Double
@@ -39,8 +54,9 @@ public final class AlertEngine {
         var opposite: Bool
     }
 
-    public init(store: RadarStore, ledger: PassLedger, now: @escaping @Sendable () -> Date = Date.init, locale: Locale = .autoupdatingCurrent) {
+    public init(store: RadarStore, roads: RoadGeometry? = nil, ledger: PassLedger, now: @escaping @Sendable () -> Date = Date.init, locale: Locale = .autoupdatingCurrent) {
         self.store = store
+        self.roads = roads
         self.now = now
         self.locale = locale
         passes = PassTracker(ledger: ledger)
@@ -90,7 +106,14 @@ public final class AlertEngine {
         let median = WarnPolicy.medianSpeed(speeds)
         let warn = WarnPolicy.warnDistance(speed: median ?? 0)
 
-        let candidates = store.candidates(near: fix.coordinate, within: warn + Thresholds.candidateBandM, on: t)
+        var candidates = store.candidates(near: fix.coordinate, within: warn + Thresholds.candidateBandM, on: t)
+        // A stretch whose road bows away from its chord is a candidate near its road too (design 2.5).
+        if let roads {
+            let have = Set(candidates.map(\.id))
+            for id in roads.lineCandidates(near: fix.coordinate, within: warn + Thresholds.candidateBandM) where !have.contains(id) {
+                if let radar = store.radar(id: id), radar.isLine, radar.isAlertable(on: t) { candidates.append(radar) }
+            }
+        }
 
         // The 2 km half of the cooldown: how far the car has been from every fired radar.
         for entry in passes.ledger.entries where entry.farthestMetres < Thresholds.cooldownM {
@@ -101,7 +124,7 @@ public final class AlertEngine {
 
         // Stretches first: an entry is one event, an exit another, never both on one fix.
         let lines = candidates.filter { $0.isLine && passes.canFire($0.id, now: t) }
-        if let change = stretches.ingest(fix, courseDegrees: course, warnDistance: warn, speedMps: median, candidates: lines, now: t) {
+        if let change = stretches.ingest(fix, courseDegrees: course, warnDistance: warn, speedMps: median, candidates: lines, roads: roads, now: t) {
             switch change {
             case .entered(let radar, _, let approach, let level, let remaining):
                 if level == .full {
@@ -127,9 +150,12 @@ public final class AlertEngine {
             }
         }
 
-        // Points (design 2.3): record the distance history, evaluate, arm or fire.
-        var fires: [(Radar, Approach)] = []
+        // Points (design 2.3): record the distance history, evaluate, arm or fire. A point with road approaches is
+        // measured along its road while the fix matches one; otherwise by the straight-line rule, held silent when the
+        // car is clearly off that road.
+        var fires: [(Radar, Approach, Fire)] = []
         var seen = Set<String>()
+        var roadMatches: [String: RoadMatch] = [:]
         for radar in candidates where !radar.isLine {
             seen.insert(radar.id)
             let previous = histories[radar.id] ?? []
@@ -139,25 +165,57 @@ public final class AlertEngine {
             if h.count > 8 { h.remove(at: 1) }
             histories[radar.id] = h
 
-            guard let course, passes.canFire(radar.id, now: t) else { continue }
-            let approach = ApproachEvaluator.evaluate(gate: radar.start, bearing: radar.bearing, bidirectional: radar.bidirectional, fix: fix, courseDegrees: course, previousDistances: previous, warnDistance: warn)
-            if approach.level != nil {
-                fires.append((radar, approach))
-            } else if approach.ahead {
-                passes.arm(radar.id)
-            } else {
-                passes.disarm(radar.id)
+            let approaches = roads?.approaches(for: radar.id)
+            if let approaches {
+                let off = RoadApproach.minLateral(approaches, at: fix.coordinate) > Thresholds.roadOffLateralM
+                    && fix.horizontalAccuracy <= Thresholds.roadOffMaxAccuracyM
+                offRoadRuns[radar.id] = off ? (offRoadRuns[radar.id] ?? 0) + 1 : 0
+                let match = course.flatMap {
+                    RoadApproach.evaluate(approaches: approaches, fix: fix, courseDegrees: $0, speedMps: median, previous: roadHistories[radar.id], warnDistance: warn)
+                }
+                roadHistories[radar.id] = match?.history
+                if let match { roadMatches[radar.id] = match }
+            }
+
+            guard let course else { continue }
+            if passes.canFire(radar.id, now: t) {
+                if let match = roadMatches[radar.id] {
+                    let approach = match.approach
+                    if approach.level != nil {
+                        fires.append((radar, approach, .normal))
+                    } else if approach.ahead {
+                        passes.arm(radar.id)
+                    } else {
+                        passes.disarm(radar.id)
+                    }
+                    continue
+                }
+                let approach = ApproachEvaluator.evaluate(gate: radar.start, bearing: radar.bearing, bidirectional: radar.bidirectional, fix: fix, courseDegrees: course, previousDistances: previous, warnDistance: warn)
+                switch approach.level {
+                case .full?:
+                    let offRoad = approaches != nil && (offRoadRuns[radar.id] ?? 0) >= Thresholds.roadOffFixes
+                    fires.append((radar, approach, offRoad ? .held : .normal))
+                case .visual?:
+                    fires.append((radar, approach, radar.directionConfidence == .high ? .hidden : .normal))
+                case nil:
+                    if approach.ahead { passes.arm(radar.id) } else { passes.disarm(radar.id) }
+                }
+            } else if passes.canUpgrade(radar.id), let match = roadMatches[radar.id], match.approach.level == .full {
+                fires.append((radar, match.approach, .upgrade))
             }
         }
         histories = histories.filter { seen.contains($0.key) }
+        roadHistories = roadHistories.filter { seen.contains($0.key) }
+        offRoadRuns = offRoadRuns.filter { seen.contains($0.key) }
 
-        // Pacing and the combined sentence (design 2.6): one voice per fix and per 8 s; the rest are shown.
+        // Pacing and the combined sentence (design 2.6): one voice per fix and per 8 s; the rest are shown. Held and
+        // hidden fires are never spoken; an upgrade the pacing would demote waits for a later fix.
         fires.sort { $0.1.distanceMetres < $1.1.distanceMetres }
         var spoken: (Radar, Approach)? = nil
         var second: Double? = nil
-        var fired: [(Radar, Approach, Level)] = []
-        for (radar, approach) in fires {
-            var level = approach.level ?? .visual
+        var fired: [(Radar, Approach, Level, Fire)] = []
+        for (radar, approach, kind) in fires {
+            var level = kind == .held || kind == .hidden ? .visual : (approach.level ?? .visual)
             if level == .full {
                 if approach.distanceMetres < Thresholds.noVoiceBelowM {
                     level = .visual
@@ -170,14 +228,26 @@ public final class AlertEngine {
                     spoken = (radar, approach)
                 }
             }
-            passes.fire(radar.id, level: level, now: t)
+            switch kind {
+            case .upgrade:
+                guard level == .full else { continue }
+                passes.upgrade(radar.id)
+            case .held:
+                passes.fire(radar.id, level: .visual, held: true, now: t)
+            case .hidden:
+                passes.fire(radar.id, level: .visual, hidden: true, now: t)
+            case .normal:
+                passes.fire(radar.id, level: level, now: t)
+            }
             passing[radar.id] = PassWatch(minDistance: approach.distanceMetres, lastDistance: approach.distanceMetres, opposite: !approach.directionMatch)
-            fired.append((radar, approach, level))
+            fired.append((radar, approach, level, kind))
         }
         if spoken != nil { lastSpokenAt = t }
-        for (radar, approach, level) in fired {
+        for (radar, approach, level, kind) in fired {
             let opposite = !approach.directionMatch
-            let content = radarContent(radar, phase: .alert, distance: approach.distanceMetres, median: median, opposite: opposite, at: t)
+            var content = radarContent(radar, phase: .alert, distance: approach.distanceMetres, median: median, opposite: opposite, at: t)
+            content.held = kind == .held
+            content.hidden = kind == .hidden
             let draft = AlertEvent(kind: .warn(level), radar: radar, distance: approach.distanceMetres, late: approach.late, crossTrackMetres: approach.crossTrackMetres, phrase: nil, content: content)
             let isSpoken = level == .full && spoken?.0.id == radar.id
             events.append(withPhrase(draft, phrase: isSpoken ? Phrasing.make(draft, locale: locale, alsoAt: second) : nil))
@@ -185,6 +255,10 @@ public final class AlertEngine {
 
         // Passed (design 2.3): three increases of at least closingMinM after the minimum, the distance at least
         // max(passedMinRiseM, accuracy) above it, or under 30 m. GPS wander while stopped before the radar is no pass.
+        // While the fix matches the radar's road, only the along-road position decides: passed within passedBelowM of
+        // the radar's end of the approach, never by a rising straight-line distance (a hairpin rises and falls).
+        // A hidden fire passes silently.
+        let firedThisFix = Set(fired.map(\.0.id))
         for id in passes.firedIds {
             guard let radar = store.radar(id: id), !radar.isLine else { continue }
             let distance = Geo.distance(fix.coordinate, radar.start)
@@ -192,25 +266,38 @@ public final class AlertEngine {
                 passing[id] = PassWatch(minDistance: distance, lastDistance: distance, opposite: false)
                 continue
             }
-            if fired.contains(where: { $0.0.id == id }) { continue }
-            var passed = distance < Thresholds.passedBelowM
-            if !passed {
-                if distance < watch.minDistance {
-                    watch.minDistance = distance
-                    watch.increases = 0
-                } else if distance - watch.lastDistance >= Thresholds.closingMinM {
-                    watch.increases += 1
-                    let rise = distance - watch.minDistance
-                    passed = watch.increases >= Thresholds.passedFixes && rise >= max(Thresholds.passedMinRiseM, fix.horizontalAccuracy)
-                } else {
-                    watch.increases = 0
+            if firedThisFix.contains(id) { continue }
+            var passed = false
+            if let match = roadMatches[id] {
+                passed = match.alongMetres >= match.lengthMetres - Thresholds.passedBelowM
+                if !passed {
+                    // Restart the straight-line watch from here, for when the fix stops matching.
+                    watch = PassWatch(minDistance: distance, lastDistance: distance, opposite: watch.opposite)
+                    passing[id] = watch
+                    continue
+                }
+            } else {
+                passed = distance < Thresholds.passedBelowM
+                if !passed {
+                    if distance < watch.minDistance {
+                        watch.minDistance = distance
+                        watch.increases = 0
+                    } else if distance - watch.lastDistance >= Thresholds.closingMinM {
+                        watch.increases += 1
+                        let rise = distance - watch.minDistance
+                        passed = watch.increases >= Thresholds.passedFixes && rise >= max(Thresholds.passedMinRiseM, fix.horizontalAccuracy)
+                    } else {
+                        watch.increases = 0
+                    }
                 }
             }
             watch.lastDistance = distance
             passing[id] = watch
             if passed {
+                let hidden = passes.isHidden(id)
                 passes.markPassed(id, now: t)
                 passing.removeValue(forKey: id)
+                guard !hidden else { continue }
                 lastPassed = (radar, t)
                 let content = radarContent(radar, phase: .passed, distance: distance, median: median, opposite: false, at: t)
                 events.append(AlertEvent(kind: .passed, radar: radar, distance: distance, late: false, crossTrackMetres: nil, phrase: nil, content: content))
@@ -234,6 +321,8 @@ public final class AlertEngine {
         passes.prune(now: t)
         histories = [:]
         passing = [:]
+        roadHistories = [:]
+        offRoadRuns = [:]
         speeds = []
         previousFix = nil
         recentFixes = []
@@ -320,7 +409,8 @@ public final class AlertEngine {
         s.lastFix = fix
         s.stretch = stretches.inside
 
-        let visualIds = Set(passes.ledger.entries.filter { $0.passedAt == nil && $0.level == .visual }.map(\.id))
+        // A hidden fire changes nothing on the card.
+        let visualIds = Set(passes.ledger.entries.filter { $0.passedAt == nil && $0.level == .visual && $0.hidden != true }.map(\.id))
         s.visualRows = visualIds.compactMap { id in
             guard let radar = store.radar(id: id) else { return nil }
             return DriveSnapshot.VisualRow(radar: radar, distanceMetres: RadarStore.gateDistance(from: fix.coordinate, to: radar), opposite: passing[id]?.opposite ?? false)
