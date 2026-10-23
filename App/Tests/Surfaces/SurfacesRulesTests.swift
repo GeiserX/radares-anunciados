@@ -63,4 +63,20 @@ final class SurfacesRulesTests: XCTestCase {
         let noRadar = AlertEvent(kind: .driveEnded, content: .watching(at: t0))
         XCTAssertNil(AlertDispatcher.notificationPhrase(for: noRadar, level: .visual, locale: es), "nothing to post without a radar")
     }
+
+    /// Twin cameras: the full warning for the radar ahead is on screen, then the opposite carriageway's camera 30 m
+    /// beyond posts its silent row on the next fix. The silent row removes nothing, so the ticked warning stays on the
+    /// Lock Screen and the car screen. Positive control: a sounded post for B does clear A, as before.
+    func testASilentPostNeverRemovesTheWarningAlreadyOnScreen() {
+        let delivered: [(id: String, thread: String)] = [("osm-a#1", Notifier.radarThread), ("health", Notifier.healthThread)]
+        XCTAssertEqual(Notifier.removedBeforePosting("osm-b#1", silent: true, delivered: delivered), [], "the silent row leaves A's warning delivered")
+        XCTAssertEqual(Notifier.removedBeforePosting("osm-b#1", silent: false, delivered: delivered), ["osm-a#1"], "a sounded post still clears the previous radar")
+        XCTAssertEqual(Notifier.removedBeforePosting("osm-a#1", silent: false, delivered: delivered), [], "a radar's own row and the health notice stay")
+    }
+
+    /// The passed path removes only that radar's rows, silent or not; another radar's warning stays.
+    func testPassingARadarRemovesOnlyItsOwnRows() {
+        let delivered: [(id: String, thread: String)] = [("osm-a#1", Notifier.radarThread), ("osm-b#2", Notifier.radarThread), ("osm-ab#1", Notifier.radarThread)]
+        XCTAssertEqual(Notifier.radarNotificationsToRemove(delivered: delivered, radarID: "osm-b"), ["osm-b#2"])
+    }
 }
