@@ -17,6 +17,8 @@ public enum AppPaths {
     public static let feed = folder.appending(path: "feed.geojson")
     public static let feedBackup = folder.appending(path: "feed.geojson.bak")
     public static let feedMeta = folder.appending(path: "feed.meta.json")
+    /// The road geometry sidecar (design 5.5); its ETag and dates live in feed.meta.json.
+    public static let roads = folder.appending(path: "roads.json")
     public static let passes = folder.appending(path: "passes.json")
     public static let events = folder.appending(path: "events.jsonl")
 }

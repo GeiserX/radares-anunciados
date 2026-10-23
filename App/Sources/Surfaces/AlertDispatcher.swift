@@ -7,7 +7,9 @@
 //
 // What each event does:
 //   .warn(.full), .stretchEntered   speech + the Time Sensitive notification; one `alert` log row with the sink outcomes
-//   .warn(.visual)                  the notification without the voice (sentido contrario, pacing gap); an `alert` row
+//   .warn(.visual)                  the notification without the voice and without a sound (sentido contrario, pacing
+//                                   gap, held off the radar's road); an `alert` row
+//   .warn(.visual), hidden          nothing posted or spoken: only the `alert` row, suppressedByDirection, no sinks
 //   .passed                         that radar's notification is removed
 //   .stretchExited                  "Fin de tramo" when the core phrased it (dropped if anything is speaking)
 //   .driveEnded                     the once-per-drive audio session is released
@@ -66,11 +68,18 @@ public final class AlertDispatcher {
     }
 
     private func alert(_ event: AlertEvent, level: Level, fix: Fix?) async {
+        if event.content.hidden {
+            // The opposite flow of a high-confidence bearing (design 2.4): no notification, no voice, no card; the row
+            // is written so a wrong hide can be found in an exported log.
+            AppLog.shared.post(Self.hiddenRow(for: event, fix: fix))
+            logger.notice("alert \(event.radar?.id ?? "-", privacy: .public) hidden")
+            return
+        }
         let phrase = level == .full ? event.phrase : nil
         let text = Self.notificationPhrase(for: event, level: level, locale: .autoupdatingCurrent)
         // The two sinks run side by side: a slow audio session never holds back the banner.
         async let spoken = speakIfWanted(phrase)
-        async let posted = post(text, for: event)
+        async let posted = post(text, for: event, level: level)
         let sinks = [await spoken, await posted].compactMap { $0 }
 
         let radar = event.radar
@@ -97,11 +106,34 @@ public final class AlertDispatcher {
         return await speech.speak(phrase).sink
     }
 
-    /// The Time Sensitive notification, unconditional: every warning posts one, silent for a radar of the opposite flow.
-    private func post(_ phrase: Phrase?, for event: AlertEvent) async -> SinkOutcome? {
+    /// The Time Sensitive notification, unconditional: every warning posts one; every `.visual` one silently.
+    private func post(_ phrase: Phrase?, for event: AlertEvent, level: Level) async -> SinkOutcome? {
         guard let phrase else { return nil }
-        let error = await notifier.post(phrase, id: notificationID(for: event), silent: event.content.opposite)
+        let error = await notifier.post(phrase, id: notificationID(for: event), silent: Self.isSilent(level: level))
         return SinkOutcome(sink: .notification, ok: error == nil, detail: error.map { String(describing: $0) })
+    }
+
+    /// A `.visual` post is always silent: the opposite flow, a pacing gap and a warning held off the radar's road are
+    /// shown, never sounded, so they never compete with (or, in the Notifier, replace) the spoken warning ahead.
+    nonisolated static func isSilent(level: Level) -> Bool {
+        level == .visual
+    }
+
+    /// The one row a hidden warning writes: level `.visual`, suppressedByDirection, no sinks, nothing spoken.
+    nonisolated static func hiddenRow(for event: AlertEvent, fix: Fix?) -> LogEvent {
+        let radar = event.radar
+        return .alert(
+            id: radar?.id ?? "",
+            level: .visual,
+            distance: event.distance ?? Double(event.content.distanceMetres ?? 0),
+            speedMps: fix?.speed ?? event.content.speedKmh.map { Double($0) / 3.6 },
+            late: event.late,
+            crossTrackMetres: event.crossTrackMetres,
+            suppressedByDirection: true,
+            coordinate: fix?.coordinate ?? radar?.start ?? Coordinate(latitude: 0, longitude: 0),
+            sinks: [],
+            spoken: nil
+        )
     }
 
     /// The notification's text. A `.full` warning carries the core's phrase. A `.visual` one has no sentence (the

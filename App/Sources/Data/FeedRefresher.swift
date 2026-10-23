@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // BGAppRefreshTask "io.github.geiserx.radares.refresh" (submit, handle, resubmit), the foreground and drive-start
-// triggers through FeedRefreshPolicy, manual "Actualizar ahora" (design 5.1, 5.2).
+// triggers through FeedRefreshPolicy, manual "Actualizar ahora" (design 5.1, 5.2). Each feed refresh also asks for the
+// road sidecar, roads.json, with its own ETag.
 
 @preconcurrency import BackgroundTasks
 import Foundation
@@ -128,9 +129,11 @@ public final class FeedRefresher {
         let now = Date()
         // Without a feed on disk an ETag would get a 304 and nothing to keep.
         let etag = FileManager.default.fileExists(atPath: AppPaths.feed.path) ? meta.etag : nil
+        var feedAnswered = false
         do {
             switch try await FeedClient().fetch(ifNoneMatch: etag) {
             case .notModified:
+                feedAnswered = true
                 meta.checkedAt = now
                 meta.lastError = nil
                 meta.consecutiveFailures = 0
@@ -142,7 +145,7 @@ public final class FeedRefresher {
                 case let .success(feed):
                     _ = try files.replaceFeed(with: feed.data)
                     CurrentFeed.shared.install(RadarStore(radars: feed.radars))
-                    meta = FeedMeta(
+                    var fresh = FeedMeta(
                         etag: newEtag,
                         lastModified: lastModified,
                         fetchedAt: now,
@@ -150,7 +153,14 @@ public final class FeedRefresher {
                         featureCount: feed.radars.count,
                         countsByKind: feed.countsByKind
                     )
+                    // The sidecar's own ETag and dates are not the feed's: a new feed keeps them.
+                    fresh.roadsEtag = meta.roadsEtag
+                    fresh.roadsFetchedAt = meta.roadsFetchedAt
+                    fresh.roadsCheckedAt = meta.roadsCheckedAt
+                    fresh.roadsLastError = meta.roadsLastError
+                    meta = fresh
                     files.writeMeta(meta)
+                    feedAnswered = true
                     AppLog.shared.post(.feedChecked(etag: newEtag, notModified: false))
                     AppLog.shared.post(.feedUpdated(count: feed.radars.count, etag: newEtag))
                 case let .failure(error):
@@ -160,6 +170,52 @@ public final class FeedRefresher {
         } catch {
             fail(&meta, error.localizedDescription, at: now)
         }
+        // The sidecar after the feed answered (200 or 304), with its own ETag; its failure never touches the feed's
+        // health, and it keeps the previous file.
+        if feedAnswered { await downloadRoads() }
+    }
+
+    /// Conditional GET of roads.json, validate, atomic replace, install for the next engine. A 404 (a publisher that
+    /// has not shipped it yet), a refused file or a network error keeps the old file and logs a `roadsFailed` row.
+    nonisolated private static func downloadRoads() async {
+        let files = FileStore.shared
+        var meta = files.readMeta()
+        let now = Date()
+        let etag = FileManager.default.fileExists(atPath: AppPaths.roads.path) ? meta.roadsEtag : nil
+        do {
+            switch try await RoadsClient().fetch(ifNoneMatch: etag) {
+            case .notModified:
+                meta.roadsCheckedAt = now
+                meta.roadsLastError = nil
+                files.writeMeta(meta)
+                AppLog.shared.post(.roadsChecked(etag: etag, notModified: true))
+            case let .updated(data, newEtag, _):
+                switch RoadsValidator.validate(data) {
+                case let .success(roads):
+                    try files.replaceRoads(with: data)
+                    CurrentFeed.shared.install(roads: roads)
+                    meta.roadsEtag = newEtag
+                    meta.roadsFetchedAt = now
+                    meta.roadsCheckedAt = now
+                    meta.roadsLastError = nil
+                    files.writeMeta(meta)
+                    AppLog.shared.post(.roadsChecked(etag: newEtag, notModified: false))
+                    AppLog.shared.post(.roadsUpdated(count: roads.count, etag: newEtag))
+                case let .failure(error):
+                    failRoads(&meta, "\(error)", at: now)
+                }
+            }
+        } catch {
+            failRoads(&meta, error.localizedDescription, at: now)
+        }
+    }
+
+    nonisolated private static func failRoads(_ meta: inout FeedMeta, _ message: String, at now: Date) {
+        meta.roadsCheckedAt = now
+        meta.roadsLastError = message
+        FileStore.shared.writeMeta(meta)
+        AppLog.shared.post(.roadsFailed(error: message))
+        Logger(subsystem: "io.github.geiserx.radares", category: "feed").error("roads refresh failed: \(message, privacy: .public)")
     }
 
     nonisolated private static func fail(_ meta: inout FeedMeta, _ message: String, at now: Date) {

@@ -28,6 +28,8 @@ struct Vector: Decodable {
         let opposite: Bool?
         let spoken: String?
         let exitReason: String?
+        /// A held straight-line warning (the car off the radar's road). Absent means not held.
+        let held: Bool?
     }
 
     struct VSnapshot: Decodable {
@@ -44,6 +46,14 @@ struct Vector: Decodable {
     let description: String
     let locale: String?
     let negativeControl: Bool?
+    /// Run without the road sidecar: the straight-line rules alone.
+    let roadsDisabled: Bool?
+    /// Drives over the road fixture (feed-sample-roads.geojson and roads-sample.json). A port without the road rule
+    /// skips these and counts them (the Kotlin suite, docs/SPEC.md section 10).
+    let roadFixture: Bool?
+    /// Radar ids the engine must fire hidden (opposite flow, high confidence). Hidden events are not in `expected`:
+    /// they reach no surface, only the log.
+    let hidden: [String]?
     let fixes: [VFix]
     let expected: [VEvent]
     var snapshots: [VSnapshot]?
@@ -63,6 +73,7 @@ struct Vector: Decodable {
 
 struct VectorRun {
     var events: [(index: Int, event: AlertEvent)] = []
+    var hidden: [AlertEvent] = []
     var mismatches: [String] = []
 }
 
@@ -73,8 +84,10 @@ final class TestClock: @unchecked Sendable {
 }
 
 enum VectorRunner {
-    static func run(_ vector: Vector, store: RadarStore, ledger: PassLedger = PassLedger()) -> VectorRun {
-        let engine = AlertEngine(store: store, ledger: ledger, locale: Locale(identifier: vector.locale ?? "es_ES"))
+    /// `roads` is the sidecar the harness passes unless the vector sets `roadsDisabled`.
+    static func run(_ vector: Vector, store: RadarStore, roads: RoadGeometry? = nil, ledger: PassLedger = PassLedger()) -> VectorRun {
+        let sidecar = vector.roadsDisabled == true ? nil : roads
+        let engine = AlertEngine(store: store, roads: sidecar, ledger: ledger, locale: Locale(identifier: vector.locale ?? "es_ES"))
         var run = VectorRun()
         // A snapshot check the fix loop never reaches would otherwise pass silently (a typo in fixIndex turns the
         // remaining, average and phase assertions off).
@@ -83,7 +96,11 @@ enum VectorRunner {
         }
         for (i, fix) in vector.fixList.enumerated() {
             for e in engine.ingest(fix) {
-                run.events.append((i, e))
+                if e.content.hidden {
+                    run.hidden.append(e)
+                } else {
+                    run.events.append((i, e))
+                }
             }
             for check in vector.snapshots ?? [] where check.fixIndex == i {
                 let s = engine.snapshot
@@ -100,6 +117,11 @@ enum VectorRunner {
             }
         }
         run.mismatches.append(contentsOf: compare(run.events.map(\.event), to: vector.expected))
+        let hiddenIds = run.hidden.map { $0.radar?.id ?? "-" }
+        if hiddenIds != (vector.hidden ?? []) { run.mismatches.append("hidden \(hiddenIds) vs \(vector.hidden ?? [])") }
+        for e in run.hidden where e.kind != .warn(.visual) || e.phrase != nil || !e.content.opposite {
+            run.mismatches.append("a hidden event must be a silent visual warning for the opposite flow: \(describe(e))")
+        }
         return run
     }
 
@@ -132,6 +154,7 @@ enum VectorRunner {
             }
             if let late = x.late, late != e.late { out.append("event \(i): late \(e.late) vs \(late)") }
             if let opposite = x.opposite, opposite != e.content.opposite { out.append("event \(i): opposite \(e.content.opposite) vs \(opposite)") }
+            if (x.held ?? false) != e.content.held { out.append("event \(i): held \(e.content.held) vs \(x.held ?? false)") }
             if let spoken = x.spoken, spoken != e.phrase?.spoken { out.append("event \(i): spoken \"\(e.phrase?.spoken ?? "nil")\" vs \"\(spoken)\"") }
             if x.spoken == nil, kind == "warn", level == "visual", e.phrase != nil { out.append("event \(i): a visual warning must not have a phrase") }
             if x.spoken == nil, kind == "stretchExited", e.phrase != nil { out.append("event \(i): a silent exit must not have a phrase") }
@@ -144,6 +167,7 @@ enum VectorRunner {
 
 final class AlertEngineVectorTests: XCTestCase {
     nonisolated(unsafe) static var sharedStore: RadarStore?
+    nonisolated(unsafe) static var sharedRoads: RoadGeometry?
 
     func store() throws -> RadarStore {
         if let s = Self.sharedStore { return s }
@@ -152,10 +176,40 @@ final class AlertEngineVectorTests: XCTestCase {
         return s
     }
 
+    func roads() throws -> RoadGeometry {
+        if let r = Self.sharedRoads { return r }
+        let r = try Fixtures.roads()
+        Self.sharedRoads = r
+        return r
+    }
+
+    /// Every vector runs with the sidecar loaded unless it sets `roadsDisabled`.
     func check(_ name: String, file: StaticString = #filePath, line: UInt = #line) throws {
         let vector = try Vector.load(name)
-        let run = VectorRunner.run(vector, store: try store())
+        let run = VectorRunner.run(vector, store: try store(), roads: try roads())
         XCTAssertTrue(run.mismatches.isEmpty, "\(name): \(run.mismatches.joined(separator: " | "))", file: file, line: line)
+    }
+
+    /// The 28 straight-line vectors are the fallback proof: they pass with the sidecar loaded (their radars have no
+    /// entry in it) and with no sidecar at all.
+    static let straightLineVectors = [
+        "a2-120kmh-ne", "a2-120kmh-sw", "a2-behind", "a2-first-seen-40m", "a2-head-on-90kmh", "a2-late-150m",
+        "a2-no-course-20mps", "a2-no-course-2mps", "a2-no-course-6mps", "a2-parallel-150m", "a2-speed-nil-course-10mps",
+        "a2-stopped-jitter-200m", "a2-uturn-11min-3km", "a2-uturn-5min", "corridor-n232-exit-distance",
+        "corridor-n232-exit-time", "corridor-n232-from-east", "corridor-n232-from-west", "corridor-n232-mid-join",
+        "leon-50kmh-today", "leon-50kmh-tomorrow", "osm-bearing-opposite", "osm-bearing-same", "osm-both",
+        "pair-123m-pacing", "pair-123m-same-fix", "section-z40-100kmh",
+    ]
+
+    func testTheStraightLineVectorsPassWithoutTheSidecarToo() throws {
+        XCTAssertEqual(Self.straightLineVectors.count + 1, 28, "27 positive vectors plus broken-a2-no-warning")
+        for name in Self.straightLineVectors {
+            let vector = try Vector.load(name)
+            let without = VectorRunner.run(vector, store: try Fixtures.sampleStore(), roads: nil)
+            XCTAssertTrue(without.mismatches.isEmpty, "\(name) without roads: \(without.mismatches.joined(separator: " | "))")
+            let with = VectorRunner.run(vector, store: try store(), roads: try roads())
+            XCTAssertTrue(with.mismatches.isEmpty, "\(name) with roads: \(with.mismatches.joined(separator: " | "))")
+        }
     }
 
     func testA2At120KmhNortheast() throws { try check("a2-120kmh-ne") }
@@ -186,6 +240,104 @@ final class AlertEngineVectorTests: XCTestCase {
     func testCorridorSilentExitByTime() throws { try check("corridor-n232-exit-time") }
     func testAverageSpeedSection() throws { try check("section-z40-100kmh") }
 
+    // Road geometry (design 2.3, 2.5): the synthetic scenarios of feed-sample-roads and roads-sample.
+    func testRoadOnApproachFromTwoKilometres() throws { try check("road-on-approach-2km") }
+    func testRoadParallelRoadIsHeldSilent() throws { try check("road-parallel-150m-from-2km") }
+    func testRoadOverpassIsHeldSilent() throws { try check("road-overpass-90deg") }
+    func testRoadArcWarnsAlongTheCurve() throws { try check("road-arc-1000m") }
+    func testRoadHairpinOneWarningPassAtTheRadar() throws { try check("road-hairpin") }
+    func testRoadHairpinWithBiasNeverPassesEarly() throws { try check("road-hairpin-biased") }
+    func testRoadHairpinWithoutSidecarIsTodaysRule() throws { try check("road-hairpin-fallback") }
+    func testRoadDualSameCarriagewayWarnsBoth() throws { try check("road-dual-same") }
+    func testRoadDualOppositeHighConfidenceIsHidden() throws { try check("road-dual-opposite-high") }
+    func testRoadDualOppositeLowConfidenceIsVisual() throws { try check("road-dual-opposite-low") }
+    func testRoadSideJoinUpgradesOnceLate() throws { try check("road-side-join-late") }
+    func testCorridorCurveGateEntry() throws { try check("corridor-curve-gate-entry") }
+    func testCorridorCurveRemainingAlongTheRoad() throws { try check("corridor-curve-along") }
+    func testCorridorCurveMidJoinOnTheBow() throws { try check("corridor-curve-mid-join-on-bow") }
+    func testCorridorCurvePolylineLossFallsBackToTheChord() throws { try check("corridor-curve-polyline-loss") }
+    func testCorridorCurveOppositeCarriagewayNeverEnters() throws { try check("corridor-curve-gate-opposite-carriageway") }
+    func testRoadHairpinAtSixtyPassesOnlyAtTheRadar() throws { try check("road-hairpin-60kmh") }
+    func testRoadHairpinAtSixtyWithBiasNeverPassesEarly() throws { try check("road-hairpin-60kmh-biased") }
+    func testRoadHairpinAtSixtyWithoutSidecarPassesEarly() throws { try check("road-hairpin-60kmh-fallback") }
+    func testRoadHairpinOneBadFixIsNotSpokenByTheStraightLine() throws { try check("road-hairpin-one-bad-fix") }
+    func testRoadOneStrayFixDoesNotHoldTheWarning() throws { try check("road-stray-fix-not-held") }
+    func testCorridorOnASwitchbackGateRoadIsEnteredByTheRoad() throws { try check("corridor-switchback-gate-road") }
+
+    /// Every vector that names a radar of the road fixture says so with roadFixture, and none of the 28 straight-line
+    /// vectors does: the Kotlin suite skips exactly the flagged ones, so a wrong flag would hide a vector from it.
+    func testRoadFixtureFlagMatchesTheRadarsAVectorNames() throws {
+        let roadFeed = try JSONDecoder().decode(GeoJSONFeatureCollection.self, from: Data(contentsOf: Fixtures.url("feed-sample-roads", ext: "geojson")))
+        let roadIds = Set(roadFeed.features.compactMap(\.id))
+        XCTAssertFalse(roadIds.isEmpty)
+        let dir = try Fixtures.url("a2-120kmh-ne", ext: "json", subdirectory: "Fixtures/vectors").deletingLastPathComponent()
+        let names = try FileManager.default.contentsOfDirectory(atPath: dir.path).filter { $0.hasSuffix(".json") }.map { String($0.dropLast(5)) }
+        var flagged = 0
+        for name in names {
+            let v = try Vector.load(name)
+            let ids = Set(v.expected.compactMap(\.radar) + (v.hidden ?? []))
+            if v.roadFixture == true {
+                flagged += 1
+                XCTAssertTrue(ids.isSubset(of: roadIds), "\(name) is flagged but names \(ids.subtracting(roadIds))")
+            } else {
+                XCTAssertTrue(ids.isDisjoint(with: roadIds), "\(name) names a road-fixture radar without the flag")
+            }
+        }
+        // Every vector beyond the 28 straight-line ones drives over the road fixture.
+        XCTAssertEqual(flagged, names.count - 28)
+        for name in Self.straightLineVectors { XCTAssertNil(try Vector.load(name).roadFixture, name) }
+    }
+
+    /// The card says what the voice said: on the 60 km/h switchbacks the warning fires on the leg below the radar's,
+    /// where the straight-line distance falls and rises leg by leg; the card's distance is the along-road one and
+    /// only falls until the pass.
+    func testTheCardShowsTheAlongRoadDistanceWhileMatched() throws {
+        let vector = try Vector.load("road-hairpin-60kmh")
+        let engine = AlertEngine(store: try store(), roads: try roads(), ledger: PassLedger(), locale: Fixtures.es)
+        let radar = try XCTUnwrap(try store().radar(id: "fixed-hairpin-road"))
+        var fired: Double?
+        var cards: [Double] = []
+        var straight: [Double] = []
+        for fix in vector.fixList {
+            let events = engine.ingest(fix)
+            if events.contains(where: { $0.kind == .passed }) { break }
+            if let w = events.first(where: { $0.kind == .warn(.full) }) { fired = w.distance }
+            guard let f = fired else { continue }
+            let s = engine.snapshot
+            XCTAssertEqual(s.next?.id, radar.id)
+            let d = try XCTUnwrap(s.distanceMetres)
+            if cards.isEmpty { XCTAssertEqual(d, f, accuracy: 1, "the card starts at the spoken distance") }
+            XCTAssertEqual(Double(s.content.distanceMetres ?? -1), d.rounded(), accuracy: 1)
+            cards.append(d)
+            straight.append(Geo.distance(fix.coordinate, radar.start))
+        }
+        XCTAssertGreaterThan(cards.count, 10)
+        for (a, b) in zip(cards, cards.dropFirst()) { XCTAssertLessThanOrEqual(b, a + 1, "the along-road card only falls: \(cards)") }
+        // The straight line rises on the leg below: the check above would fail if the card used it.
+        XCTAssertTrue(zip(straight, straight.dropFirst()).contains { $1 > $0 + 5 }, "\(straight)")
+    }
+
+    /// The road rule's negative control: the switchback drive expected with today's straight-line events must not pass
+    /// with the sidecar loaded.
+    func testBrokenRoadVectorIsRejected() throws {
+        let vector = try Vector.load("broken-road-hairpin-straight-line")
+        XCTAssertEqual(vector.negativeControl, true)
+        let run = VectorRunner.run(vector, store: try store(), roads: try roads())
+        XCTAssertFalse(run.mismatches.isEmpty, "the road rule produced the straight-line events on the switchbacks")
+    }
+
+    /// The hidden warning of a high-confidence opposite flow is produced (for its log row) but never in the events the
+    /// surfaces speak or show; without the bearing's confidence it would be a visual row.
+    func testTheHiddenEventIsProducedWithItsFlags() throws {
+        let vector = try Vector.load("road-dual-opposite-high")
+        let run = VectorRunner.run(vector, store: try store(), roads: try roads())
+        XCTAssertEqual(run.hidden.count, 1)
+        let e = try XCTUnwrap(run.hidden.first)
+        XCTAssertTrue(e.content.hidden && e.content.opposite && !e.content.held)
+        XCTAssertEqual(e.kind, .warn(.visual))
+        XCTAssertTrue(run.events.isEmpty, "\(run.events.map { VectorRunner.describe($0.event) })")
+    }
+
     /// The negative control: a vector with the warning deleted from its expectation must not pass.
     func testBrokenVectorIsRejected() throws {
         let vector = try Vector.load("broken-a2-no-warning")
@@ -201,7 +353,7 @@ final class AlertEngineVectorTests: XCTestCase {
         let source = try String(contentsOf: URL(fileURLWithPath: #filePath), encoding: .utf8)
         let untested = files.filter { !source.contains("\"\($0)\"") }
         XCTAssertEqual(untested, [], "vectors without a test")
-        XCTAssertEqual(files.count, 28)
+        XCTAssertEqual(files.count, 51)
     }
 
     /// A snapshot check that names a fix the vector does not have must fail the vector, not pass unnoticed.
@@ -219,12 +371,28 @@ final class AlertEngineVectorTests: XCTestCase {
     /// A silent vector expects nothing at all; its twin on the same radar expects a full warning. The U-turn inside
     /// five minutes is the once-per-pass twin: exactly one full warning, where its eleven-minute twin has two.
     func testEveryMustNotFireVectorHasAMustFireTwin() throws {
-        let silent = ["leon-50kmh-tomorrow": "leon-50kmh-today", "a2-parallel-150m": "a2-head-on-90kmh", "a2-behind": "a2-head-on-90kmh", "a2-no-course-2mps": "a2-no-course-20mps"]
+        let silent = [
+            "leon-50kmh-tomorrow": "leon-50kmh-today", "a2-parallel-150m": "a2-head-on-90kmh", "a2-behind": "a2-head-on-90kmh",
+            "a2-no-course-2mps": "a2-no-course-20mps", "road-dual-opposite-high": "road-dual-same",
+            "corridor-curve-gate-opposite-carriageway": "corridor-curve-gate-entry",
+        ]
         for (quiet, loud) in silent {
             let q = try Vector.load(quiet), l = try Vector.load(loud)
             XCTAssertTrue(q.expected.isEmpty, "\(quiet) must expect no event at all, got \(q.expected.map(\.kind))")
-            XCTAssertGreaterThanOrEqual(fullWarnings(l), 1, loud)
+            XCTAssertGreaterThanOrEqual(fullWarnings(l) + l.expected.filter { $0.kind == "stretchEntered" }.count, 1, loud)
         }
+        // A held vector never speaks; its twin on the same radar does.
+        let held = ["road-parallel-150m-from-2km": "road-on-approach-2km", "road-overpass-90deg": "road-on-approach-2km", "road-dual-opposite-low": "road-dual-same"]
+        for (quiet, loud) in held {
+            XCTAssertEqual(fullWarnings(try Vector.load(quiet)), 0, quiet)
+            XCTAssertGreaterThanOrEqual(fullWarnings(try Vector.load(loud)), 1, loud)
+        }
+        XCTAssertEqual(fullWarnings(try Vector.load("road-hairpin")), 1, "one warning on the switchbacks")
+        XCTAssertEqual(fullWarnings(try Vector.load("road-hairpin-biased")), 1, "one warning with the bias")
+        XCTAssertEqual(fullWarnings(try Vector.load("road-hairpin-60kmh")), 1, "one warning at 60 km/h")
+        XCTAssertEqual(fullWarnings(try Vector.load("road-hairpin-60kmh-biased")), 1, "one warning at 60 km/h with the bias")
+        XCTAssertEqual(fullWarnings(try Vector.load("road-hairpin-one-bad-fix")), 1, "one warning with one bad fix")
+        XCTAssertEqual(fullWarnings(try Vector.load("road-side-join-late")), 1, "exactly one upgrade")
         XCTAssertEqual(fullWarnings(try Vector.load("a2-uturn-5min")), 1, "one pass, one warning")
         XCTAssertEqual(fullWarnings(try Vector.load("a2-uturn-11min-3km")), 2, "two passes, two warnings")
     }
