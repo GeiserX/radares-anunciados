@@ -20,9 +20,10 @@ struct MapView: View {
             EstadoStrip()
             Map(position: $position) {
                 UserAnnotation()
-                ForEach(nearby) { radar in
-                    if let end = radar.end {
-                        MapPolyline(coordinates: [radar.start.cl, end.cl])
+                ForEach(nearby) { item in
+                    let radar = item.radar
+                    if let line = item.line {
+                        MapPolyline(coordinates: line.map(\.cl))
                             .stroke(radar.kind.color, lineWidth: 4)
                     }
                     Marker(
@@ -73,17 +74,10 @@ struct MapView: View {
         ))
     }
 
-    /// Radars inside a box of Thresholds.mapRadiusM around the map centre. A box, not a circle: cheaper, and the
-    /// screen is a box anyway.
-    private var nearby: [Radar] {
+    /// What the map draws around its centre (`MapRules.nearby`).
+    private var nearby: [MapRules.Item] {
         guard let store = model.store else { return [] }
-        let dLat = Thresholds.mapRadiusM / 111_320
-        let dLon = dLat / max(cos(center.latitude * .pi / 180), 0.01)
-        return store.all.filter { radar in
-            [radar.start, radar.end].compactMap { $0 }.contains { point in
-                abs(point.latitude - center.latitude) <= dLat && abs(point.longitude - center.longitude) <= dLon
-            }
-        }
+        return MapRules.nearby(store: store, centre: center, on: Date())
     }
 
     /// Driving: the engine's next radar and its distance (design 4.4). Otherwise the nearest radar to the user that
@@ -97,6 +91,71 @@ struct MapView: View {
             .map { radar in (radar, [radar.start, radar.end].compactMap { $0 }.map { Geo.distance(me, $0) }.min() ?? .infinity) }
             .min { $0.1 < $1.1 }
             .map { (radar: $0.0, metres: $0.1) }
+    }
+}
+
+/// The map's pure rules, testable without SwiftUI (design 4.4).
+enum MapRules {
+    /// One radar to draw, and for a stretch the coordinates of its line (the road when there is one, else the chord).
+    struct Item: Identifiable, Equatable {
+        let radar: Radar
+        let line: [Coordinate]?
+        var id: String { radar.id }
+    }
+
+    /// Drawn at all: a radar that can warn on `day`, or an unconfirmed report (grey). An announced mobile radar whose
+    /// days are over, or an inactive one, would only be a stale marker.
+    static func isShown(_ radar: Radar, on day: Date) -> Bool {
+        radar.isAlertable(on: day) || radar.kind == .reported
+    }
+
+    /// Radars inside a box of `radius` around `centre` (a box, not a circle: cheaper, and the screen is a box). A point
+    /// is kept when it is inside the box. A line is kept when an end is inside, or when its line passes within the box's
+    /// half-diagonal of the centre: a corridor is often longer than the box, and a car in its middle must see it.
+    /// `roadLine(id)` gives the road under a stretch when one is known; the map then draws it instead of the chord.
+    static func nearby(
+        store: RadarStore,
+        centre: Coordinate,
+        radius: Double = Thresholds.mapRadiusM,
+        on day: Date,
+        roadLine: (String) -> [Coordinate]? = { _ in nil }
+    ) -> [Item] {
+        let dLat = radius / 111_320
+        let dLon = dLat / max(cos(centre.latitude * .pi / 180), 0.01)
+        let halfDiagonal = radius * 2.0.squareRoot()
+        func inBox(_ point: Coordinate) -> Bool {
+            abs(point.latitude - centre.latitude) <= dLat && abs(point.longitude - centre.longitude) <= dLon
+        }
+        // The half-diagonal reach in degrees, for a cheap bounding-box test before any distance is computed.
+        let reachLat = dLat * 2.0.squareRoot(), reachLon = dLon * 2.0.squareRoot()
+        func mayReach(_ points: [Coordinate]) -> Bool {
+            guard let first = points.first else { return false }
+            var minLat = first.latitude, maxLat = first.latitude, minLon = first.longitude, maxLon = first.longitude
+            for p in points.dropFirst() {
+                minLat = min(minLat, p.latitude); maxLat = max(maxLat, p.latitude)
+                minLon = min(minLon, p.longitude); maxLon = max(maxLon, p.longitude)
+            }
+            return maxLat >= centre.latitude - reachLat && minLat <= centre.latitude + reachLat
+                && maxLon >= centre.longitude - reachLon && minLon <= centre.longitude + reachLon
+        }
+        func crosses(_ line: [Coordinate]) -> Bool {
+            guard mayReach(line) else { return false }
+            return zip(line, line.dropFirst()).contains { a, b in
+                Geo.distanceToChord(point: centre, from: a, to: b) <= halfDiagonal
+            }
+        }
+        return store.all.compactMap { radar in
+            guard isShown(radar, on: day) else { return nil }
+            guard let end = radar.end else {
+                return inBox(radar.start) ? Item(radar: radar, line: nil) : nil
+            }
+            let road = roadLine(radar.id).flatMap { $0.count >= 2 ? $0 : nil }
+            let line = road ?? [radar.start, end]
+            guard inBox(radar.start) || inBox(end) || crosses([radar.start, end]) || (road.map(crosses) ?? false) else {
+                return nil
+            }
+            return Item(radar: radar, line: line)
+        }
     }
 }
 
