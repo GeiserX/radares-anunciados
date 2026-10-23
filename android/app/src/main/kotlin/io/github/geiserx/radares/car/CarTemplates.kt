@@ -30,6 +30,7 @@ object CarTemplates {
         content: NearbyContent,
         locale: Locale,
         showCurrentLocation: Boolean,
+        onRefresh: (() -> Unit)? = null,
         onSources: () -> Unit,
     ): PlaceListMapTemplate {
         val builder = PlaceListMapTemplate.Builder()
@@ -46,6 +47,8 @@ object CarTemplates {
                     )
                     .build(),
             )
+        // Car API 5 and later: the driver's refresh request, which the host never counts against its quota.
+        onRefresh?.let { refresh -> builder.setOnContentRefreshListener { refresh() } }
         if (!content.hasPosition) return builder.setLoading(true).build()
         val list = ItemList.Builder().setNoItemsMessage(content.emptyMessage)
         content.rows.forEach { list.addItem(row(it)) }

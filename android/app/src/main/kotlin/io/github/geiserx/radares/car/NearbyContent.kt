@@ -36,6 +36,25 @@ data class NearbyContent(
     /** False until the first position is known: the template shows its loading state. */
     val hasPosition: Boolean,
 ) {
+    /**
+     * Whether the car host counts `next` as a refresh of this content, which costs nothing against its template quota:
+     * this one was still loading, or the screen title, the number of rows and each row's title are unchanged (the
+     * rule in PlaceListMapTemplate's documentation). Anything else is a new template.
+     */
+    fun isRefreshedBy(next: NearbyContent): Boolean =
+        !hasPosition || (title == next.title && rows.map { it.title } == next.rows.map { it.title })
+
+    /** The same rows in the same order with their distances from `position`, so the host takes it as a refresh. */
+    fun withDistancesFrom(position: Coordinate?, store: RadarStore?): NearbyContent {
+        if (position == null || store == null) return this
+        return copy(
+            rows = rows.map { row ->
+                val radar = store.radar(row.radarId) ?: return@map row
+                row.copy(distanceMetres = Phrasing.roundedDistance(RadarStore.distance(position, radar)))
+            },
+        )
+    }
+
     companion object {
         const val MAX_ROWS = 6
         /** Radars farther than this are not listed: the screen is about what is near, not a map of Spain. */

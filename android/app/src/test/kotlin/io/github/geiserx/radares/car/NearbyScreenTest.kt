@@ -95,6 +95,60 @@ class NearbyScreenTest {
         assertTrue(CarTemplates.nearby(content, es, showCurrentLocation = false) {}.isLoading)
     }
 
+    private class FixedData(val at: Coordinate?, val radars: RadarStore?) : CarData {
+        override fun position() = at
+        override fun store() = radars
+        override fun locationPermitted() = true
+    }
+
+    @Test
+    fun aChangedSetWithoutBudgetKeepsTheShownRowsAndUpdatesTheirDistances() {
+        val radars = store(9)
+        val shown = NearbyContent.make(here, radars, now, es)
+        // 12 km north only dgt-7..dgt-9 are within 10 km: three rows instead of six, a new template for the host.
+        val moved = Coordinate(here.latitude + 12_000 / 111_320.0, here.longitude)
+        val fresh = NearbyContent.make(moved, radars, now, es)
+        assertFalse("the test needs a set the host would count as a new template", shown.isRefreshedBy(fresh))
+
+        val (next, spent) = NearbyScreen.next(shown, fresh, FixedData(moved, radars), newSetsLeft = 0)
+        assertEquals(0, spent)
+        assertEquals(shown.rows.size, next.rows.size)
+        assertEquals(shown.rows.map { it.title }, next.rows.map { it.title })
+        assertEquals(shown.rows.map { it.radarId }, next.rows.map { it.radarId })
+        assertTrue("the host must see a refresh", shown.isRefreshedBy(next))
+        assertEquals(11_700, next.rows.first().distanceMetres) // dgt-1 is 300 m north of here, 11.7 km from `moved`
+    }
+
+    @Test
+    fun aChangedSetSpendsOneOfTheBudget() {
+        val radars = store(9)
+        val shown = NearbyContent.make(here, radars, now, es)
+        val far = Coordinate(here.latitude + 1.0, here.longitude)
+        val fresh = NearbyContent.make(far, radars, now, es)
+        val (next, spent) = NearbyScreen.next(shown, fresh, FixedData(far, radars), newSetsLeft = 1)
+        assertEquals(1, spent)
+        assertEquals(fresh, next)
+    }
+
+    @Test
+    fun aRefreshIsFreeAndLoadingToListIsFree() {
+        val radars = store(9)
+        val shown = NearbyContent.make(here, radars, now, es)
+        val nudged = Coordinate(here.latitude - 50 / 111_320.0, here.longitude)
+        val fresh = NearbyContent.make(nudged, radars, now, es)
+        assertEquals(fresh to 0, NearbyScreen.next(shown, fresh, FixedData(nudged, radars), newSetsLeft = 0))
+
+        val loading = NearbyContent.make(null, radars, now, es)
+        assertEquals(shown to 0, NearbyScreen.next(loading, shown, FixedData(here, radars), newSetsLeft = 0))
+    }
+
+    @Test
+    fun theDriversRefreshListenerIsWiredOnlyWhenGiven() {
+        val content = NearbyContent.make(here, store(3), now, es)
+        assertTrue(CarTemplates.nearby(content, es, false, onRefresh = {}) {}.onContentRefreshDelegate != null)
+        assertTrue(CarTemplates.nearby(content, es, false) {}.onContentRefreshDelegate == null)
+    }
+
     @Test
     fun sourcesScreenListsEveryAttributionAndTheMap() {
         val content = NearbyContent.make(here, store(4), now, es)
