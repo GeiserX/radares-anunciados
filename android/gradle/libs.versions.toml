@@ -2,7 +2,7 @@
 [versions]
 agp = "9.5.1"
 kotlin = "2.4.21"
-kotlinx-serialization-json = "1.12.0"
+kotlinx-serialization-json = "1.13.0"
 junit-jupiter = "5.14.4"
 junit-platform-launcher = "1.14.4"
 
@@ -17,7 +17,7 @@ carApp = "1.7.0"
 osmdroid = "6.1.20"
 coroutines = "1.11.0"
 junit4 = "4.13.2"
-robolectric = "4.17"
+robolectric = "4.18"
 androidxTestCore = "1.7.0"
 
 [libraries]
