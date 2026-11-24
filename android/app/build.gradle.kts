@@ -11,7 +11,9 @@ plugins {
 
 android {
     namespace = "io.github.geiserx.radares"
-    compileSdk = 37
+    compileSdk {
+        version = release(37) { minorApiLevel = 1 }
+    }
 
     defaultConfig {
         applicationId = "io.github.geiserx.radares"
