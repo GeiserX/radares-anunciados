@@ -1,6 +1,6 @@
 # Versions verified on Google Maven and Maven Central on 2026-10-23.
 [versions]
-agp = "9.5.1"
+agp = "9.5.2"
 kotlin = "2.4.21"
 kotlinx-serialization-json = "1.13.0"
 junit-jupiter = "5.14.4"
@@ -10,14 +10,14 @@ junit-platform-launcher = "1.14.4"
 coreKtx = "1.19.1"
 lifecycle = "2.11.0"
 activityCompose = "1.13.0"
-composeBom = "2026.09.00"
+composeBom = "2026.11.01"
 workManager = "2.12.0"
 playServicesLocation = "21.4.0"
 carApp = "1.7.0"
 osmdroid = "6.1.20"
 coroutines = "1.11.0"
 junit4 = "4.13.2"
-robolectric = "4.18"
+robolectric = "4.18.1"
 androidxTestCore = "1.7.0"
 
 [libraries]
